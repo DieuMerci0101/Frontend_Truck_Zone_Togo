@@ -54,8 +54,8 @@ export default function AdminUtilisateursPage() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <Users className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <Users className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>

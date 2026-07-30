@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState, useRef } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,21 +8,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
 import { proprietaireService } from "@/services/proprietaire.service";
+import { authService } from "@/services/auth.service";
 import { profileService } from "@/services/profile.service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Avatar } from "@/components/ui/avatar";
+import { getRoleLabel } from "@/lib/utils";
 import { TYPE_ACTIVITE } from "@/constants";
-import { Save, Building, Camera } from "lucide-react";
+import { Save, Building, User, Camera, Trash2, Shield, Eye, EyeOff, Settings, Mail } from "lucide-react";
 
 const profileSchema = z.object({
   nom_complet: z.string().min(2, "Le nom complet est requis"),
-  telephone: z.string().min(8, "Le téléphone est requis"),
+  telephone: z.string().min(8, "Le téléphone est requis").regex(/^\+?[0-9\s]{8,20}$/, "Le format du téléphone est invalide. Exemple : +228 90 12 34 56"),
   date_naissance: z.string().optional(),
   lieu_naissance: z.string().optional(),
   adresse_personnelle: z.string().optional(),
@@ -31,13 +34,27 @@ const profileSchema = z.object({
   adresse: z.string().min(1, "L'adresse est requise"),
   bio: z.string().optional(),
 });
-
 type ProfileFormValues = z.infer<typeof profileSchema>;
+
+const passwordSchema = z
+  .object({
+    old_password: z.string().min(1, "L'ancien mot de passe est requis"),
+    new_password: z.string().min(6, "Minimum 6 caractères"),
+    confirm_new_password: z.string(),
+  })
+  .refine((d) => d.new_password === d.confirm_new_password, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirm_new_password"],
+  });
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ProprietaireProfilPage() {
   const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["proprietaire", "profile"],
@@ -65,6 +82,13 @@ export default function ProprietaireProfilPage() {
         }
       : undefined,
   });
+
+  const {
+    register: regPwd,
+    handleSubmit: submitPwd,
+    reset: resetPwd,
+    formState: { errors: pwdErr },
+  } = useForm<PasswordFormValues>({ resolver: zodResolver(passwordSchema) });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => proprietaireService.createProfile(data),
@@ -112,6 +136,16 @@ export default function ProprietaireProfilPage() {
     onError: () => toast.error("Erreur lors de la suppression"),
   });
 
+  const passwordMutation = useMutation({
+    mutationFn: (data: { old_password: string; new_password: string }) =>
+      authService.changePassword(data),
+    onSuccess: () => {
+      toast.success("Mot de passe modifié avec succès");
+      resetPwd();
+    },
+    onError: () => toast.error("Erreur lors de la modification du mot de passe"),
+  });
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -136,26 +170,22 @@ export default function ProprietaireProfilPage() {
     return (
       <div className="space-y-4 sm:space-y-6">
         <Skeleton className="h-8 w-64" />
-        <Card>
-          <CardContent className="p-4 sm:p-6 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4 sm:p-6 space-y-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+        </CardContent></Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Building className="h-6 w-6 text-blue-600" />
+        <div className="p-2 bg-slate-50 rounded-lg">
+          <Building className="h-6 w-6 text-slate-700" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mon profil</h1>
-          <p className="text-gray-500">Gérez vos informations personnelles et professionnelles</p>
+          <p className="text-gray-500">Gérez toutes vos informations en un seul endroit</p>
         </div>
       </div>
 
@@ -164,27 +194,49 @@ export default function ProprietaireProfilPage() {
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <Avatar
-                src={user?.photo_profil || null}
-                name={user?.nom_complet || ""}
-                size="lg"
-                className="h-20 w-20 sm:h-24 sm:w-24 text-2xl"
-              />
+              <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="lg" className="h-20 w-20 sm:h-24 sm:w-24 text-2xl" />
               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="h-6 w-6 text-white" />
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoChange} className="hidden" />
             </div>
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left flex-1">
               <p className="text-lg font-semibold text-gray-900">{user?.nom_complet}</p>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <p className="text-sm text-gray-500 flex items-center justify-center sm:justify-start gap-1"><Mail className="h-3.5 w-3.5" />{user?.email}</p>
+              <Badge variant="info" className="mt-1">{user?.role ? getRoleLabel(user.role) : ""}</Badge>
               <p className="text-xs text-gray-400 mt-1">JPG, PNG ou WebP — max 5 Mo</p>
+            </div>
+            {user?.photo_profil && (
+              <Button variant="outline" size="sm" onClick={() => deletePhotoMutation.mutate()} loading={deletePhotoMutation.isPending} className="text-red-600 border-red-200 hover:bg-red-50 min-h-[44px]">
+                <Trash2 className="h-4 w-4 mr-1" /> Supprimer
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Statut du compte */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Statut du compte</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+              <p className="text-sm text-gray-900 truncate">{user?.email}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Rôle</label>
+              <Badge variant="info">{user?.role ? getRoleLabel(user.role) : ""}</Badge>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Statut</label>
+              <Badge variant={user?.is_active ? "success" : "destructive"}>{user?.is_active ? "Actif" : "Inactif"}</Badge>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Vérifié</label>
+              <Badge variant={user?.is_verified ? "success" : "warning"}>{user?.is_verified ? "Vérifié" : "Non vérifié"}</Badge>
             </div>
           </div>
         </CardContent>
@@ -193,85 +245,65 @@ export default function ProprietaireProfilPage() {
       {/* Formulaire */}
       <Card>
         <CardHeader>
-          <CardTitle>Informations</CardTitle>
+          <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Informations</CardTitle>
           <CardDescription>Vos coordonnées et informations professionnelles</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Nom complet"
-                placeholder="Votre nom complet"
-                error={errors.nom_complet?.message}
-                {...register("nom_complet")}
-              />
-              <Input
-                label="Téléphone"
-                placeholder="+228 90 12 34 56"
-                error={errors.telephone?.message}
-                {...register("telephone")}
-              />
-              <Input
-                label="Date de naissance"
-                type="date"
-                {...register("date_naissance")}
-              />
-              <Input
-                label="Lieu de naissance"
-                placeholder="Ex: Lomé, Togo"
-                {...register("lieu_naissance")}
-              />
+              <Input label="Nom complet" placeholder="Votre nom complet" error={errors.nom_complet?.message} {...register("nom_complet")} />
+              <Input label="Téléphone" placeholder="+228 90 12 34 56" error={errors.telephone?.message} {...register("telephone")} />
+              <Input label="Date de naissance" type="date" {...register("date_naissance")} />
+              <Input label="Lieu de naissance" placeholder="Ex: Lomé, Togo" {...register("lieu_naissance")} />
             </div>
-            <Input
-              label="Adresse personnelle"
-              placeholder="Votre adresse complète"
-              {...register("adresse_personnelle")}
-            />
+            <Input label="Adresse personnelle" placeholder="Votre adresse complète" {...register("adresse_personnelle")} />
 
             <Separator />
-
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Entreprise</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Nom de l'entreprise"
-                placeholder="Mon entreprise SARL"
-                error={errors.nom_entreprise?.message}
-                {...register("nom_entreprise")}
-              />
-              <Select
-                label="Type d'activité"
-                options={Object.entries(TYPE_ACTIVITE).map(([v, l]) => ({
-                  value: v,
-                  label: l,
-                }))}
-                error={errors.type_activite?.message}
-                {...register("type_activite")}
-              />
+              <Input label="Nom de l'entreprise" placeholder="Mon entreprise SARL" error={errors.nom_entreprise?.message} {...register("nom_entreprise")} />
+              <Select label="Type d'activité" options={Object.entries(TYPE_ACTIVITE).map(([v, l]) => ({ value: v, label: l }))} error={errors.type_activite?.message} {...register("type_activite")} />
             </div>
-
-            <Input
-              label="Adresse"
-              placeholder="Lomé, Togo"
-              error={errors.adresse?.message}
-              {...register("adresse")}
-            />
-
-            <Textarea
-              label="Bio / Description"
-              placeholder="Décrivez votre entreprise..."
-              rows={4}
-              {...register("bio")}
-            />
+            <Input label="Adresse" placeholder="Lomé, Togo" error={errors.adresse?.message} {...register("adresse")} />
+            <Textarea label="Bio / Description" placeholder="Décrivez votre entreprise..." rows={4} {...register("bio")} />
 
             <div className="flex justify-end">
-              <Button
-                type="submit"
-                loading={createMutation.isPending || updateMutation.isPending || profileUpdateMutation.isPending}
-                className="w-full sm:w-auto min-h-[44px]"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Enregistrer
+              <Button type="submit" loading={createMutation.isPending || updateMutation.isPending || profileUpdateMutation.isPending} className="w-full sm:w-auto min-h-[44px]">
+                <Save className="h-4 w-4 mr-2" /> Enregistrer
               </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Changer le mot de passe */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Changer le mot de passe</CardTitle>
+          <CardDescription>Assurez-vous d&apos;utiliser un mot de passe fort</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submitPwd((d) => passwordMutation.mutate({ old_password: d.old_password, new_password: d.new_password }))} className="space-y-4 max-w-md" autoComplete="off">
+            <div className="relative">
+              <Input label="Mot de passe actuel" type={showOld ? "text" : "password"} placeholder="••••••••" error={pwdErr.old_password?.message} {...regPwd("old_password")} />
+              <button type="button" onClick={() => setShowOld(!showOld)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showOld ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input label="Nouveau mot de passe" type={showNew ? "text" : "password"} placeholder="••••••••" error={pwdErr.new_password?.message} {...regPwd("new_password")} />
+              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input label="Confirmer le nouveau mot de passe" type={showConfirm ? "text" : "password"} placeholder="••••••••" error={pwdErr.confirm_new_password?.message} {...regPwd("confirm_new_password")} />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" loading={passwordMutation.isPending} className="w-full sm:w-auto min-h-[44px]">Modifier le mot de passe</Button>
             </div>
           </form>
         </CardContent>

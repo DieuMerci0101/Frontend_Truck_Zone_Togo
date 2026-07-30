@@ -4,13 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import {
-  Search,
-  MapPin,
-  Wrench,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { mecanicienService } from "@/services/mecanicien.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -112,18 +106,25 @@ export default function MecaniciensPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-10 sm:py-12 lg:py-16">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+      <div className="bg-slate-900 text-white py-10 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-white mb-4 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+              Retour à l&apos;accueil
+            </Link>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
               Mécaniciens Qualifiés
             </h1>
-            <p className="text-blue-200 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
+            <p className="text-slate-300 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
               Trouvez un mécanicien spécialisé pour dépanner votre véhicule
             </p>
           </motion.div>
@@ -134,7 +135,6 @@ export default function MecaniciensPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="sm:col-span-2 lg:col-span-1">
             <Input
-              icon={Search}
               placeholder="Rechercher par nom, spécialité..."
               value={search}
               onChange={(e) => {
@@ -186,11 +186,10 @@ export default function MecaniciensPage() {
           </div>
         ) : paginated.length === 0 ? (
           <div className="text-center py-10 sm:py-12 lg:py-16">
-            <Wrench className="h-14 w-14 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Aucun mécanicien trouvé
             </h3>
-            <p className="text-sm sm:text-base text-gray-500">
+            <p className="text-sm sm:text-base text-slate-500">
               Essayez de modifier vos filtres de recherche
             </p>
           </div>
@@ -207,7 +206,7 @@ export default function MecaniciensPage() {
                   <Card className="h-full hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-base sm:text-lg flex-shrink-0 overflow-hidden">
+                        <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-base sm:text-lg flex-shrink-0 overflow-hidden">
                           {mecanicien.photo_url ? (
                             <img
                               src={mecanicien.photo_url}
@@ -222,7 +221,7 @@ export default function MecaniciensPage() {
                           <CardTitle className="text-sm sm:text-base truncate">
                             {mecanicien.user?.nom_complet || "Mécanicien"}
                           </CardTitle>
-                          <p className="text-xs sm:text-sm text-gray-500 truncate">
+                          <p className="text-xs sm:text-sm text-slate-500 truncate">
                             {mecanicien.annees_experience} ans d&apos;expérience
                           </p>
                         </div>
@@ -254,8 +253,7 @@ export default function MecaniciensPage() {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
-                          <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                        <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
                           <span>Rayon {mecanicien.rayon_intervention} km</span>
                         </div>
                       </div>
@@ -283,7 +281,7 @@ export default function MecaniciensPage() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-xs sm:text-sm text-gray-600 px-2 sm:px-4">
+                <span className="text-xs sm:text-sm text-slate-600 px-2 sm:px-4">
                   Page {page} / {totalPages}
                 </span>
                 <Button

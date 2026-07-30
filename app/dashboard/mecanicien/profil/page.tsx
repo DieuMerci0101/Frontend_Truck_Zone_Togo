@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
 import { mecanicienService } from "@/services/mecanicien.service";
+import { authService } from "@/services/auth.service";
 import { profileService } from "@/services/profile.service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,16 +19,17 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Avatar } from "@/components/ui/avatar";
+import { getRoleLabel } from "@/lib/utils";
 import {
   TARIFICATION_MECANICIEN,
   DISPONIBILITE_MECANICIEN,
   SPECIALITES_MECANICIEN,
 } from "@/constants";
-import { X, Plus, Save, Wrench, Camera } from "lucide-react";
+import { X, Plus, Save, Wrench, Camera, Trash2, Shield, Eye, EyeOff, Settings, Mail, User as UserIcon } from "lucide-react";
 
 const profileSchema = z.object({
   nom_complet: z.string().min(2, "Le nom complet est requis"),
-  telephone: z.string().min(8, "Le téléphone est requis"),
+  telephone: z.string().min(8, "Le téléphone est requis").regex(/^\+?[0-9\s]{8,20}$/, "Le format du téléphone est invalide. Exemple : +228 90 12 34 56"),
   date_naissance: z.string().optional(),
   lieu_naissance: z.string().optional(),
   adresse: z.string().optional(),
@@ -40,10 +42,25 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+const passwordSchema = z
+  .object({
+    old_password: z.string().min(1, "L'ancien mot de passe est requis"),
+    new_password: z.string().min(6, "Minimum 6 caractères"),
+    confirm_new_password: z.string(),
+  })
+  .refine((d) => d.new_password === d.confirm_new_password, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirm_new_password"],
+  });
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
 export default function MecanicienProfilPage() {
   const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [specialites, setSpecialites] = useState<string[]>([]);
   const [certifications, setCertifications] = useState<string[]>([]);
   const [newSpecialite, setNewSpecialite] = useState("");
@@ -123,6 +140,23 @@ export default function MecanicienProfilPage() {
     onError: () => toast.error("Erreur lors de la suppression"),
   });
 
+  const {
+    register: regPwd,
+    handleSubmit: submitPwd,
+    reset: resetPwd,
+    formState: { errors: pwdErr },
+  } = useForm<PasswordFormValues>({ resolver: zodResolver(passwordSchema) });
+
+  const passwordMutation = useMutation({
+    mutationFn: (data: { old_password: string; new_password: string }) =>
+      authService.changePassword(data),
+    onSuccess: () => {
+      toast.success("Mot de passe modifié avec succès");
+      resetPwd();
+    },
+    onError: () => toast.error("Erreur lors de la modification du mot de passe"),
+  });
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -174,10 +208,10 @@ export default function MecanicienProfilPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Wrench className="h-6 w-6 text-blue-600" />
+        <div className="p-2 bg-slate-50 rounded-lg">
+          <Wrench className="h-6 w-6 text-slate-700" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mon profil</h1>
@@ -207,10 +241,43 @@ export default function MecanicienProfilPage() {
                 className="hidden"
               />
             </div>
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left flex-1">
               <p className="text-lg font-semibold text-gray-900">{user?.nom_complet}</p>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <p className="text-sm text-gray-500 flex items-center justify-center sm:justify-start gap-1"><Mail className="h-3.5 w-3.5" />{user?.email}</p>
+              <Badge variant="info" className="mt-1">{user?.role ? getRoleLabel(user.role) : ""}</Badge>
               <p className="text-xs text-gray-400 mt-1">JPG, PNG ou WebP — max 5 Mo</p>
+            </div>
+            {user?.photo_profil && (
+              <Button variant="outline" size="sm" onClick={() => deletePhotoMutation.mutate()} loading={deletePhotoMutation.isPending} className="text-red-600 border-red-200 hover:bg-red-50 min-h-[44px]">
+                <Trash2 className="h-4 w-4 mr-1" /> Supprimer
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Statut du compte */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Statut du compte</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+              <p className="text-sm text-gray-900 truncate">{user?.email}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Rôle</label>
+              <Badge variant="info">{user?.role ? getRoleLabel(user.role) : ""}</Badge>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Statut</label>
+              <Badge variant={user?.is_active ? "success" : "destructive"}>{user?.is_active ? "Actif" : "Inactif"}</Badge>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Vérifié</label>
+              <Badge variant={user?.is_verified ? "success" : "warning"}>{user?.is_verified ? "Vérifié" : "Non vérifié"}</Badge>
             </div>
           </div>
         </CardContent>
@@ -223,7 +290,7 @@ export default function MecanicienProfilPage() {
           <CardDescription>Vos compétences et conditions d&apos;intervention</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="Nom complet"
@@ -394,6 +461,38 @@ export default function MecanicienProfilPage() {
                 <Save className="h-4 w-4 mr-2" />
                 Enregistrer
               </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      {/* Changer le mot de passe */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Changer le mot de passe</CardTitle>
+          <CardDescription>Assurez-vous d&apos;utiliser un mot de passe fort</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submitPwd((d) => passwordMutation.mutate({ old_password: d.old_password, new_password: d.new_password }))} className="space-y-4 max-w-md" autoComplete="off">
+            <div className="relative">
+              <Input label="Mot de passe actuel" type={showOld ? "text" : "password"} placeholder="••••••••" error={pwdErr.old_password?.message} {...regPwd("old_password")} />
+              <button type="button" onClick={() => setShowOld(!showOld)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showOld ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input label="Nouveau mot de passe" type={showNew ? "text" : "password"} placeholder="••••••••" error={pwdErr.new_password?.message} {...regPwd("new_password")} />
+              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input label="Confirmer le nouveau mot de passe" type={showConfirm ? "text" : "password"} placeholder="••••••••" error={pwdErr.confirm_new_password?.message} {...regPwd("confirm_new_password")} />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" loading={passwordMutation.isPending} className="w-full sm:w-auto min-h-[44px]">Modifier le mot de passe</Button>
             </div>
           </form>
         </CardContent>

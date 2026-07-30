@@ -153,6 +153,15 @@ export type TypeCamion =
 
 export type EtatCamion = "excellent" | "bon" | "use" | "en_reparation";
 
+export interface ProprietaireInfo {
+  id: string;
+  user_id: string;
+  nom_complet: string;
+  email: string;
+  telephone: string;
+  photo_profil?: string | null;
+}
+
 export interface Camion {
   id: string;
   proprietaire_id?: string | null;
@@ -167,12 +176,14 @@ export interface Camion {
   description: string | null;
   photo_principale_url: string | null;
   is_public: boolean;
+  expires_at?: string | null;
   nb_essieux?: number | null;
   carburant?: string | null;
   boite_vitesse?: string | null;
   kilometrage?: number | null;
   localisation?: string | null;
   photos: CamionPhoto[];
+  proprietaire_info?: ProprietaireInfo | null;
   created_at: string;
   proprietaire?: ProfilProprietaire;
   chauffeur?: ProfilChauffeur;
@@ -274,6 +285,7 @@ export type DisponibiliteMecanicien = "disponible" | "occupe" | "indisponible";
 export interface ProfilMecanicien {
   id: string;
   user_id: string;
+  nom_complet?: string;
   specialites: string[];
   annees_experience: number;
   certifications: string[] | null;
@@ -304,17 +316,41 @@ export interface ProfilMecanicienUpdate {
 // ─── Assistance ─────────────────────────────────────
 export type TypePanne = "Mécanique" | "Pneumatique" | "Électricité" | "Carrosserie" | "Autre";
 export type Urgence = "Faible" | "Moyenne" | "Haute" | "Critique";
-export type StatutAssistance = "en_attente" | "assignee" | "en_cours" | "terminee";
+export type StatutAssistance = "en_attente" | "pris_en_charge" | "assignee" | "en_cours" | "terminee";
+
+export interface DemandeurInfo {
+  id: string;
+  nom_complet: string;
+  photo_profil: string | null;
+  role: string;
+}
+
+export interface MecanicienInfo {
+  id: string;
+  nom_complet: string;
+  photo_profil: string | null;
+}
+
+export interface DeclarantInfo {
+  id: string;
+  nom_complet: string;
+  photo_profil: string | null;
+  role: string;
+}
 
 export interface Assistance {
   id: string;
   demandeur_id: string;
+  demandeur_info?: DemandeurInfo | null;
   mecanicien_id: string | null;
+  mecanicien_info?: MecanicienInfo | null;
   type_panne: TypePanne;
   description: string;
   urgence: Urgence;
   vehicule_description: string;
   statut: StatutAssistance;
+  localisation_lat?: number | null;
+  localisation_lng?: number | null;
   created_at: string;
 }
 
@@ -344,6 +380,7 @@ export interface Conversation {
 
 export interface ConversationCreate {
   participant_id: string;
+  premier_message?: string;
 }
 
 export type TypeMessage = "texte" | "image" | "fichier";
@@ -371,6 +408,7 @@ export type StatutIncident = "declare" | "en_cours" | "traite" | "cloture";
 export interface Incident {
   id: string;
   declarant_id: string;
+  declarant_info?: DeclarantInfo | null;
   type_incident: TypeIncident;
   date_incident: string;
   description: string;
@@ -379,6 +417,9 @@ export interface Incident {
   victimes: boolean;
   nombre_victimes: number | null;
   statut: StatutIncident;
+  localisation_lat?: number | null;
+  localisation_lng?: number | null;
+  photo_url?: string | null;
   created_at: string;
 }
 
@@ -430,6 +471,9 @@ export type StatutDocument = "en_attente" | "valide" | "rejete";
 export interface Document {
   id: string;
   utilisateur_id: string;
+  utilisateur_nom?: string;
+  utilisateur_email?: string;
+  utilisateur_role?: string;
   type_document: TypeDocument;
   fichier_url: string;
   statut: StatutDocument;

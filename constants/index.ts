@@ -130,6 +130,7 @@ export const URGENCE = {
 
 export const STATUT_ASSISTANCE = {
   en_attente: "En attente",
+  pris_en_charge: "Pris en charge",
   assignee: "Assignée",
   en_cours: "En cours",
   terminee: "Terminée",

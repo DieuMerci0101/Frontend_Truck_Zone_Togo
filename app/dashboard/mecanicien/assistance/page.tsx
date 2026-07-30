@@ -8,35 +8,58 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
-import { STATUT_ASSISTANCE, TYPE_PANNE, URGENCE } from "@/constants";
-import { Headphones, ArrowRight, CheckCircle, Play } from "lucide-react";
-import type { StatutAssistance } from "@/types";
+import { STATUT_ASSISTANCE, TYPE_PANNE } from "@/constants";
+import { Headphones, CheckCircle, Play, MapPin, Clock, Wrench, User, Navigation } from "lucide-react";
+import type { StatutAssistance, Assistance } from "@/types";
+import MechanicGeoWidget from "@/components/maps/mechanic-geo-widget";
 
-const statutBadge: Record<string, "warning" | "info" | "success" | "default"> = {
+const statutBadge: Record<string, "warning" | "info" | "success" | "destructive" | "default" | "secondary"> = {
   en_attente: "warning",
+  pris_en_charge: "secondary",
   assignee: "info",
   en_cours: "success",
   terminee: "default",
 };
 
-const urgenceColor: Record<string, string> = {
-  Faible: "text-green-600",
-  Moyenne: "text-yellow-600",
-  Haute: "text-orange-600",
-  Critique: "text-red-600",
-};
-
-const nextStatut: Record<string, StatutAssistance | null> = {
-  assignee: "en_cours",
-  en_cours: "terminee",
+const urgenceBadge: Record<string, "destructive" | "warning" | "info" | "default"> = {
+  Critique: "destructive",
+  Haute: "warning",
+  Moyenne: "info",
+  Faible: "default",
+  critique: "destructive",
+  haute: "warning",
+  moyenne: "info",
+  faible: "default",
 };
 
 export default function MecanicienAssistancePage() {
   const queryClient = useQueryClient();
 
-  const { data: demandes, isLoading } = useQuery({
-    queryKey: ["mecanicien", "demandes"],
+  const { data: mesDemandes, isLoading: loadingMine } = useQuery({
+    queryKey: ["mecanicien", "mes-demandes"],
     queryFn: () => mecanicienService.getMyDemandes(),
+  });
+
+  const { data: disponibles, isLoading: loadingDispo } = useQuery({
+    queryKey: ["mecanicien", "demandes-disponibles"],
+    queryFn: () => mecanicienService.getAssistanceDisponibles(),
+    refetchInterval: 10000,
+  });
+
+  const toutesDemandes: Assistance[] = [
+    ...(mesDemandes || []),
+    ...(disponibles || []).filter(
+      (d) => !mesDemandes?.some((m) => m.id === d.id)
+    ),
+  ];
+
+  const prendreMutation = useMutation({
+    mutationFn: (id: string) => mecanicienService.prendreAssistance(id),
+    onSuccess: () => {
+      toast.success("Demande prise en charge");
+      queryClient.invalidateQueries({ queryKey: ["mecanicien"] });
+    },
+    onError: () => toast.error("Impossible de prendre la demande"),
   });
 
   const updateMutation = useMutation({
@@ -44,84 +67,197 @@ export default function MecanicienAssistancePage() {
       mecanicienService.updateAssistanceStatut(id, { statut }),
     onSuccess: () => {
       toast.success("Statut mis à jour");
-      queryClient.invalidateQueries({ queryKey: ["mecanicien", "demandes"] });
+      queryClient.invalidateQueries({ queryKey: ["mecanicien"] });
     },
     onError: () => toast.error("Erreur lors de la mise à jour"),
   });
 
+  const openMaps = (lat?: number | null, lng?: number | null) => {
+    if (!lat || !lng) return;
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      "_blank"
+    );
+  };
+
+  const isLoading = loadingMine || loadingDispo;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Headphones className="h-6 w-6 text-blue-600" />
+        <div className="p-2 bg-slate-50 rounded-lg">
+          <Headphones className="h-6 w-6 text-slate-700" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Demandes d&apos;assistance</h1>
-          <p className="text-gray-500">Suivez et gérez les demandes qui vous sont assignées</p>
+          <p className="text-gray-500">Demandes disponibles et interventions en cours</p>
         </div>
       </div>
 
+      <MechanicGeoWidget />
+
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-80" />
           ))}
         </div>
-      ) : demandes && demandes.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
-          {demandes.map((demande) => {
-            const next = nextStatut[demande.statut];
+      ) : toutesDemandes.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {toutesDemandes.map((demande) => {
+            const isMine = mesDemandes?.some((m) => m.id === demande.id);
+            const isTerminee = demande.statut === "terminee";
+            const isTaken = demande.statut !== "en_attente" && !isMine;
             return (
-              <Card key={demande.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4 sm:p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-gray-900">
-                          {TYPE_PANNE[demande.type_panne as keyof typeof TYPE_PANNE] ||
-                            demande.type_panne}
-                        </h3>
-                        <Badge variant={statutBadge[demande.statut] || "info"}>
-                          {STATUT_ASSISTANCE[demande.statut as keyof typeof STATUT_ASSISTANCE] ||
-                            demande.statut}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {demande.description}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-sm">
-                        <span className={urgenceColor[demande.urgence] || "text-gray-600"}>
-                          Urgence: {demande.urgence}
-                        </span>
-                        <span className="text-gray-500">
-                          Véhicule: {demande.vehicule_description}
-                        </span>
-                        <span className="text-gray-500">
-                          {formatDate(demande.created_at)}
-                        </span>
+              <Card
+                key={demande.id}
+                className={`flex flex-col hover:shadow-md transition-shadow ${
+                  isTerminee ? "opacity-60" : ""
+                }`}
+              >
+                <CardContent className="p-4 flex flex-col flex-1">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-gray-900 line-clamp-1">
+                      {TYPE_PANNE[demande.type_panne as keyof typeof TYPE_PANNE] ||
+                        demande.type_panne}
+                    </h3>
+                    <Badge
+                      variant={statutBadge[demande.statut] || "info"}
+                      className="shrink-0 text-[10px]"
+                    >
+                      {STATUT_ASSISTANCE[demande.statut as keyof typeof STATUT_ASSISTANCE] ||
+                        demande.statut}
+                    </Badge>
+                  </div>
+
+                  <Badge
+                    variant={urgenceBadge[demande.urgence] || "default"}
+                    className="text-[10px] w-fit mb-2"
+                  >
+                    {demande.urgence}
+                  </Badge>
+
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-2 flex-1">
+                    {demande.description}
+                  </p>
+
+                  <div className="text-xs text-gray-500 space-y-1 mb-3">
+                    <p className="flex items-center gap-1">
+                      <Wrench className="h-3 w-3 shrink-0" />
+                      {demande.vehicule_description}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 shrink-0" />
+                      {formatDate(demande.created_at)}
+                    </p>
+                  </div>
+
+                  {demande.demandeur_info && (
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg mb-3">
+                      {demande.demandeur_info.photo_profil ? (
+                        <img
+                          src={demande.demandeur_info.photo_profil}
+                          alt={demande.demandeur_info.nom_complet}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                          <User className="h-4 w-4 text-slate-700" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {demande.demandeur_info.nom_complet}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {demande.demandeur_info.role}
+                        </p>
                       </div>
                     </div>
-                    {next && (
+                  )}
+
+                  {isTaken && demande.mecanicien_info && (
+                    <div className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg mb-3">
+                      {demande.mecanicien_info.photo_profil ? (
+                        <img
+                          src={demande.mecanicien_info.photo_profil}
+                          alt={demande.mecanicien_info.nom_complet}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <Wrench className="h-4 w-4 text-green-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-700">
+                          Pris en charge par
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {demande.mecanicien_info.nom_complet}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-auto">
+                    {demande.statut === "en_attente" && (
                       <Button
                         size="sm"
-                        variant={next === "terminee" ? "secondary" : "default"}
+                        className="flex-1 min-h-[44px]"
+                        loading={prendreMutation.isPending}
+                        onClick={() => prendreMutation.mutate(demande.id)}
+                      >
+                        <Play className="h-3.5 w-3.5 mr-1" />
+                        Prendre en charge
+                      </Button>
+                    )}
+                    {isMine && (demande.statut === "pris_en_charge" || demande.statut === "assignee") && (
+                      <Button
+                        size="sm"
+                        className="flex-1 min-h-[44px]"
                         loading={updateMutation.isPending}
                         onClick={() =>
-                          updateMutation.mutate({ id: demande.id, statut: next })
+                          updateMutation.mutate({
+                            id: demande.id,
+                            statut: "en_cours" as StatutAssistance,
+                          })
                         }
-                        className="min-h-[44px] shrink-0"
                       >
-                        {next === "en_cours" ? (
-                          <>
-                            <Play className="h-3.5 w-3.5 mr-1" />
-                            Commencer
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                            Terminer
-                          </>
-                        )}
+                        <Play className="h-3.5 w-3.5 mr-1" />
+                        Commencer
+                      </Button>
+                    )}
+                    {isMine && demande.statut === "en_cours" && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1 min-h-[44px]"
+                        loading={updateMutation.isPending}
+                        onClick={() =>
+                          updateMutation.mutate({
+                            id: demande.id,
+                            statut: "terminee" as StatutAssistance,
+                          })
+                        }
+                      >
+                        <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                        Marquer comme Réparé
+                      </Button>
+                    )}
+                    {demande.localisation_lat && demande.localisation_lng && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`min-h-[44px] ${isTaken ? "opacity-50 cursor-not-allowed" : ""}`}
+                        disabled={isTaken}
+                        onClick={() => {
+                          if (!isTaken) openMaps(demande.localisation_lat, demande.localisation_lng);
+                        }}
+                        title={isTaken ? "Géolocalisation réservée au mécanicien assigné" : "Voir sur Google Maps"}
+                      >
+                        <Navigation className="h-3.5 w-3.5 mr-1" />
+                        {isTaken ? "Indisponible" : "Y aller"}
                       </Button>
                     )}
                   </div>

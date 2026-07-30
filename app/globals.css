@@ -8,9 +8,9 @@
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-    --primary: 224.3 76.3% 48%;
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 24.6 95% 53.1%;
+    --secondary: 38 92% 50%;
     --secondary-foreground: 60 9.1% 97.8%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -20,7 +20,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
 
@@ -53,74 +53,74 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-700 text-white px-4 py-2.5 rounded-lg font-semibold
-           hover:bg-blue-800 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+    @apply bg-slate-900 text-white px-4 py-2.5 rounded-lg font-semibold
+           hover:bg-slate-800 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           shadow-sm hover:shadow-md;
+           shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-orange-500 text-white px-4 py-2.5 rounded-lg font-semibold
-           hover:bg-orange-600 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
+    @apply bg-amber-600 text-white px-4 py-2.5 rounded-lg font-semibold
+           hover:bg-amber-700 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           shadow-sm hover:shadow-md;
+           shadow-sm;
   }
 
   .btn-outline {
-    @apply border-2 border-blue-700 text-blue-700 px-4 py-2.5 rounded-lg font-semibold
-           hover:bg-blue-50 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply border border-slate-300 text-slate-700 px-4 py-2.5 rounded-lg font-semibold
+           hover:bg-slate-50 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2;
   }
 
   .btn-ghost {
-    @apply text-gray-600 px-4 py-2 rounded-lg font-medium
-           hover:bg-gray-100 transition-colors duration-200;
+    @apply text-slate-600 px-4 py-2 rounded-lg font-medium
+           hover:bg-slate-100 transition-colors duration-200;
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-           placeholder:text-gray-400 transition-all duration-200
-           bg-white text-gray-900;
+    @apply w-full px-4 py-2.5 border border-slate-300 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent
+           placeholder:text-slate-400 transition-all duration-200
+           bg-white text-slate-900;
   }
 
   .input-field:focus {
-    @apply ring-2 ring-blue-500 border-transparent shadow-sm;
+    @apply ring-2 ring-slate-900 border-transparent shadow-sm;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
   }
 
   .card-hover {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6
-           hover:shadow-md hover:border-gray-200 transition-all duration-300;
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6
+           hover:shadow-md hover:border-slate-300 transition-all duration-300;
   }
 
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium
-           text-gray-600 hover:bg-blue-50 hover:text-blue-700
+           text-slate-300 hover:bg-slate-800 hover:text-white
            transition-colors duration-200;
   }
 
   .sidebar-link-active {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium
-           bg-blue-100 text-blue-700;
+           bg-slate-800 text-white;
   }
 
   .stat-card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-5
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-5
            hover:shadow-md transition-all duration-300;
   }
 
   .stat-number {
-    @apply text-3xl font-bold text-gray-900;
+    @apply text-3xl font-bold text-slate-900;
   }
 
   .stat-label {
-    @apply text-sm font-medium text-gray-500 mt-1;
+    @apply text-sm font-medium text-slate-500 mt-1;
   }
 }
 
@@ -138,12 +138,8 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
+    background-color: #cbd5e1;
     border-radius: 3px;
-  }
-
-  .text-gradient {
-    @apply bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent;
   }
 
   .animate-float {
@@ -159,11 +155,6 @@
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .truck-pattern {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  }
-
-  /* Safe area insets for mobile notch */
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -178,5 +169,19 @@
 
   .safe-right {
     padding-right: env(safe-area-inset-right);
+  }
+
+  .tooltip {
+    @apply relative inline-block;
+  }
+
+  .tooltip::after {
+    @apply content-[attr(data-tip)] absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2
+           whitespace-nowrap bg-slate-900 text-white text-xs rounded-md px-2.5 py-1.5
+           opacity-0 pointer-events-none transition-opacity duration-200 z-50;
+  }
+
+  .tooltip:hover::after {
+    @apply opacity-100;
   }
 }

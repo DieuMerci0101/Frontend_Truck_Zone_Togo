@@ -73,8 +73,8 @@ export default function ChauffeurOffresPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Briefcase className="h-6 w-6 text-blue-600" />
+        <div className="p-2 bg-slate-50 rounded-lg">
+          <Briefcase className="h-6 w-6 text-slate-700" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Offres disponibles</h1>
@@ -127,8 +127,8 @@ export default function ChauffeurOffresPage() {
                 </div>
                 {offre.proprietaire_info && (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg mb-3">
-                    <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <User className="h-3.5 w-3.5 text-blue-600" />
+                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                      <User className="h-3.5 w-3.5 text-slate-700" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-gray-900 truncate">{offre.proprietaire_info.nom_complet}</p>
@@ -198,9 +198,9 @@ export default function ChauffeurOffresPage() {
               <p className="text-gray-600 mt-2">{selectedOffre.description}</p>
             </div>
             {selectedOffre.proprietaire_info && (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                  <User className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-slate-700" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{selectedOffre.proprietaire_info.nom_complet}</p>
@@ -219,7 +219,7 @@ export default function ChauffeurOffresPage() {
                 <p className="text-xs text-gray-500">Salaire</p>
                 <p className="font-semibold text-green-700">{formatMoney(selectedOffre.salaire_propose)}</p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="p-3 bg-slate-50 rounded-lg">
                 <p className="text-xs text-gray-500">Zone</p>
                 <p className="font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {selectedOffre.zone_travail}</p>
               </div>
@@ -229,9 +229,9 @@ export default function ChauffeurOffresPage() {
               </div>
             </div>
             {selectedOffre.expires_at && (
-              <div className={`p-3 rounded-lg flex items-center gap-2 ${selectedOffre.is_expired ? 'bg-red-50' : 'bg-orange-50'}`}>
+              <div className={`p-3 rounded-lg flex items-center gap-2 ${selectedOffre.is_expired ? 'bg-red-50' : 'bg-amber-50'}`}>
                 <Clock className="h-4 w-4 shrink-0" />
-                <p className={`text-sm font-medium ${selectedOffre.is_expired ? 'text-red-700' : 'text-orange-700'}`}>
+                <p className={`text-sm font-medium ${selectedOffre.is_expired ? 'text-red-700' : 'text-amber-700'}`}>
                   {selectedOffre.is_expired ? "Cette offre a expiré" : `Expire le ${formatDate(selectedOffre.expires_at)}`}
                 </p>
               </div>
@@ -252,9 +252,9 @@ export default function ChauffeurOffresPage() {
       <Dialog open={showApplyDialog} onClose={() => { setShowApplyDialog(false); setApplyMessage(""); }} title="Postuler à l'offre" size="md">
         {selectedOffre && (
           <div className="space-y-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm font-semibold text-blue-900">{selectedOffre.titre}</p>
-              <p className="text-xs text-blue-600 mt-1">{formatMoney(selectedOffre.salaire_propose)} · {selectedOffre.zone_travail}</p>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-sm font-semibold text-slate-900">{selectedOffre.titre}</p>
+              <p className="text-xs text-slate-700 mt-1">{formatMoney(selectedOffre.salaire_propose)} · {selectedOffre.zone_travail}</p>
             </div>
             {hasApplied ? (
               <div className="text-center py-6">
@@ -270,7 +270,7 @@ export default function ChauffeurOffresPage() {
                     value={applyMessage}
                     onChange={(e) => setApplyMessage(e.target.value)}
                     placeholder="Présentez-vous et expliquez pourquoi vous êtes le bon candidat..."
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px] resize-none"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[100px] resize-none"
                     rows={4}
                     required
                   />

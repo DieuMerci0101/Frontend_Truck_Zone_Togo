@@ -16,6 +16,8 @@ const PUBLIC_ROUTES = [
   "/about",
 ];
 
+const VERIFICATION_ROUTES = ["/dashboard/verification"];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -49,6 +51,28 @@ export function middleware(request: NextRequest) {
       const now = Math.floor(Date.now() / 1000);
       if (payload.exp && payload.exp < now) {
         return NextResponse.redirect(new URL("/login", request.url));
+      }
+
+      const isVerificationRoute = VERIFICATION_ROUTES.some(
+        (route) => pathname === route || pathname.startsWith(route + "/")
+      );
+
+      if (!isVerificationRoute && payload.role !== "admin") {
+        if (payload.is_verified === false) {
+          return NextResponse.redirect(new URL("/dashboard/verification", request.url));
+        }
+      }
+
+      if (isVerificationRoute && payload.is_verified !== false) {
+        const rolePath: Record<string, string> = {
+          chauffeur: "/dashboard/chauffeur",
+          proprietaire: "/dashboard/proprietaire",
+          mecanicien: "/dashboard/mecanicien",
+          admin: "/dashboard/admin",
+        };
+        return NextResponse.redirect(
+          new URL(rolePath[payload.role] || "/dashboard/chauffeur", request.url)
+        );
       }
 
       if (pathname.startsWith("/dashboard/admin") && payload.role !== "admin") {

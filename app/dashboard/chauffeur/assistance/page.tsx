@@ -17,7 +17,9 @@ import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { TYPE_PANNE, URGENCE, STATUT_ASSISTANCE } from "@/constants";
-import { Wrench, Plus, MapPin, Clock, AlertTriangle, Phone } from "lucide-react";
+import { Wrench, Plus, MapPin, Clock, AlertTriangle, Phone, Locate } from "lucide-react";
+import { MapPicker } from "@/components/maps";
+import NearbyMechanicsMap from "@/components/maps/nearby-mechanics-map";
 
 const assistanceSchema = z.object({
   type_panne: z.string().min(1, "Le type de panne est requis"),
@@ -110,7 +112,7 @@ export default function ChauffeurAssistancePage() {
             <p className="text-gray-500">Demandez de l&apos;aide en cas de panne</p>
           </div>
         </div>
-        <Button onClick={() => setCreateDialog(true)} className="w-full sm:w-auto min-h-[44px] bg-red-600 hover:bg-red-700">
+        <Button onClick={() => { reset(); setCreateDialog(true); }} className="w-full sm:w-auto min-h-[44px] bg-red-600 hover:bg-red-700">
           <AlertTriangle className="h-4 w-4 mr-2" />
           Demander une assistance
         </Button>
@@ -129,6 +131,8 @@ export default function ChauffeurAssistancePage() {
           </div>
         </CardContent>
       </Card>
+
+      <NearbyMechanicsMap />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -168,7 +172,7 @@ export default function ChauffeurAssistancePage() {
           <CardContent className="py-12 text-center">
             <Wrench className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">Aucune demande d&apos;assistance</p>
-            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => setCreateDialog(true)}>
+            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => { reset(); setCreateDialog(true); }}>
               <Plus className="h-4 w-4 mr-2" /> Créer votre première demande
             </Button>
           </CardContent>
@@ -176,22 +180,34 @@ export default function ChauffeurAssistancePage() {
       )}
 
       <Dialog open={createDialog} onClose={() => setCreateDialog(false)} title="Demander une assistance mécanique" size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select label="Type de panne" options={Object.entries(TYPE_PANNE).map(([v, l]) => ({ value: v, label: l }))} error={errors.type_panne?.message} {...register("type_panne")} />
             <Select label="Niveau d'urgence" options={Object.entries(URGENCE).map(([v, l]) => ({ value: v, label: l }))} error={errors.urgence?.message} {...register("urgence")} />
           </div>
           <Textarea label="Description du problème" placeholder="Décrivez la panne en détail..." rows={4} error={errors.description?.message} {...register("description")} />
           <Input label="Description du véhicule" placeholder="Ex: Camion Renault Premium, TG-1234-AB" error={errors.vehicule_description?.message} {...register("vehicule_description")} />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Géolocalisation</label>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={requestLocation} className="min-h-[44px]">
-                <MapPin className="h-4 w-4 mr-1" />
-                {location ? "Position capturée" : "Ma position actuelle"}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Position sur la carte</label>
+              <Button type="button" variant="outline" size="sm" onClick={requestLocation} className="min-h-[36px]">
+                <Locate className="h-3.5 w-3.5 mr-1" />
+                {location ? "Recentrer" : "Ma position"}
               </Button>
-              {location && <span className="text-xs text-gray-500">{location.lat.toFixed(4)}, {location.lng.toFixed(4)}</span>}
             </div>
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <MapPicker
+                lat={location?.lat || 6.1256}
+                lng={location?.lng || 1.2254}
+                onPositionChange={(lat, lng) => setLocation({ lat, lng })}
+                height="h-48"
+              />
+            </div>
+            {location && (
+              <p className="text-xs text-gray-500 text-right">
+                {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+              </p>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
             <Button variant="outline" type="button" onClick={() => setCreateDialog(false)} className="w-full sm:w-auto min-h-[44px]">Annuler</Button>

@@ -74,7 +74,7 @@ export const chauffeurService = {
     api.get<Document[]>("/api/chauffeurs/me/documents").then((r) => r.data),
 
   uploadDocument: (formData: FormData) =>
-    api.post<{ id: string; message: string }>("/api/chauffeurs/me/documents", formData, {
+    api.post<{ id: string; message: string; url: string }>("/api/chauffeurs/me/documents", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }).then((r) => r.data),
 
@@ -132,8 +132,8 @@ export const chauffeurService = {
   setMainPhoto: (camionId: string, photoId: string) =>
     api.post<{ message: string }>(`/api/chauffeurs/me/camions/${camionId}/photos/${photoId}/principale`).then((r) => r.data),
 
-  togglePublish: (camionId: string) =>
-    api.post<{ message: string; is_public: boolean }>(`/api/chauffeurs/me/camions/${camionId}/publish`).then((r) => r.data),
+  togglePublish: (camionId: string, expires_at?: string) =>
+    api.post<{ message: string; is_public: boolean }>(`/api/chauffeurs/me/camions/${camionId}/publish`, { expires_at }).then((r) => r.data),
 
   // ── Camions publics ──
   getPublicCamions: (params?: { skip?: number; limit?: number; type_camion?: string }) =>

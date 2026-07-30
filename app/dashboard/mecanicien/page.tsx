@@ -96,8 +96,8 @@ export default function MecanicienDashboard() {
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900">{demandes?.length ?? 0}</p>
                 )}
               </div>
-              <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50">
-                <Headphones className="h-5 w-5 text-blue-600" />
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50">
+                <Headphones className="h-5 w-5 text-slate-700" />
               </div>
             </div>
           </CardContent>
@@ -139,12 +139,12 @@ export default function MecanicienDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/dashboard/mecanicien/assistance" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Headphones className="h-5 w-5 text-blue-600 shrink-0" />
+                  <Headphones className="h-5 w-5 text-slate-700 shrink-0" />
                   <span className="text-sm font-medium">Voir les demandes d&apos;assistance</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-blue-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-slate-700 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/mecanicien/profil" className="block">

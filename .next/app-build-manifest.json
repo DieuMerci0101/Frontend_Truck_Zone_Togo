@@ -16,20 +16,45 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
-    "/(auth)/login/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
+      "static/chunks/app/_not-found/page.js"
+    ],
+    "/about/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/about/page.js"
+    ],
+    "/(auth)/register/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/register/page.js"
     ],
     "/(auth)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/layout.js"
     ],
-    "/dashboard/chauffeur/page": [
+    "/chauffeurs/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/chauffeur/page.js"
+      "static/chunks/app/chauffeurs/page.js"
+    ],
+    "/chauffeurs/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/chauffeurs/[id]/page.js"
+    ],
+    "/(auth)/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/login/page.js"
+    ],
+    "/dashboard/admin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/admin/page.js"
     ],
     "/dashboard/layout": [
       "static/chunks/webpack.js",
@@ -41,75 +66,75 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/dashboard/chauffeur/offres/page": [
+    "/dashboard/admin/assistance/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/chauffeur/offres/page.js"
+      "static/chunks/app/dashboard/admin/assistance/page.js"
+    ],
+    "/dashboard/admin/notifications/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/admin/notifications/page.js"
+    ],
+    "/dashboard/admin/profil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/admin/profil/page.js"
+    ],
+    "/dashboard/admin/utilisateurs/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/admin/utilisateurs/page.js"
+    ],
+    "/(auth)/admin-login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/admin-login/page.js"
+    ],
+    "/dashboard/chauffeur/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/chauffeur/page.js"
+    ],
+    "/dashboard/chauffeur/profil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/chauffeur/profil/page.js"
+    ],
+    "/dashboard/chauffeur/camions-publics/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/chauffeur/camions-publics/page.js"
     ],
     "/dashboard/chat/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/chat/[id]/page.js"
     ],
+    "/dashboard/chat/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/chat/layout.js"
+    ],
     "/dashboard/chat/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/chat/page.js"
     ],
-    "/dashboard/chauffeur/documents/page": [
+    "/dashboard/chauffeur/offres/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/chauffeur/documents/page.js"
+      "static/chunks/app/dashboard/chauffeur/offres/page.js"
     ],
-    "/dashboard/proprietaire/page": [
+    "/dashboard/chauffeur/assistance/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/page.js"
+      "static/chunks/app/dashboard/chauffeur/assistance/page.js"
     ],
-    "/dashboard/proprietaire/chauffeurs/page": [
+    "/dashboard/chauffeur/incidents/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/chauffeurs/page.js"
-    ],
-    "/dashboard/proprietaire/documents/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/documents/page.js"
-    ],
-    "/dashboard/proprietaire/assistance/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/assistance/page.js"
-    ],
-    "/dashboard/proprietaire/incidents/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/incidents/page.js"
-    ],
-    "/dashboard/parametres/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/parametres/page.js"
-    ],
-    "/dashboard/proprietaire/camions/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/camions/page.js"
-    ],
-    "/dashboard/proprietaire/offres/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proprietaire/offres/page.js"
-    ],
-    "/dashboard/mecanicien/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/mecanicien/page.js"
-    ],
-    "/dashboard/mecanicien/profil/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/mecanicien/profil/page.js"
+      "static/chunks/app/dashboard/chauffeur/incidents/page.js"
     ]
   }
 }

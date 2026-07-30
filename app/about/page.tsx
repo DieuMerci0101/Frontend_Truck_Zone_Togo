@@ -2,40 +2,26 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  Truck,
-  Lightbulb,
-  Shield,
-  Users,
-  Wrench,
-  ArrowRight,
-  Target,
-  Eye,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 const values = [
   {
-    icon: Lightbulb,
     title: "Innovation",
     description:
       "Nous utilisons la technologie pour moderniser le secteur du transport routier au Togo.",
   },
   {
-    icon: Shield,
     title: "Fiabilité",
     description:
       "Chaque professionnel est vérifié et noté pour garantir un service de qualité.",
   },
   {
-    icon: Wrench,
     title: "Sécurité",
     description:
       "La sécurité est au cœur de nos préoccupations, avec des mécaniciens disponibles 24h/24.",
   },
   {
-    icon: Users,
     title: "Communauté",
     description:
       "Nous construisons une communauté solide de professionnels du transport.",
@@ -44,19 +30,26 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-10 sm:py-12 lg:py-16">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+      <div className="bg-slate-900 text-white py-10 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-white mb-4 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+              Retour à l&apos;accueil
+            </Link>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
               À propos de{" "}
-              <span className="text-orange-400">Togo Truck Connect</span>
+              <span className="text-amber-400">Togo Truck Connect</span>
             </h1>
-            <p className="text-blue-200 text-sm sm:text-base lg:text-lg max-w-3xl mx-auto">
+            <p className="text-slate-300 text-sm sm:text-base lg:text-lg max-w-3xl mx-auto">
               La plateforme qui révolutionne le transport routier au Togo en
               connectant chauffeurs, propriétaires de camions et mécaniciens.
             </p>
@@ -71,13 +64,8 @@ export default function AboutPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 bg-blue-700 rounded-lg flex items-center justify-center">
-                <Target className="h-5 w-5 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Notre Mission</h2>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Notre Mission</h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               Simplifier et moderniser le transport routier au Togo en créant
               une plateforme qui connecte directement les chauffeurs, les
               propriétaires de camions et les mécaniciens. Nous voulons rendre
@@ -91,13 +79,8 @@ export default function AboutPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <Eye className="h-5 w-5 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Notre Vision</h2>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Notre Vision</h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               Devenir la référence en Afrique de l&apos;Ouest pour la connexion
               des professionnels du transport routier. Nous aspirons à un
               écosystème où chaque acteur du transport peut trouver les
@@ -114,10 +97,10 @@ export default function AboutPage() {
             transition={{ delay: 0.3 }}
             className="text-center mb-8 sm:mb-10 lg:mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4">
               Nos Valeurs
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-slate-500 max-w-2xl mx-auto">
               Les principes qui guident notre travail au quotidien
             </p>
           </motion.div>
@@ -129,18 +112,12 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
+                className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 text-center"
               >
-                <Card className="h-full text-center hover:shadow-md transition-shadow">
-                  <CardContent className="p-5 sm:p-6">
-                    <div className="h-12 w-12 sm:h-14 sm:w-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                      <value.icon className="h-6 w-6 sm:h-7 sm:w-7 text-blue-700" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
-                      {value.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500">{value.description}</p>
-                  </CardContent>
-                </Card>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                  {value.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500">{value.description}</p>
               </motion.div>
             ))}
           </div>
@@ -150,19 +127,18 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 text-center text-white"
+          className="bg-slate-900 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 text-center text-white"
         >
-          <Truck className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-orange-400" />
           <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">
             Prêt à rejoindre Togo Truck Connect ?
           </h2>
-          <p className="text-blue-200 text-sm sm:text-base mb-6 sm:mb-8 max-w-xl mx-auto">
+          <p className="text-slate-300 text-sm sm:text-base mb-6 sm:mb-8 max-w-xl mx-auto">
             Créez votre compte gratuitement et commencez à utiliser la
             plateforme dès aujourd&apos;hui.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link href="/register" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full bg-orange-500 hover:bg-orange-600 min-h-[44px]">
+              <Button size="lg" className="w-full bg-amber-600 hover:bg-amber-700 text-white border-0 min-h-[44px]">
                 Créer un compte
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -171,7 +147,7 @@ export default function AboutPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full border-white text-white hover:bg-white/10 min-h-[44px]"
+                className="w-full border-slate-400 text-slate-200 hover:bg-slate-800 min-h-[44px]"
               >
                 Parcourir les chauffeurs
               </Button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { useAuth } from "@/providers/auth-provider";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +48,6 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Offres", href: "/dashboard/chauffeur/offres", icon: Briefcase },
     { label: "Assistance", href: "/dashboard/chauffeur/assistance", icon: Headphones },
     { label: "Incidents", href: "/dashboard/chauffeur/incidents", icon: AlertTriangle },
-    { label: "Paramètres", href: "/dashboard/parametres", icon: Settings },
   ],
   proprietaire: [
     { label: "Dashboard", href: "/dashboard/proprietaire", icon: LayoutDashboard },
@@ -60,7 +59,6 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Messagerie", href: "/dashboard/chat", icon: MessageSquare },
     { label: "Assistance", href: "/dashboard/proprietaire/assistance", icon: Headphones },
     { label: "Incidents", href: "/dashboard/proprietaire/incidents", icon: AlertTriangle },
-    { label: "Paramètres", href: "/dashboard/parametres", icon: Settings },
   ],
   mecanicien: [
     { label: "Dashboard", href: "/dashboard/mecanicien", icon: LayoutDashboard },
@@ -69,7 +67,6 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Assistance", href: "/dashboard/mecanicien/assistance", icon: Headphones },
     { label: "Messagerie", href: "/dashboard/chat", icon: MessageSquare },
     { label: "Localisation", href: "/dashboard/mecanicien/profil", icon: MapPin },
-    { label: "Paramètres", href: "/dashboard/parametres", icon: Settings },
   ],
   admin: [
     { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
@@ -79,7 +76,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Assistance", href: "/dashboard/admin/assistance", icon: Headphones },
     { label: "Notifications", href: "/dashboard/admin/notifications", icon: BarChart3 },
     { label: "Statistiques", href: "/dashboard/admin", icon: BarChart3 },
-    { label: "Paramètres", href: "/dashboard/parametres", icon: Settings },
+    { label: "Profil", href: "/dashboard/admin/profil", icon: User },
   ],
 };
 
@@ -106,8 +103,10 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <Link href="/" className="flex items-center gap-2">
-          <Truck className="h-6 w-6 text-blue-400" />
-          <span className="text-xl font-bold text-white">TTC</span>
+          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
+            <Truck className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-lg font-bold text-white">TTC</span>
         </Link>
         <button
           onClick={onClose}
@@ -132,11 +131,11 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px]",
                   isActive
-                    ? "bg-blue-100 text-blue-700"
+                    ? "bg-slate-800 text-white"
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                  <item.icon className="h-5 w-5 shrink-0 text-gray-400" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -177,28 +176,19 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
       </aside>
 
       {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={onClose}
-            />
-            <motion.aside
-              initial={{ x: -256 }}
-              animate={{ x: 0 }}
-              exit={{ x: -256 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-64 max-w-[85vw] bg-gray-900 z-50 lg:hidden overflow-y-auto"
-            >
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 lg:hidden ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 w-64 max-w-[85vw] bg-gray-900 z-50 transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {sidebarContent}
+      </aside>
 
       <LogoutModal
         open={showLogoutModal}

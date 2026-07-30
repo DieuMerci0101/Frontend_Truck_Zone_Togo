@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Truck, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+
+import { Truck, Menu, X } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useScrollPosition } from "@/hooks/use-scroll";
 
@@ -36,45 +36,47 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+      <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/95 backdrop-blur-md shadow-md border-b border-gray-100"
-            : "bg-transparent"
+            ? "bg-white border-b border-slate-200 shadow-sm"
+            : "bg-slate-900"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-secondary-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-shadow duration-300">
-                <Truck className="h-5 w-5 text-white" />
+            <Link href="/" className="flex items-center gap-3 lg:mr-8">
+              {/* Future logo: replace div below with <img src="/images/logo.png" alt="Togo Truck Connect" className="h-9 w-auto" /> */}
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                isScrolled ? "bg-slate-900" : "bg-amber-600"
+              }`}>
+                <Truck className="h-6 w-6 text-white" />
               </div>
-              <span
-                className={`text-xl font-bold transition-colors duration-300 ${
-                  isScrolled ? "text-gradient" : "text-white"
-                }`}
-              >
-                Togo Truck Connect
-              </span>
+              <div className="leading-tight">
+                <div className={`text-sm font-bold leading-none ${
+                  isScrolled ? "text-slate-900" : "text-white"
+                }`}>
+                  Togo Truck
+                </div>
+                <div className={`text-sm font-bold leading-none ${
+                  isScrolled ? "text-slate-500" : "text-slate-400"
+                }`}>
+                  Connect
+                </div>
+              </div>
             </Link>
 
-            {/* Desktop Nav */}
             <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
-                const isActive =
-                  !link.isHash && pathname === link.href;
+                const isActive = !link.isHash && pathname === link.href;
                 return link.isHash ? (
                   <button
                     key={link.label}
                     onClick={() => handleNavClick(link.href, link.isHash)}
-                    className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isScrolled
-                        ? "text-gray-600 hover:text-blue-700 hover:bg-blue-50"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                        ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800"
                     }`}
                   >
                     {link.label}
@@ -83,14 +85,14 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive
                         ? isScrolled
-                          ? "text-blue-700 bg-blue-50"
-                          : "text-white bg-white/15"
+                          ? "text-slate-900 bg-slate-100"
+                          : "text-white bg-slate-800"
                         : isScrolled
-                        ? "text-gray-600 hover:text-blue-700 hover:bg-blue-50"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                        ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800"
                     }`}
                   >
                     {link.label}
@@ -99,30 +101,27 @@ export default function Navbar() {
               })}
             </div>
 
-            {/* Desktop Right Side */}
             <div className="hidden lg:flex items-center gap-3">
               {isAuthenticated ? (
                 <>
                   <Link
                     href="/dashboard"
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                       isScrolled
-                        ? "text-blue-700 hover:bg-blue-50"
-                        : "text-white hover:bg-white/10"
+                        ? "text-slate-700 hover:bg-slate-100"
+                        : "text-slate-300 hover:bg-slate-800"
                     }`}
                   >
-                    <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Link>
                   <button
                     onClick={() => logout()}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                       isScrolled
                         ? "text-red-600 hover:bg-red-50"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                        : "text-slate-300 hover:bg-slate-800"
                     }`}
                   >
-                    <LogOut className="h-4 w-4" />
                     Déconnexion
                   </button>
                 </>
@@ -130,17 +129,18 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className={`px-5 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
+                    className={`px-5 py-2 rounded-lg text-sm font-semibold border transition-colors ${
                       isScrolled
-                        ? "border-blue-700 text-blue-700 hover:bg-blue-50"
-                        : "border-white/40 text-white hover:bg-white/10"
+                        ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+                        : "border-slate-400 text-slate-200 hover:bg-slate-800"
                     }`}
                   >
                     Connexion
                   </Link>
                   <Link
                     href="/register"
-                    className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="px-5 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm"
+                    data-tip="Créez votre compte gratuit"
                   >
                     Inscription
                   </Link>
@@ -148,136 +148,123 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className={`lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-lg transition-colors ${
                 isScrolled
-                  ? "text-gray-700 hover:bg-gray-100"
-                  : "text-white hover:bg-white/10"
+                  ? "text-slate-700 hover:bg-slate-100"
+                  : "text-white hover:bg-slate-800"
               }`}
             >
-              {mobileOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-2xl lg:hidden"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-secondary-500 rounded-lg flex items-center justify-center">
-                    <Truck className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-gradient font-bold">
-                    Togo Truck Connect
-                  </span>
-                </div>
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 lg:hidden ${
+          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileOpen(false)}
+      />
+      <div
+        className={`fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-xl transition-transform duration-300 ease-in-out lg:hidden ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+              <Truck className="h-4 w-4 text-white" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-bold text-slate-900 leading-none">
+                Togo Truck
+              </div>
+              <div className="text-sm font-bold text-slate-500 leading-none">
+                Connect
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-1">
+          {navLinks.map((link) => {
+            if (link.isHash) {
+              return (
                 <button
-                  onClick={() => setMobileOpen(false)}
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                  key={link.label}
+                  onClick={() => handleNavClick(link.href, link.isHash)}
+                  className="w-full text-left px-4 py-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-lg font-medium transition-colors min-h-[44px]"
                 >
-                  <X className="h-5 w-5" />
+                  {link.label}
                 </button>
-              </div>
+              );
+            }
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-medium transition-colors min-h-[44px] ${
+                  pathname === link.href
+                    ? "bg-slate-100 text-slate-900"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
 
-              <div className="p-4 space-y-1">
-                {navLinks.map((link) => {
-                  if (link.isHash) {
-                    return (
-                      <button
-                        key={link.label}
-                        onClick={() => handleNavClick(link.href, link.isHash)}
-                        className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg font-medium transition-colors"
-                      >
-                        {link.label}
-                      </button>
-                    );
-                  }
-                  return (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
-                        pathname === link.href
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 space-y-3">
-                {isAuthenticated ? (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        logout();
-                      }}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Déconnexion
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileOpen(false)}
-                      className="block w-full py-2.5 text-center border-2 border-blue-700 text-blue-700 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-                    >
-                      Connexion
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMobileOpen(false)}
-                      className="block w-full py-2.5 text-center bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
-                    >
-                      Inscription
-                    </Link>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 space-y-3 bg-white">
+          {isAuthenticated ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full py-2.5 text-center bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors min-h-[44px]"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                }}
+                className="w-full py-2.5 text-center text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition-colors min-h-[44px]"
+              >
+                Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full py-2.5 text-center border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 transition-colors min-h-[44px]"
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full py-2.5 text-center bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors min-h-[44px]"
+              >
+                Inscription
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
     </>
   );
 }

@@ -1,11 +1,8 @@
 {
   "/page": "app/page.js",
-  "/dashboard/proprietaire/camions/page": "app/dashboard/proprietaire/camions/page.js",
-  "/dashboard/proprietaire/offres/page": "app/dashboard/proprietaire/offres/page.js",
-  "/dashboard/chat/page": "app/dashboard/chat/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/dashboard/mecanicien/page": "app/dashboard/mecanicien/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/chat/[id]/page": "app/dashboard/chat/[id]/page.js",
-  "/dashboard/mecanicien/profil/page": "app/dashboard/mecanicien/profil/page.js"
+  "/dashboard/chauffeur/camions-publics/page": "app/dashboard/chauffeur/camions-publics/page.js",
+  "/dashboard/chauffeur/offres/page": "app/dashboard/chauffeur/offres/page.js",
+  "/dashboard/chauffeur/assistance/page": "app/dashboard/chauffeur/assistance/page.js",
+  "/dashboard/chauffeur/incidents/page": "app/dashboard/chauffeur/incidents/page.js",
+  "/dashboard/chat/page": "app/dashboard/chat/page.js"
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardTopbar } from "@/components/layout/dashboard-topbar";
@@ -12,7 +13,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useAuth();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const isVerificationPage = pathname === "/dashboard/verification";
 
   if (isLoading) {
     return (
@@ -41,6 +45,10 @@ export default function DashboardLayout({
         </div>
       </div>
     );
+  }
+
+  if (isVerificationPage) {
+    return <>{children}</>;
   }
 
   return (

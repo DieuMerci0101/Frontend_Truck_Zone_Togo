@@ -22,8 +22,8 @@ export default function AdminDashboard() {
       title: "Total utilisateurs",
       value: stats?.total_utilisateurs,
       icon: Users,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-slate-700",
+      bg: "bg-slate-50",
     },
     {
       title: "Chauffeurs",
@@ -36,8 +36,8 @@ export default function AdminDashboard() {
       title: "Propriétaires",
       value: stats?.proprietaires,
       icon: Truck,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
     {
       title: "Mécaniciens",
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {[
                   { label: "Chauffeurs", value: stats?.chauffeurs || 0, color: "bg-green-500" },
-                  { label: "Propriétaires", value: stats?.proprietaires || 0, color: "bg-orange-500" },
+                  { label: "Propriétaires", value: stats?.proprietaires || 0, color: "bg-amber-600" },
                   { label: "Mécaniciens", value: stats?.mecaniciens || 0, color: "bg-purple-500" },
                   { label: "Admins", value: stats?.admins || 0, color: "bg-red-500" },
                 ].map((item) => {

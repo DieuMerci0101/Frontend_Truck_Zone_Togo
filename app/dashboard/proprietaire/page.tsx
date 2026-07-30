@@ -36,8 +36,8 @@ export default function ProprietaireDashboard() {
       title: "Camions",
       value: loadingCamions ? null : camions?.length ?? 0,
       icon: Truck,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-slate-700",
+      bg: "bg-slate-50",
     },
     {
       title: "Offres actives",
@@ -59,8 +59,8 @@ export default function ProprietaireDashboard() {
       title: "Chauffeurs",
       value: null,
       icon: Users,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
   ];
 
@@ -148,12 +148,12 @@ export default function ProprietaireDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/dashboard/proprietaire/camions" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Truck className="h-5 w-5 text-blue-600 shrink-0" />
+                  <Truck className="h-5 w-5 text-slate-700 shrink-0" />
                   <span className="text-sm font-medium">Gérer mes camions</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-blue-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-slate-700 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/proprietaire/offres" className="block">
@@ -166,12 +166,12 @@ export default function ProprietaireDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/proprietaire/chauffeurs" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-orange-600 shrink-0" />
+                  <Users className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="text-sm font-medium">Rechercher des chauffeurs</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-orange-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
               </div>
             </Link>
           </CardContent>

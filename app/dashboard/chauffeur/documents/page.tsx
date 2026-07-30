@@ -77,8 +77,8 @@ export default function ChauffeurDocumentsPage() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <FileText className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <FileText className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Mes documents</h1>
@@ -203,7 +203,7 @@ export default function ChauffeurDocumentsPage() {
                 onClick={() => setSelectedType(doc.type)}
                 className={`p-3 rounded-lg border text-left transition-colors min-h-[44px] ${
                   selectedType === doc.type
-                    ? "border-blue-500 bg-blue-50"
+                    ? "border-amber-500 bg-amber-50"
                     : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -218,7 +218,7 @@ export default function ChauffeurDocumentsPage() {
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 min-h-[44px]"
+              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 p-2 min-h-[44px]"
             />
             {selectedFile && (
               <p className="text-sm text-gray-500 mt-1 truncate">{selectedFile.name}</p>

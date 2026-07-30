@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Mail, Lock, LogIn, Truck, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -51,24 +51,12 @@ export default function LoginPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Mobile Logo */}
-      <div className="lg:hidden text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
-            <Truck className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-xl font-bold text-gray-900">
-            Togo Truck Connect
-          </span>
-        </Link>
-      </div>
-
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
           Bonjour !
         </h1>
-        <p className="text-gray-500">
+        <p className="text-slate-500">
           Connectez-vous pour accéder à votre espace
         </p>
       </div>
@@ -77,20 +65,17 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Email */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
             Adresse email
           </label>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="email"
-              placeholder="votre@email.com"
-              className={`w-full pl-12 pr-4 py-3.5 bg-white border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm ${
-                errors.email ? "border-red-400" : "border-gray-200"
-              }`}
-              {...register("email")}
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="votre@email.com"
+            className={`w-full px-4 py-3.5 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+              errors.email ? "border-red-400" : "border-slate-200"
+            }`}
+            {...register("email")}
+          />
           {errors.email && (
             <p className="mt-1.5 text-xs text-red-500 font-medium">
               {errors.email.message}
@@ -101,30 +86,29 @@ export default function LoginPage() {
         {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-semibold text-gray-700">
+            <label className="text-sm font-semibold text-slate-700">
               Mot de passe
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              className="text-xs text-amber-600 hover:text-amber-800 font-medium"
             >
               Mot de passe oublié ?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-12 pr-12 py-3.5 bg-white border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm ${
-                errors.password ? "border-red-400" : "border-gray-200"
+              className={`w-full px-4 pr-12 py-3.5 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                errors.password ? "border-red-400" : "border-slate-200"
               }`}
               {...register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -140,33 +124,30 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-2 bg-blue-700 text-white py-3.5 rounded-xl font-semibold hover:bg-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 min-h-[44px]"
+          className="w-full bg-slate-900 text-white py-3.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
         >
           {isSubmitting ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
           ) : (
-            <>
-              <LogIn className="h-5 w-5" />
-              Se connecter
-            </>
+            "Se connecter"
           )}
         </button>
       </form>
 
       {/* Divider */}
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400 font-medium">OU</span>
-        <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex-1 h-px bg-slate-200" />
+        <span className="text-xs text-slate-400 font-medium">OU</span>
+        <div className="flex-1 h-px bg-slate-200" />
       </div>
 
       {/* Register Link */}
       <div className="text-center">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           Pas encore de compte ?{" "}
           <Link
             href="/register"
-            className="text-blue-600 hover:text-blue-800 font-bold"
+            className="text-amber-600 hover:text-amber-800 font-bold"
           >
             Créer un compte gratuit
           </Link>
@@ -177,9 +158,8 @@ export default function LoginPage() {
       <div className="mt-4 text-center">
         <Link
           href="/admin-login"
-          className="text-xs text-gray-400 hover:text-gray-600 font-medium inline-flex items-center gap-1"
+          className="text-xs text-slate-400 hover:text-slate-600 font-medium"
         >
-          <Lock className="h-3 w-3" />
           Espace administrateur
         </Link>
       </div>
@@ -188,9 +168,8 @@ export default function LoginPage() {
       <div className="mt-4 text-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 font-medium"
+          className="text-xs text-slate-400 hover:text-slate-600 font-medium"
         >
-          <ArrowLeft className="h-3 w-3" />
           Retour à l&apos;accueil
         </Link>
       </div>

@@ -74,8 +74,8 @@ export default function AdminNotificationsPage() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <Bell className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <Bell className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
@@ -109,7 +109,7 @@ export default function AdminNotificationsPage() {
       ) : notifications && notifications.length > 0 ? (
         <div className="space-y-3">
           {notifications.map((n) => (
-            <Card key={n.id} className={`${!n.lu ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''}`}>
+            <Card key={n.id} className={`${!n.lu ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''}`}>
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
@@ -120,7 +120,7 @@ export default function AdminNotificationsPage() {
                       <Badge variant={typeVariant[n.type] || "info"} className="text-[10px]">
                         {n.type}
                       </Badge>
-                      {!n.lu && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
+                      {!n.lu && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{n.contenu}</p>
                     <p className="text-xs text-gray-400 mt-1">{formatDate(n.created_at)}</p>

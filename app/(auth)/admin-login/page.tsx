@@ -7,11 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Shield, Mail, Lock, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const adminLoginSchema = z.object({
   email: z.string().email("Adresse email invalide"),
@@ -54,54 +51,76 @@ export default function AdminLoginPage() {
     >
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex justify-center mb-3 sm:mb-4">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-            <Shield className="h-8 w-8 sm:h-9 sm:w-9 text-white" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">A</span>
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Espace Administrateur</h1>
-        <p className="text-sm sm:text-base text-gray-500 mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Espace Administrateur</h1>
+        <p className="text-sm sm:text-base text-slate-500 mt-1">
           Connectez-vous pour gérer la plateforme
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
-        <Input
-          label="Email administrateur"
-          type="email"
-          icon={Mail}
-          placeholder="admin@togotruckconnect.com"
-          error={errors.email?.message}
-          {...register("email")}
-        />
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+            Email administrateur
+          </label>
+          <input
+            type="email"
+            placeholder="admin@togotruckconnect.com"
+            className={`w-full px-4 py-3 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+              errors.email ? "border-red-400" : "border-slate-200"
+            }`}
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-500 font-medium">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
 
-        <Input
-          label="Mot de passe"
-          type="password"
-          icon={Lock}
-          placeholder="••••••••"
-          error={errors.password?.message}
-          {...register("password")}
-        />
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+            Mot de passe
+          </label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            className={`w-full px-4 py-3 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+              errors.password ? "border-red-400" : "border-slate-200"
+            }`}
+            {...register("password")}
+          />
+          {errors.password && (
+            <p className="mt-1 text-xs text-red-500 font-medium">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-        <Button
+        <button
           type="submit"
-          className="w-full min-h-[44px]"
-          size="lg"
-          loading={isSubmitting}
+          disabled={isSubmitting}
+          className="w-full bg-slate-900 text-white py-3.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
         >
-          Se connecter
-        </Button>
+          {isSubmitting ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+          ) : (
+            "Se connecter"
+          )}
+        </button>
       </form>
 
       <div className="mt-5 sm:mt-6 text-center space-y-3">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1 text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-xs sm:text-sm text-amber-600 hover:text-amber-800 font-medium"
         >
-          <ArrowLeft className="h-4 w-4" />
           Retour à la connexion
         </Link>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-slate-400">
           Accès réservé aux administrateurs autorisés
         </p>
       </div>

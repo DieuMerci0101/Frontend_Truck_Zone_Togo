@@ -15,7 +15,7 @@ import ContactSection from "@/components/landing/contact-section";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white">
       <Navbar />
       <main>
         <HeroSection />

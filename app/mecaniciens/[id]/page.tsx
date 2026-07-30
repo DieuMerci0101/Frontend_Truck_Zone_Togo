@@ -1,16 +1,12 @@
 "use client";
 
-import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   MapPin,
   Wrench,
-  Shield,
-  Clock,
   Euro,
   Award,
   Phone,
@@ -39,9 +35,9 @@ function getInitials(name: string) {
 export default function MecanicienDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = use(params);
+  const { id } = params;
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -52,7 +48,7 @@ export default function MecanicienDetailPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <Skeleton className="h-8 w-32 mb-6" />
           <Card>
@@ -80,10 +76,9 @@ export default function MecanicienDetailPage({
 
   if (!mecanicien) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <Wrench className="h-14 w-14 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
             Mécanicien non trouvé
           </h2>
           <Link href="/mecaniciens">
@@ -98,15 +93,15 @@ export default function MecanicienDetailPage({
     isAuthenticated && (user?.role === "chauffeur" || user?.role === "proprietaire");
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium mb-4 sm:mb-6 min-h-[44px]"
+        <Link
+          href="/mecaniciens"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 sm:mb-6 transition-colors min-h-[44px]"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </button>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Retour à la liste
+        </Link>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -115,7 +110,7 @@ export default function MecanicienDetailPage({
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xl sm:text-2xl flex-shrink-0 overflow-hidden">
+                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xl sm:text-2xl flex-shrink-0 overflow-hidden">
                   {mecanicien.photo_url ? (
                     <img
                       src={mecanicien.photo_url}
@@ -135,7 +130,7 @@ export default function MecanicienDetailPage({
                       {DISPONIBILITE_MECANICIEN[mecanicien.disponibilite]}
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-slate-500">
                     <span className="flex items-center gap-1">
                       <Wrench className="h-4 w-4" />
                       {mecanicien.annees_experience} ans d&apos;expérience
@@ -155,14 +150,14 @@ export default function MecanicienDetailPage({
             <CardContent className="space-y-5 sm:space-y-6">
               {mecanicien.bio && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">À propos</h3>
-                  <p className="text-sm sm:text-base text-gray-600">{mecanicien.bio}</p>
+                  <h3 className="font-semibold text-slate-900 mb-2">À propos</h3>
+                  <p className="text-sm sm:text-base text-slate-600">{mecanicien.bio}</p>
                 </div>
               )}
 
               {mecanicien.specialites?.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
+                  <h3 className="font-semibold text-slate-900 mb-2">
                     Spécialités
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -177,7 +172,7 @@ export default function MecanicienDetailPage({
 
               {mecanicien.certifications && mecanicien.certifications.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
+                  <h3 className="font-semibold text-slate-900 mb-2">
                     Certifications
                   </h3>
                   <div className="flex flex-wrap gap-2">

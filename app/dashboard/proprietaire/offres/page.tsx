@@ -19,6 +19,8 @@ import { formatMoney, formatDate } from "@/lib/utils";
 import { TYPE_CONTRAT, ZONES_CIRCULATION, API_URL } from "@/constants";
 import { Briefcase, Plus, Pencil, Trash2, Clock } from "lucide-react";
 import type { Offre, OffreCreate, OffreUpdate, Camion } from "@/types";
+import PageAnimation from "@/components/ui/page-animation";
+import CardAnimation from "@/components/ui/card-animation";
 
 function resolvePhotoUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -158,18 +160,18 @@ export default function ProprietaireOffresPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageAnimation className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <Briefcase className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <Briefcase className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Mes offres</h1>
             <p className="text-gray-500">Publiez et gérez vos offres d&apos;emploi</p>
           </div>
         </div>
-        <Button onClick={() => { setSelectedCamionId(""); setDialogOpen(true); }} className="w-full sm:w-auto min-h-[44px]">
+        <Button onClick={() => { reset(); setSelectedCamionId(""); setDialogOpen(true); }} className="w-full sm:w-auto min-h-[44px]">
           <Plus className="h-4 w-4 mr-2" />
           Publier une offre
         </Button>
@@ -181,10 +183,11 @@ export default function ProprietaireOffresPage() {
         </div>
       ) : offres && offres.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {offres.map((offre) => {
+          {offres.map((offre, i) => {
             const canEdit = isEditable(offre.created_at);
             const minsLeft = minutesRemaining(offre.created_at);
             return (
+              <CardAnimation index={i}>
               <Card key={offre.id} className="flex flex-col hover:shadow-md transition-shadow">
                 <CardContent className="p-4 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-2 gap-2">
@@ -222,6 +225,7 @@ export default function ProprietaireOffresPage() {
                   </div>
                 </CardContent>
               </Card>
+              </CardAnimation>
             );
           })}
         </div>
@@ -230,7 +234,7 @@ export default function ProprietaireOffresPage() {
           <CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">Aucune offre publiée</p>
-            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => { setSelectedCamionId(""); setDialogOpen(true); }}>
+            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => { reset(); setSelectedCamionId(""); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" /> Publier votre première offre
             </Button>
           </CardContent>
@@ -239,7 +243,7 @@ export default function ProprietaireOffresPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={closeDialog} title={editingOffre ? "Modifier l'offre" : "Publier une offre"} size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <Input label="Titre" placeholder="Chauffeur pour trajet Lomé-Kara" error={errors.titre?.message} {...register("titre")} />
           <Textarea label="Description" placeholder="Décrivez les conditions et exigences..." rows={4} error={errors.description?.message} {...register("description")} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -285,6 +289,6 @@ export default function ProprietaireOffresPage() {
           <Button variant="destructive" loading={deleteMutation.isPending} onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)} className="w-full sm:w-auto min-h-[44px]">Supprimer</Button>
         </div>
       </Dialog>
-    </div>
+    </PageAnimation>
   );
 }

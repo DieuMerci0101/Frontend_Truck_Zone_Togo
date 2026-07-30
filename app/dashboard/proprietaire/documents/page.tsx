@@ -3,16 +3,17 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { chauffeurService } from "@/services/chauffeur.service";
+import { proprietaireService } from "@/services/proprietaire.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { STATUT_DOCUMENT, TYPE_DOCUMENT } from "@/constants";
-import { FileText, Upload, CheckCircle, XCircle, Clock, Shield } from "lucide-react";
+import {
+  FileText, Upload, CheckCircle, XCircle, Clock, Shield, Building
+} from "lucide-react";
 
 const statusVariant: Record<string, "success" | "destructive" | "warning" | "info"> = {
   valide: "success",
@@ -28,31 +29,29 @@ const statusIcon: Record<string, React.ElementType> = {
 
 const REQUIRED_DOCS = [
   { type: "cni", label: "Carte Nationale d'Identité", description: "Pièce d'identité officielle en cours de validité" },
-  { type: "permis", label: "Permis de conduire", description: "Permis de conduire valide pour la catégorie C ou CE" },
-  { type: "certificat", label: "Certificat médical", description: "Certificat d'aptitude médicale de conduite" },
-  { type: "assurance", label: "Assurance véhicule", description: "Attestation d'assurance du véhicule" },
+  { type: "certificat", label: "Registre du commerce", description: "Preuve d'immatriculation de votre entreprise" },
 ];
 
 export default function ProprietaireDocumentsPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDialog, setUploadDialog] = useState(false);
-  const [selectedType, setSelectedType] = useState("permis");
+  const [selectedType, setSelectedType] = useState("cni");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["proprietaire", "documents"],
-    queryFn: () => chauffeurService.getDocuments(),
+    queryFn: () => proprietaireService.getDocuments(),
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => chauffeurService.uploadDocument(formData),
+    mutationFn: (formData: FormData) => proprietaireService.uploadDocument(formData),
     onSuccess: () => {
       toast.success("Document envoyé avec succès");
       queryClient.invalidateQueries({ queryKey: ["proprietaire", "documents"] });
       setUploadDialog(false);
       setSelectedFile(null);
-      setSelectedType("permis");
+      setSelectedType("cni");
     },
     onError: () => toast.error("Erreur lors de l'envoi du document"),
   });
@@ -69,12 +68,17 @@ export default function ProprietaireDocumentsPage() {
     return documents?.find((d) => d.type_document === type);
   };
 
+  const allValidated = REQUIRED_DOCS.every((doc) => {
+    const existing = getDocStatus(doc.type);
+    return existing && existing.statut === "valide";
+  });
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <FileText className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <FileText className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Mes documents</h1>
@@ -87,7 +91,36 @@ export default function ProprietaireDocumentsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {!allValidated && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Documents requis</p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Pour accéder à toutes les fonctionnalités, veuillez soumettre vos documents obligatoires. Un administrateur validera vos documents.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {allValidated && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <p className="text-sm font-semibold text-green-800">
+                Tous vos documents sont validés. Votre compte est vérifié !
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {REQUIRED_DOCS.map((doc) => {
           const existing = getDocStatus(doc.type);
           const StatusIcon = existing ? (statusIcon[existing.statut] || Clock) : Clock;
@@ -96,7 +129,7 @@ export default function ProprietaireDocumentsPage() {
               <CardContent className="p-4">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="p-2 bg-gray-100 rounded-lg shrink-0">
-                    <FileText className="h-5 w-5 text-gray-600" />
+                    <Building className="h-5 w-5 text-gray-600" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 text-sm">{doc.label}</p>
@@ -104,7 +137,7 @@ export default function ProprietaireDocumentsPage() {
                   </div>
                 </div>
                 {existing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant={statusVariant[existing.statut] || "info"}>
                       <StatusIcon className="h-3 w-3 mr-1" />
                       {STATUT_DOCUMENT[existing.statut as keyof typeof STATUT_DOCUMENT] || existing.statut}
@@ -112,12 +145,10 @@ export default function ProprietaireDocumentsPage() {
                     <span className="text-xs text-gray-400">{formatDate(existing.created_at)}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Non soumis
-                    </Badge>
-                  </div>
+                  <Badge variant="destructive">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    Non soumis
+                  </Badge>
                 )}
               </CardContent>
             </Card>
@@ -127,7 +158,7 @@ export default function ProprietaireDocumentsPage() {
 
       {documents && documents.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-900">Documents soumis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Historique</h2>
           {documents.map((doc) => {
             const StatusIcon = statusIcon[doc.statut] || Clock;
             return (
@@ -147,12 +178,10 @@ export default function ProprietaireDocumentsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={statusVariant[doc.statut] || "info"}>
-                        <StatusIcon className="h-3 w-3 mr-1" />
-                        {STATUT_DOCUMENT[doc.statut as keyof typeof STATUT_DOCUMENT] || doc.statut}
-                      </Badge>
-                    </div>
+                    <Badge variant={statusVariant[doc.statut] || "info"}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {STATUT_DOCUMENT[doc.statut as keyof typeof STATUT_DOCUMENT] || doc.statut}
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -167,12 +196,21 @@ export default function ProprietaireDocumentsPage() {
         title="Uploader un document"
       >
         <div className="space-y-4 p-1">
-          <Select
-            label="Type de document"
-            options={Object.entries(TYPE_DOCUMENT).map(([v, l]) => ({ value: v, label: l }))}
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-          />
+          <div className="grid grid-cols-2 gap-2">
+            {REQUIRED_DOCS.map((doc) => (
+              <button
+                key={doc.type}
+                onClick={() => setSelectedType(doc.type)}
+                className={`p-3 rounded-lg border text-left transition-colors min-h-[44px] ${
+                  selectedType === doc.type
+                    ? "border-amber-500 bg-amber-50"
+                    : "border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                <p className="text-xs font-medium text-gray-900">{doc.label}</p>
+              </button>
+            ))}
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Fichier</label>
             <input
@@ -180,7 +218,7 @@ export default function ProprietaireDocumentsPage() {
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 min-h-[44px]"
+              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 p-2 min-h-[44px]"
             />
             {selectedFile && (
               <p className="text-sm text-gray-500 mt-1 truncate">{selectedFile.name}</p>

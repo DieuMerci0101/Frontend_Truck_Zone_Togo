@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { chauffeurService } from "@/services/chauffeur.service";
+import { proprietaireService } from "@/services/proprietaire.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
-import { Headphones, Plus, MapPin, Clock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { Headphones, Plus, MapPin, Clock, AlertTriangle, CheckCircle, Loader2, Locate } from "lucide-react";
+import { MapPicker } from "@/components/maps";
+import NearbyMechanicsMap from "@/components/maps/nearby-mechanics-map";
 
 const TYPE_PANNE_OPTIONS = [
   { value: "Mécanique", label: "Mécanique" },
@@ -72,12 +74,13 @@ export default function ProprietaireAssistancePage() {
 
   const { data: demandes, isLoading } = useQuery({
     queryKey: ["proprietaire", "assistance"],
-    queryFn: () => chauffeurService.getMyAssistances(),
+    queryFn: () => proprietaireService.getMyAssistances(),
   });
 
   const {
     register,
     handleSubmit,
+    watch,
     reset,
     setValue,
     formState: { errors },
@@ -90,7 +93,7 @@ export default function ProprietaireAssistancePage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: AssistanceFormValues) => chauffeurService.createAssistance(data as any),
+    mutationFn: (data: AssistanceFormValues) => proprietaireService.createAssistance(data as any),
     onSuccess: () => {
       toast.success("Demande d'assistance envoyée");
       queryClient.invalidateQueries({ queryKey: ["proprietaire", "assistance"] });
@@ -129,48 +132,46 @@ export default function ProprietaireAssistancePage() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-50 rounded-lg">
-            <Headphones className="h-6 w-6 text-orange-600" />
+          <div className="p-2 bg-amber-50 rounded-lg">
+            <Headphones className="h-6 w-6 text-amber-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Assistance mécanique</h1>
             <p className="text-gray-500">Demandez de l&apos;aide en cas de panne</p>
           </div>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto min-h-[44px]">
+        <Button onClick={() => { reset(); setDialogOpen(true); }} className="w-full sm:w-auto min-h-[44px]">
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle demande
         </Button>
       </div>
 
+      <NearbyMechanicsMap />
+
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-40" />)}
         </div>
       ) : demandes && demandes.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {demandes.map((d) => (
-            <Card key={d.id}>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900">
-                        {TYPE_PANNE_OPTIONS.find((o) => o.value === d.type_panne)?.label || d.type_panne}
-                      </h3>
-                      <Badge variant={statutBadge[d.statut] || "info"}>
-                        {statutLabel[d.statut] || d.statut}
-                      </Badge>
-                      <Badge variant={urgenceBadge[d.urgence] || "default"}>
-                        {d.urgence}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{d.description}</p>
-                    <p className="text-sm text-gray-500 mt-1">Véhicule: {d.vehicule_description}</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(d.created_at)}</span>
-                    </div>
-                  </div>
+            <Card key={d.id} className="flex flex-col hover:shadow-md transition-shadow">
+              <CardContent className="p-4 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-gray-900">
+                    {TYPE_PANNE_OPTIONS.find((o) => o.value === d.type_panne)?.label || d.type_panne}
+                  </h3>
+                  <Badge variant={statutBadge[d.statut] || "info"} className="shrink-0 text-[10px]">
+                    {statutLabel[d.statut] || d.statut}
+                  </Badge>
+                </div>
+                <Badge variant={urgenceBadge[d.urgence] || "default"} className="text-[10px] w-fit mb-2">
+                  {d.urgence}
+                </Badge>
+                <p className="text-sm text-gray-600 line-clamp-2 mb-2 flex-1">{d.description}</p>
+                <p className="text-sm text-gray-500 mb-1">Véhicule: {d.vehicule_description}</p>
+                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(d.created_at)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -181,7 +182,7 @@ export default function ProprietaireAssistancePage() {
           <CardContent className="py-12 text-center">
             <Headphones className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">Aucune demande d&apos;assistance</p>
-            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => setDialogOpen(true)}>
+            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => { reset(); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
               Créer une demande
             </Button>
@@ -190,7 +191,7 @@ export default function ProprietaireAssistancePage() {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Demander une assistance" size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select label="Type de panne" options={TYPE_PANNE_OPTIONS} error={errors.type_panne?.message} {...register("type_panne")} />
             <Select label="Urgence" options={URGENCE_OPTIONS} error={errors.urgence?.message} {...register("urgence")} />
@@ -200,15 +201,24 @@ export default function ProprietaireAssistancePage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">Position GPS</label>
+              <label className="text-sm font-medium text-gray-700">Position sur la carte</label>
               <Button type="button" variant="outline" size="sm" onClick={detectGPS} loading={gpsLoading} className="min-h-[36px]">
-                <MapPin className="h-3.5 w-3.5 mr-1" />
-                Détecter ma position
+                <Locate className="h-3.5 w-3.5 mr-1" />
+                {gpsLoading ? "Détection..." : "Ma position"}
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Input label="Latitude" type="number" step="any" error={errors.localisation_lat?.message} {...register("localisation_lat")} />
-              <Input label="Longitude" type="number" step="any" error={errors.localisation_lng?.message} {...register("localisation_lng")} />
+            <input type="hidden" {...register("localisation_lat")} />
+            <input type="hidden" {...register("localisation_lng")} />
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <MapPicker
+                lat={watch("localisation_lat") || 6.1256}
+                lng={watch("localisation_lng") || 1.2254}
+                onPositionChange={(lat, lng) => {
+                  setValue("localisation_lat", lat);
+                  setValue("localisation_lng", lng);
+                }}
+                height="h-48"
+              />
             </div>
           </div>
 

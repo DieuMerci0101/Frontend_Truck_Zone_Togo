@@ -8,6 +8,9 @@ import type {
   Offre,
   OffreCreate,
   OffreUpdate,
+  Document,
+  AssistanceCreate,
+  Assistance,
 } from "@/types";
 
 export const proprietaireService = {
@@ -55,8 +58,8 @@ export const proprietaireService = {
   setMainPhoto: (camionId: string, photoId: string) =>
     api.post<{ message: string }>(`/api/proprietaires/me/camions/${camionId}/photos/${photoId}/principale`).then((r) => r.data),
 
-  togglePublish: (camionId: string) =>
-    api.post<{ message: string; is_public: boolean }>(`/api/proprietaires/me/camions/${camionId}/publish`).then((r) => r.data),
+  togglePublish: (camionId: string, expires_at?: string) =>
+    api.post<{ message: string; is_public: boolean }>(`/api/proprietaires/me/camions/${camionId}/publish`, { expires_at }).then((r) => r.data),
 
   // ── Offres ──
   getMyOffres: () =>
@@ -73,4 +76,20 @@ export const proprietaireService = {
 
   deleteOffre: (offreId: string) =>
     api.delete<{ message: string }>(`/api/proprietaires/me/offres/${offreId}`).then((r) => r.data),
+
+  // ── Documents ──
+  getDocuments: () =>
+    api.get<Document[]>("/api/proprietaires/me/documents").then((r) => r.data),
+
+  uploadDocument: (formData: FormData) =>
+    api.post<{ id: string; message: string }>("/api/proprietaires/me/documents", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data),
+
+  // ── Assistance ──
+  getMyAssistances: () =>
+    api.get<Assistance[]>("/api/proprietaires/me/assistance").then((r) => r.data),
+
+  createAssistance: (data: AssistanceCreate) =>
+    api.post<Assistance>("/api/proprietaires/me/assistance", data).then((r) => r.data),
 };

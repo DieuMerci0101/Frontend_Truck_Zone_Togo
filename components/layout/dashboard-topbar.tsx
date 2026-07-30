@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { LogoutModal } from "@/components/ui/logout-modal";
 import { notificationService } from "@/services/notification.service";
 import { getRoleLabel } from "@/lib/utils";
-import { Menu, Bell, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { Menu, Bell, ChevronDown, LogOut, User } from "lucide-react";
 
 interface DashboardTopbarProps {
   onMenuClick: () => void;
@@ -112,20 +112,12 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
                   />
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
                     <Link
-                      href="/dashboard/parametres"
+                      href={`/dashboard/${user?.role || "chauffeur"}/profil`}
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                     >
                       <User className="h-4 w-4" />
                       Mon profil
-                    </Link>
-                    <Link
-                      href="/dashboard/parametres"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Paramètres
                     </Link>
                     <div className="border-t border-gray-100 my-1" />
                     <button

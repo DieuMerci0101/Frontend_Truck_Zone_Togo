@@ -96,15 +96,15 @@ export default function ChauffeurDashboard() {
       title: "Documents",
       value: loadingDocs ? null : documents?.length ?? 0,
       icon: FileText,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-slate-700",
+      bg: "bg-slate-50",
     },
     {
       title: "Incidents",
       value: loadingIncidents ? null : incidents?.length ?? 0,
       icon: AlertTriangle,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
     {
       title: "Demandes",
@@ -145,7 +145,7 @@ export default function ChauffeurDashboard() {
       <Card className="border-2">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <ToggleLeft className="h-5 w-5 text-blue-600" />
+            <ToggleLeft className="h-5 w-5 text-slate-700" />
             Ma disponibilité
           </CardTitle>
         </CardHeader>
@@ -217,12 +217,12 @@ export default function ChauffeurDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/dashboard/chauffeur/offres" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Briefcase className="h-5 w-5 text-blue-600 shrink-0" />
+                  <Briefcase className="h-5 w-5 text-slate-700 shrink-0" />
                   <span className="text-sm font-medium">Voir les offres disponibles</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-blue-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-slate-700 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/chauffeur/assistance" className="block">
@@ -235,12 +235,12 @@ export default function ChauffeurDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/chauffeur/incidents" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0" />
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="text-sm font-medium">Déclarer un incident</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-orange-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/chat" className="block">
@@ -273,7 +273,7 @@ export default function ChauffeurDashboard() {
               {incidents && incidents.length > 0 ? (
                 incidents.slice(0, 3).map((inc) => (
                   <div key={inc.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                    <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{inc.type_incident}</p>
                       <p className="text-xs text-gray-500">{inc.description.slice(0, 60)}...</p>

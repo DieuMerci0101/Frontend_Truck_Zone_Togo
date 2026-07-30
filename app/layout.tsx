@@ -10,7 +10,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#1e40af",
+  themeColor: "#0f172a",
 };
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | Togo Truck Connect",
   },
   description:
-    "Plateforme de connexion entre chauffeurs, propriétaires de camions et mécaniciens au Togo",
+    "Mise en relation directe entre propriétaires de camions, chauffeurs et mécaniciens.",
   keywords: [
     "transport",
     "camion",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Togo Truck Connect" }],
   openGraph: {
     title: "Togo Truck Connect",
-    description: "La plateforme de transport routier au Togo",
+    description: "Mise en relation directe entre propriétaires de camions, chauffeurs et mécaniciens.",
     type: "website",
     locale: "fr_TG",
   },

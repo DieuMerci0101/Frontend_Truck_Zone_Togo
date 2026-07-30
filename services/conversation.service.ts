@@ -16,4 +16,7 @@ export const conversationService = {
 
   sendMessage: (conversationId: string, data: MessageCreate) =>
     api.post<Message>(`/api/conversations/${conversationId}/messages`, data).then((r) => r.data),
+
+  lire: (conversationId: string) =>
+    api.put<{ message: string; marked: number }>(`/api/conversations/${conversationId}/lire`).then((r) => r.data),
 };

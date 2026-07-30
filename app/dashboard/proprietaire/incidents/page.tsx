@@ -17,7 +17,9 @@ import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { TYPE_INCIDENT, GRAVITE_INCIDENT, STATUT_INCIDENT } from "@/constants";
-import { AlertTriangle, Plus, MapPin } from "lucide-react";
+import { AlertTriangle, Plus, MapPin, Locate, Clock } from "lucide-react";
+import { MapPicker } from "@/components/maps";
+import type { Incident } from "@/types";
 
 const incidentSchema = z.object({
   type_incident: z.string().min(1, "Le type est requis"),
@@ -38,10 +40,21 @@ const statutBadge: Record<string, "warning" | "info" | "success" | "default"> = 
   cloture: "default",
 };
 
+const graviteColor: Record<string, string> = {
+  Faible: "text-green-600",
+  Moyenne: "text-yellow-600",
+  Grave: "text-amber-600",
+  Mortel: "text-red-600",
+};
+
 export default function ProprietaireIncidentsPage() {
   const queryClient = useQueryClient();
   const [createDialog, setCreateDialog] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number }>({
+    lat: 6.1256,
+    lng: 1.2254,
+  });
 
   const { data: incidents, isLoading } = useQuery({
     queryKey: ["proprietaire", "incidents"],
@@ -72,85 +85,111 @@ export default function ProprietaireIncidentsPage() {
 
   const hasVictimes = watch("victimes") === "true";
 
+  const detectGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error("Géolocalisation non supportée");
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        toast.success("Position capturée");
+        setGpsLoading(false);
+      },
+      () => {
+        toast.error("Impossible de récupérer la position");
+        setGpsLoading(false);
+      }
+    );
+  };
+
   const onSubmit = (data: IncidentFormValues) => {
     const now = new Date().toISOString();
-    createMutation.mutate({
+    const payload = {
       type_incident: data.type_incident,
       gravite: data.gravite,
       description: data.description,
       date_incident: now,
-      localisation_lat: location?.lat || 6.1256,
-      localisation_lng: location?.lng || 1.2254,
+      localisation_lat: location.lat,
+      localisation_lng: location.lng,
       victimes: data.victimes === "true",
       nombre_victimes: data.nombre_victimes || undefined,
       vehicules_impliques: data.vehicules_impliques
         ? data.vehicules_impliques.split(",").map((s) => s.trim())
         : undefined,
       temoin_contact: data.temoin_contact || undefined,
-    });
+    };
+    createMutation.mutate(payload);
   };
 
-  const requestLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          toast.success("Position récupérée");
-        },
-        () => toast.error("Impossible de récupérer la position")
-      );
-    }
+  const openMaps = (lat?: number | null, lng?: number | null) => {
+    if (!lat || !lng) return;
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      "_blank"
+    );
   };
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-50 rounded-lg">
-            <AlertTriangle className="h-6 w-6 text-orange-600" />
+          <div className="p-2 bg-amber-50 rounded-lg">
+            <AlertTriangle className="h-6 w-6 text-amber-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Incidents</h1>
             <p className="text-gray-500">Déclarez et suivez les incidents</p>
           </div>
         </div>
-        <Button onClick={() => setCreateDialog(true)} className="w-full sm:w-auto min-h-[44px]">
+        <Button onClick={() => { reset(); setCreateDialog(true); }} className="w-full sm:w-auto min-h-[44px]">
           <Plus className="h-4 w-4 mr-2" />
           Déclarer un incident
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-48" />
           ))}
         </div>
       ) : incidents && incidents.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
-          {incidents.map((inc) => (
-            <Card key={inc.id}>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900">{inc.type_incident}</h3>
-                      <Badge variant={statutBadge[inc.statut] || "info"}>
-                        {STATUT_INCIDENT[inc.statut as keyof typeof STATUT_INCIDENT] || inc.statut}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{inc.description}</p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-sm text-gray-500">
-                      <span>Gravité: {inc.gravite}</span>
-                      <span>{formatDate(inc.date_incident)}</span>
-                      {inc.victimes && (
-                        <span className="text-red-600 font-medium">
-                          {inc.nombre_victimes} victime(s)
-                        </span>
-                      )}
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {incidents.map((inc: Incident) => (
+            <Card key={inc.id} className="flex flex-col hover:shadow-md transition-shadow">
+              <CardContent className="p-4 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-gray-900">{inc.type_incident}</h3>
+                  <Badge variant={statutBadge[inc.statut] || "info"} className="shrink-0 text-[10px]">
+                    {STATUT_INCIDENT[inc.statut as keyof typeof STATUT_INCIDENT] || inc.statut}
+                  </Badge>
                 </div>
+                <p className="text-sm text-gray-600 line-clamp-3 mb-3 flex-1">{inc.description}</p>
+                <div className="text-xs text-gray-500 space-y-1 mb-3">
+                  <p className={graviteColor[inc.gravite] || "text-gray-600"}>
+                    Gravité: <span className="font-medium">{inc.gravite}</span>
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDate(inc.date_incident)}
+                  </p>
+                  {inc.victimes && (
+                    <p className="text-red-600 font-medium">{inc.nombre_victimes} victime(s)</p>
+                  )}
+                </div>
+                {inc.localisation_lat && inc.localisation_lng && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full min-h-[36px] text-xs"
+                    onClick={() => openMaps(inc.localisation_lat, inc.localisation_lng)}
+                  >
+                    <MapPin className="h-3 w-3 mr-1" />
+                    Voir sur Google Maps
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -170,7 +209,7 @@ export default function ProprietaireIncidentsPage() {
         title="Déclarer un incident"
         size="lg"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Type d'incident"
@@ -185,13 +224,15 @@ export default function ProprietaireIncidentsPage() {
               {...register("gravite")}
             />
           </div>
+
           <Textarea
             label="Description"
-            placeholder="Décrivez l'incident..."
+            placeholder="Décrivez l'incident en détail..."
             rows={4}
             error={errors.description?.message}
             {...register("description")}
           />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Y a-t-il des victimes ?"
@@ -211,23 +252,47 @@ export default function ProprietaireIncidentsPage() {
               />
             )}
           </div>
+
           <Input
-            label="Véhicules impliqués (virgule)"
+            label="Véhicules impliqués (séparés par virgule)"
             placeholder="TG-1234-AB, TG-5678-CD"
             {...register("vehicules_impliques")}
           />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Localisation</label>
-            <Button type="button" variant="outline" size="sm" onClick={requestLocation} className="min-h-[44px]">
-              <MapPin className="h-4 w-4 mr-1" />
-              {location ? "Position capturée" : "Ma position actuelle"}
-            </Button>
+
+          <Input
+            label="Contact témoin (optionnel)"
+            placeholder="+228 90 00 00 00"
+            {...register("temoin_contact")}
+          />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Position sur la carte</label>
+              <Button type="button" variant="outline" size="sm" onClick={detectGPS} loading={gpsLoading} className="min-h-[36px]">
+                <Locate className="h-3.5 w-3.5 mr-1" />
+                {gpsLoading ? "Détection..." : "Ma position"}
+              </Button>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <MapPicker
+                lat={location.lat}
+                lng={location.lng}
+                onPositionChange={(lat, lng) => setLocation({ lat, lng })}
+                height="h-48"
+              />
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row justify-end gap-2">
+
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
             <Button variant="outline" type="button" onClick={() => setCreateDialog(false)} className="w-full sm:w-auto min-h-[44px]">
               Annuler
             </Button>
-            <Button type="submit" variant="destructive" loading={createMutation.isPending} className="w-full sm:w-auto min-h-[44px]">
+            <Button
+              type="submit"
+              variant="destructive"
+              loading={createMutation.isPending}
+              className="w-full sm:w-auto min-h-[44px]"
+            >
               Déclarer l&apos;incident
             </Button>
           </div>

@@ -19,9 +19,11 @@ import { TYPE_CAMION, ETAT_CAMION } from "@/constants";
 import { API_URL } from "@/constants";
 import { Truck, Plus, Pencil, Trash2, Camera, Upload, Star, Eye, EyeOff, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Camion, CamionCreate, CamionUpdate, CamionPhoto } from "@/types";
+import PageAnimation from "@/components/ui/page-animation";
+import CardAnimation from "@/components/ui/card-animation";
 
 const camionSchema = z.object({
-  immatriculation: z.string().min(1, "Immatriculation requise"),
+  immatriculation: z.string().min(1, "Immatriculation requise").regex(/^[A-Za-z]{2,3}-\d{2,4}(-[A-Za-z]{1,3})?$/, "Le format de l'immatriculation est invalide. Exemple attendu : TGE-12 ou TG-1234-AB"),
   marque: z.string().min(1, "Marque requise"),
   modele: z.string().min(1, "Modèle requis"),
   annee: z.coerce.number().min(1990, "Année minimale: 1990").max(2030),
@@ -61,6 +63,9 @@ export default function ProprietaireCamionsPage() {
   const [viewPhotos, setViewPhotos] = useState<Camion | null>(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [publishDialog, setPublishDialog] = useState(false);
+  const [publishCamion, setPublishCamion] = useState<Camion | null>(null);
+  const [publishExpiresAt, setPublishExpiresAt] = useState("");
 
   const { data: camions, isLoading } = useQuery({
     queryKey: ["proprietaire", "camions"],
@@ -109,7 +114,8 @@ export default function ProprietaireCamionsPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (camionId: string) => proprietaireService.togglePublish(camionId),
+    mutationFn: ({ camionId, expires_at }: { camionId: string; expires_at?: string }) =>
+      proprietaireService.togglePublish(camionId, expires_at),
     onSuccess: (data) => {
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["proprietaire", "camions"] });
@@ -186,21 +192,24 @@ export default function ProprietaireCamionsPage() {
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !photoCamionId) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Max 5 Mo");
-      return;
+    const files = e.target.files;
+    if (!files || !photoCamionId) return;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} dépasse 5 Mo — ignoré`);
+        continue;
+      }
+      photoMutation.mutate({ camionId: photoCamionId, file });
     }
-    photoMutation.mutate({ camionId: photoCamionId, file });
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageAnimation className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <Truck className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <Truck className="h-6 w-6 text-slate-700" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Mes camions</h1>
@@ -228,9 +237,10 @@ export default function ProprietaireCamionsPage() {
         </div>
       ) : camions && camions.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {camions.map((camion) => {
+          {camions.map((camion, i) => {
             const photoUrl = resolvePhotoUrl(camion.photo_principale_url);
             return (
+              <CardAnimation index={i}>
               <Card key={camion.id} className="overflow-hidden">
                 <div
                   className="h-40 sm:h-44 bg-gray-200 flex items-center justify-center relative group cursor-pointer"
@@ -295,7 +305,17 @@ export default function ProprietaireCamionsPage() {
                       <Button
                         variant={camion.is_public ? "secondary" : "default"}
                         size="sm"
-                        onClick={() => publishMutation.mutate(camion.id)}
+                        disabled={!camion.is_public && camion.etat === "en_reparation"}
+                        title={!camion.is_public && camion.etat === "en_reparation" ? "Impossible de publier un camion en réparation" : ""}
+                        onClick={() => {
+                          if (camion.is_public) {
+                            publishMutation.mutate({ camionId: camion.id });
+                          } else if (camion.etat !== "en_reparation") {
+                            setPublishCamion(camion);
+                            setPublishExpiresAt("");
+                            setPublishDialog(true);
+                          }
+                        }}
                         loading={publishMutation.isPending}
                         className="min-h-[44px]"
                       >
@@ -314,6 +334,7 @@ export default function ProprietaireCamionsPage() {
                   </div>
                 </CardContent>
               </Card>
+              </CardAnimation>
             );
           })}
         </div>
@@ -322,7 +343,7 @@ export default function ProprietaireCamionsPage() {
           <CardContent className="py-12 text-center">
             <Truck className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">Aucun camion enregistré</p>
-            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => setDialogOpen(true)}>
+            <Button className="mt-4 w-full sm:w-auto min-h-[44px]" onClick={() => { reset(); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter votre premier camion
             </Button>
@@ -334,13 +355,15 @@ export default function ProprietaireCamionsPage() {
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        multiple
+        capture="environment"
         onChange={handlePhotoUpload}
         className="hidden"
       />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={closeDialog} title={editingCamion ? "Modifier le camion" : "Ajouter un camion"} size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Immatriculation" placeholder="TG-1234-AB" error={errors.immatriculation?.message} {...register("immatriculation")} />
             <Input label="Marque" placeholder="Mercedes" error={errors.marque?.message} {...register("marque")} />
@@ -409,7 +432,7 @@ export default function ProprietaireCamionsPage() {
                 {viewPhotos.photos.map((photo, idx) => (
                   <div
                     key={photo.id}
-                    className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 ${idx === currentPhotoIndex ? "border-blue-500" : "border-transparent"}`}
+                    className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 ${idx === currentPhotoIndex ? "border-amber-500" : "border-transparent"}`}
                     onClick={() => setCurrentPhotoIndex(idx)}
                   >
                     <img src={resolvePhotoUrl(photo.photo_url) || ""} alt="" className="w-full h-full object-cover" />
@@ -461,6 +484,37 @@ export default function ProprietaireCamionsPage() {
           </div>
         </div>
       </Dialog>
-    </div>
+
+      {/* Publish Dialog */}
+      <Dialog open={publishDialog} onClose={() => setPublishDialog(false)} title={`Publier ${publishCamion?.marque} ${publishCamion?.modele}`} size="sm">
+        <div className="space-y-4">
+          <p className="text-gray-600">Choisissez la durée de publication :</p>
+          <Input
+            type="datetime-local"
+            label="Durée de publication"
+            value={publishExpiresAt}
+            onChange={(e) => setPublishExpiresAt(e.target.value)}
+            min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+          />
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
+            <Button variant="outline" onClick={() => setPublishDialog(false)} className="w-full sm:w-auto min-h-[44px]">Annuler</Button>
+            <Button
+              onClick={() => {
+                if (publishCamion) {
+                  const expiresAt = publishExpiresAt ? new Date(publishExpiresAt).toISOString() : undefined;
+                  publishMutation.mutate({ camionId: publishCamion.id, expires_at: expiresAt });
+                  setPublishDialog(false);
+                  setPublishCamion(null);
+                }
+              }}
+              loading={publishMutation.isPending}
+              className="w-full sm:w-auto min-h-[44px]"
+            >
+              Publier
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    </PageAnimation>
   );
 }

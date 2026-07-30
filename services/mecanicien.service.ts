@@ -36,6 +36,9 @@ export const mecanicienService = {
       params: { lat, lng, rayon_km: rayonKm || 50, specialite },
     }).then((r) => r.data),
 
+  updatePosition: (lat: number, lng: number) =>
+    api.put<{ message: string; localisation_lat: number; localisation_lng: number }>("/api/mecaniciens/me/position", { localisation_lat: lat, localisation_lng: lng }).then((r) => r.data),
+
   // ── Assistance ──
   createAssistance: (data: AssistanceCreate) =>
     api.post<Assistance>("/api/mecaniciens/assistance", data).then((r) => r.data),
@@ -48,4 +51,10 @@ export const mecanicienService = {
 
   updateAssistanceStatut: (id: string, data: AssistanceUpdateStatut) =>
     api.put<{ message: string; statut: string }>(`/api/mecaniciens/assistance/${id}/statut`, data).then((r) => r.data),
+
+  getAssistanceDisponibles: () =>
+    api.get<Assistance[]>("/api/mecaniciens/assistance/disponibles").then((r) => r.data),
+
+  prendreAssistance: (id: string) =>
+    api.put<{ message: string; statut: string }>(`/api/mecaniciens/assistance/${id}/prendre`).then((r) => r.data),
 };

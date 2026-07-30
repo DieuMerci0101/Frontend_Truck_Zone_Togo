@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { chauffeurService } from "@/services/chauffeur.service";
 import { conversationService } from "@/services/conversation.service";
@@ -11,11 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Avatar } from "@/components/ui/avatar";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TYPE_CAMION, ETAT_CAMION, API_URL } from "@/constants";
-import { Truck, Search, MapPin, MessageCircle, User, Fuel, Settings, Calendar, Gauge } from "lucide-react";
+import { Truck, Search, MapPin, MessageCircle, Fuel, Settings, Gauge, Clock, Send } from "lucide-react";
 import type { Camion } from "@/types";
 
 function resolvePhotoUrl(url: string | null | undefined): string | null {
@@ -23,6 +25,26 @@ function resolvePhotoUrl(url: string | null | undefined): string | null {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   if (url.startsWith("/uploads/")) return `${API_URL}${url}`;
   return url;
+}
+
+function resolveProfilePhoto(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/uploads/")) return `${API_URL}${url}`;
+  return url;
+}
+
+function formatExpiration(d: string): string {
+  const dt = new Date(d);
+  return dt.toLocaleDateString("fr-FR", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function isExpired(camion: Camion): boolean {
+  if (!camion.expires_at) return false;
+  return new Date(camion.expires_at) <= new Date();
 }
 
 const etatBadge: Record<string, "success" | "info" | "warning" | "destructive"> = {
@@ -34,23 +56,58 @@ const etatBadge: Record<string, "success" | "info" | "warning" | "destructive"> 
 
 export default function ChauffeurCamionsPublicsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [contactModal, setContactModal] = useState<{ ownerUserId: string; ownerName: string } | null>(null);
+  const [messageText, setMessageText] = useState("");
 
   const { data: camions, isLoading } = useQuery({
     queryKey: ["camions-publics", filterType],
     queryFn: () => chauffeurService.getPublicCamions({ limit: 50, type_camion: filterType || undefined }),
   });
 
-  const messageMutation = useMutation({
-    mutationFn: (ownerUserId: string) => conversationService.create({ participant_id: ownerUserId }),
+  const { data: conversations } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => conversationService.list(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: ({ participant_id, premier_message }: { participant_id: string; premier_message: string }) =>
+      conversationService.create({ participant_id, premier_message }),
     onSuccess: (conv) => {
-      toast.success("Conversation ouverte");
+      toast.success("Message envoyé");
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      setContactModal(null);
+      setMessageText("");
       router.push(`/dashboard/chat/${conv.id}`);
     },
-    onError: () => toast.error("Impossible d'ouvrir la conversation"),
+    onError: () => toast.error("Impossible d'envoyer le message"),
   });
+
+  const handleContact = useCallback(
+    (ownerUserId: string, ownerName: string) => {
+      const existing = conversations?.find((c) =>
+        c.participants?.some((p) => p.id === ownerUserId)
+      );
+      if (existing) {
+        router.push(`/dashboard/chat/${existing.id}`);
+      } else {
+        setContactModal({ ownerUserId, ownerName });
+        setMessageText("");
+      }
+    },
+    [conversations, router]
+  );
+
+  const handleSendMessage = () => {
+    if (!contactModal || !messageText.trim()) return;
+    createMutation.mutate({
+      participant_id: contactModal.ownerUserId,
+      premier_message: messageText.trim(),
+    });
+  };
 
   const filtered = camions?.filter((c) => {
     if (!searchQuery) return true;
@@ -98,15 +155,23 @@ export default function ChauffeurCamionsPublicsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map((camion) => {
             const photoUrl = resolvePhotoUrl(camion.photo_principale_url);
-            const ownerName = camion.proprietaire?.user?.nom_complet || camion.chauffeur?.user?.nom_complet || "Propriétaire";
-            const ownerUserId = camion.proprietaire?.user_id || camion.chauffeur?.user_id;
+            const propInfo = camion.proprietaire_info;
+            const ownerName = propInfo?.nom_complet || "Propriétaire";
+            const ownerPhoto = resolveProfilePhoto(propInfo?.photo_profil);
+            const ownerUserId = propInfo?.user_id;
+            const expired = isExpired(camion);
             return (
               <Card key={camion.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="h-44 bg-gray-200 flex items-center justify-center">
+                <div className="h-44 bg-gray-200 flex items-center justify-center relative">
                   {photoUrl ? (
                     <img src={photoUrl} alt={`${camion.marque} ${camion.modele}`} className="w-full h-full object-cover" />
                   ) : (
                     <Truck className="h-12 w-12 text-gray-400" />
+                  )}
+                  {expired && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Badge variant="destructive" className="text-sm px-3 py-1">Offre expirée</Badge>
+                    </div>
                   )}
                 </div>
                 <CardContent className="p-4">
@@ -140,25 +205,31 @@ export default function ChauffeurCamionsPublicsPage() {
                     )}
                   </div>
 
+                  {camion.expires_at && (
+                    <p className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+                      <Clock className="h-3 w-3" />
+                      Expire le {formatExpiration(camion.expires_at)}
+                    </p>
+                  )}
+
                   {camion.description && (
                     <p className="text-sm text-gray-500 mt-2 line-clamp-2">{camion.description}</p>
                   )}
 
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Avatar name={ownerName} size="sm" />
+                      <Avatar src={ownerPhoto} name={ownerName} size="sm" />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{ownerName}</p>
                         <p className="text-xs text-gray-400">Propriétaire</p>
                       </div>
                     </div>
-                    {ownerUserId && ownerUserId !== user?.id && (
+                    {ownerUserId && ownerUserId !== user?.id && !expired && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="min-h-[44px] shrink-0"
-                        onClick={() => messageMutation.mutate(ownerUserId)}
-                        loading={messageMutation.isPending}
+                        onClick={() => handleContact(ownerUserId, ownerName)}
                       >
                         <MessageCircle className="h-3.5 w-3.5 mr-1" />
                         Contacter
@@ -180,6 +251,32 @@ export default function ChauffeurCamionsPublicsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={!!contactModal} onClose={() => { setContactModal(null); setMessageText(""); }} title={`Contacter ${contactModal?.ownerName || ""}`} size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Rédigez votre premier message pour contacter ce propriétaire :</p>
+          <Textarea
+            placeholder="Bonjour, je suis intéressé par votre camion..."
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            rows={4}
+          />
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
+            <Button variant="outline" onClick={() => { setContactModal(null); setMessageText(""); }} className="w-full sm:w-auto min-h-[44px]">
+              Annuler
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!messageText.trim() || createMutation.isPending}
+              loading={createMutation.isPending}
+              className="w-full sm:w-auto min-h-[44px]"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Envoyer
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
