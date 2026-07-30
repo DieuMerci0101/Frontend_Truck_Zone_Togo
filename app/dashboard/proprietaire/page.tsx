@@ -45,15 +45,15 @@ export default function ProprietaireDashboard() {
         ? null
         : offres?.filter((o) => o.statut === "active").length ?? 0,
       icon: Briefcase,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
     {
       title: "Total offres",
       value: loadingOffres ? null : offres?.length ?? 0,
       icon: Briefcase,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-slate-700",
+      bg: "bg-slate-100",
     },
     {
       title: "Chauffeurs",
@@ -157,12 +157,12 @@ export default function ProprietaireDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/proprietaire/offres" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Briefcase className="h-5 w-5 text-green-600 shrink-0" />
+                  <Briefcase className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="text-sm font-medium">Publier une offre</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-green-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/proprietaire/chauffeurs" className="block">

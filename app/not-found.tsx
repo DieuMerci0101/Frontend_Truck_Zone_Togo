@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Truck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import BackButton from "@/components/ui/back-button";
 
 export default function NotFound() {
   return (
@@ -13,11 +13,7 @@ export default function NotFound() {
           <p className="text-blue-200 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 max-w-md mx-auto">
             La page que vous recherchez n&apos;existe pas ou a été déplacée.
           </p>
-          <Link href="/" className="inline-block w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 min-h-[44px]">
-              Retour à l&apos;accueil
-            </Button>
-          </Link>
+          <BackButton fallback="/" label="Retour à l'accueil" className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 font-semibold text-base" />
         </div>
       </div>
     </div>

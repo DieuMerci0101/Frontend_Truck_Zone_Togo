@@ -451,7 +451,7 @@ export default function ProprietaireCamionsPage() {
                           }
                         }
                       }}
-                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white min-h-[28px] min-w-[28px] flex items-center justify-center"
+                      className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white min-h-[28px] min-w-[28px] flex items-center justify-center"
                     >
                       <X className="h-3 w-3" />
                     </button>

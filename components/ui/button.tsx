@@ -11,17 +11,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-500 shadow-sm hover:shadow-md",
+          "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-500 shadow-sm hover:shadow-md",
         secondary:
-          "bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500 shadow-sm hover:shadow-md",
+          "bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 shadow-sm hover:shadow-md",
         outline:
-          "border-2 border-blue-700 text-blue-700 hover:bg-blue-50 focus:ring-blue-500 bg-transparent",
+          "border-2 border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-400 bg-transparent",
         ghost:
-          "text-gray-600 hover:bg-gray-100 focus:ring-gray-400 bg-transparent",
+          "text-slate-600 hover:bg-slate-100 focus:ring-slate-400 bg-transparent",
         destructive:
           "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow-md",
         link:
-          "text-blue-700 underline-offset-4 hover:underline focus:ring-blue-500 bg-transparent",
+          "text-amber-600 underline-offset-4 hover:underline focus:ring-amber-500 bg-transparent",
       },
       size: {
         sm: "px-3 py-1.5 text-sm",

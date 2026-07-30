@@ -353,7 +353,7 @@ export default function ChauffeurCamionsPage() {
                   <div key={photo.id} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 ${idx === currentPhotoIndex ? "border-amber-500" : "border-transparent"}`} onClick={() => setCurrentPhotoIndex(idx)}>
                     <img src={resolvePhotoUrl(photo.photo_url) || ""} alt="" className="w-full h-full object-cover" />
                     {photo.est_principale && <div className="absolute top-1 left-1"><Star className="h-3 w-3 text-yellow-500 fill-yellow-500" /></div>}
-                    <button onClick={(e) => { e.stopPropagation(); if (confirm("Supprimer cette photo ?")) { deletePhotoMutation.mutate({ camionId: viewPhotos.id, photoId: photo.id }); if (currentPhotoIndex >= (viewPhotos.photos.length - 1) && currentPhotoIndex > 0) setCurrentPhotoIndex(currentPhotoIndex - 1); } }} className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white min-h-[28px] min-w-[28px] flex items-center justify-center">
+                    <button onClick={(e) => { e.stopPropagation(); if (confirm("Supprimer cette photo ?")) { deletePhotoMutation.mutate({ camionId: viewPhotos.id, photoId: photo.id }); if (currentPhotoIndex >= (viewPhotos.photos.length - 1) && currentPhotoIndex > 0) setCurrentPhotoIndex(currentPhotoIndex - 1); } }} className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white min-h-[28px] min-w-[28px] flex items-center justify-center">
                       <X className="h-3 w-3" />
                     </button>
                   </div>

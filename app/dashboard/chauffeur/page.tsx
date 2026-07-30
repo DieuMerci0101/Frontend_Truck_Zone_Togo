@@ -31,15 +31,15 @@ const statusConfig: Record<
 > = {
   disponible: {
     label: "Disponible",
-    color: "text-green-700",
-    bg: "bg-green-50 border-green-200",
+    color: "text-amber-600",
+    bg: "bg-amber-50 border-amber-200",
     icon: Circle,
     description: "Visible par les propriétaires dans les recherches",
   },
   en_mission: {
     label: "En mission",
-    color: "text-yellow-700",
-    bg: "bg-yellow-50 border-yellow-200",
+    color: "text-amber-600",
+    bg: "bg-amber-50 border-amber-200",
     icon: Clock,
     description: "En cours de mission actuelle",
   },
@@ -110,15 +110,15 @@ export default function ChauffeurDashboard() {
       title: "Demandes",
       value: myDemandes?.length ?? 0,
       icon: Wrench,
-      color: "text-red-600",
-      bg: "bg-red-50",
+      color: "text-slate-700",
+      bg: "bg-slate-100",
     },
     {
       title: "Messagerie",
       value: null,
       icon: MessageSquare,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
   ];
 
@@ -226,12 +226,12 @@ export default function ChauffeurDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/chauffeur/assistance" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Wrench className="h-5 w-5 text-red-600 shrink-0" />
+                  <Wrench className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="text-sm font-medium">Demander une assistance mécanique</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-red-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/chauffeur/incidents" className="block">
@@ -244,21 +244,21 @@ export default function ChauffeurDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/chat" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <MessageSquare className="h-5 w-5 text-green-600 shrink-0" />
+                  <MessageSquare className="h-5 w-5 text-slate-700 shrink-0" />
                   <span className="text-sm font-medium">Consulter la messagerie</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-green-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-slate-700 shrink-0" />
               </div>
             </Link>
             <Link href="/dashboard/chauffeur/documents" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-purple-600 shrink-0" />
+                  <FileText className="h-5 w-5 text-slate-700 shrink-0" />
                   <span className="text-sm font-medium">Gérer mes documents</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-purple-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-slate-700 shrink-0" />
               </div>
             </Link>
           </CardContent>

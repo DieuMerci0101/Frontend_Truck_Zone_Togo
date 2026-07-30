@@ -132,7 +132,7 @@ export default function VerificationPage() {
 
   const statusIcon = (statut?: string) => {
     switch (statut) {
-      case "valide": return <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />;
+      case "valide": return <CheckCircle className="h-5 w-5 text-amber-500 shrink-0" />;
       case "rejete": return <XCircle className="h-5 w-5 text-red-500 shrink-0" />;
       default: return <Clock className="h-5 w-5 text-amber-500 shrink-0" />;
     }
@@ -190,10 +190,10 @@ export default function VerificationPage() {
         )}
 
         {allValidated && (
-          <Card className="border-green-200 bg-green-50">
+          <Card className="border-amber-200 bg-amber-50">
             <CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-              <p className="text-sm text-green-700">
+              <CheckCircle className="h-5 w-5 text-amber-500 shrink-0" />
+              <p className="text-sm text-amber-700">
                 Tous vos documents sont validés ! Redirection en cours...
               </p>
             </CardContent>
@@ -273,7 +273,7 @@ export default function VerificationPage() {
                   )}
 
                   {existing?.statut === "valide" && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
                       <CheckCircle className="h-4 w-4 shrink-0" />
                       Document validé
                     </div>

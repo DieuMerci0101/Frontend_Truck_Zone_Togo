@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import BackButton from "@/components/ui/back-button";
 import toast from "react-hot-toast";
 import { authService } from "@/services/auth.service";
 
@@ -114,12 +115,11 @@ export default function VerifyOtpPage() {
           Retour à la récupération
         </Link>
         <div>
-          <Link
-            href="/"
+          <BackButton
+            fallback="/"
+            label="Retour à l'accueil"
             className="text-xs text-slate-400 hover:text-slate-600 font-medium"
-          >
-            Retour à l&apos;accueil
-          </Link>
+          />
         </div>
       </div>
     </motion.div>

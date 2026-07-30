@@ -17,6 +17,15 @@ export const conversationService = {
   sendMessage: (conversationId: string, data: MessageCreate) =>
     api.post<Message>(`/api/conversations/${conversationId}/messages`, data).then((r) => r.data),
 
+  sendAudioMessage: (conversationId: string, file: Blob, contenu?: string) => {
+    const formData = new FormData();
+    formData.append("file", file, "audio.webm");
+    if (contenu) formData.append("contenu", contenu);
+    return api.post<Message>(`/api/conversations/${conversationId}/messages/audio`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+
   lire: (conversationId: string) =>
     api.put<{ message: string; marked: number }>(`/api/conversations/${conversationId}/lire`).then((r) => r.data),
 };

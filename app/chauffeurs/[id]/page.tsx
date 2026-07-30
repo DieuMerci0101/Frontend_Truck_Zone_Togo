@@ -13,6 +13,7 @@ import {
 import { chauffeurService } from "@/services/chauffeur.service";
 import { useAuth } from "@/providers/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BackButton from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,9 +79,7 @@ export default function ChauffeurDetailPage({
           <h2 className="text-xl font-semibold text-slate-900 mb-2">
             Chauffeur non trouvé
           </h2>
-          <Link href="/chauffeurs">
-            <Button variant="outline" className="min-h-[44px]">Retour à la liste</Button>
-          </Link>
+          <BackButton fallback="/chauffeurs" label="Retour à la liste" className="text-sm text-slate-500 hover:text-slate-700 font-medium" />
         </div>
       </div>
     );
@@ -89,13 +88,7 @@ export default function ChauffeurDetailPage({
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <Link
-          href="/chauffeurs"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 sm:mb-6 transition-colors min-h-[44px]"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          Retour à la liste
-        </Link>
+        <BackButton fallback="/chauffeurs" label="Retour à la liste" className="text-sm text-slate-500 hover:text-slate-900 mb-4 sm:mb-6 min-h-[44px]" />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

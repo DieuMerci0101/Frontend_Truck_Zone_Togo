@@ -29,8 +29,8 @@ export default function AdminDashboard() {
       title: "Chauffeurs",
       value: stats?.chauffeurs,
       icon: UserCheck,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
     {
       title: "Propriétaires",
@@ -43,15 +43,15 @@ export default function AdminDashboard() {
       title: "Mécaniciens",
       value: stats?.mecaniciens,
       icon: Wrench,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-slate-700",
+      bg: "bg-slate-100",
     },
     {
       title: "Admins",
       value: stats?.admins,
       icon: Shield,
-      color: "text-red-600",
-      bg: "bg-red-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
     },
   ];
 
@@ -99,10 +99,10 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-4">
                 {[
-                  { label: "Chauffeurs", value: stats?.chauffeurs || 0, color: "bg-green-500" },
+                  { label: "Chauffeurs", value: stats?.chauffeurs || 0, color: "bg-amber-500" },
                   { label: "Propriétaires", value: stats?.proprietaires || 0, color: "bg-amber-600" },
-                  { label: "Mécaniciens", value: stats?.mecaniciens || 0, color: "bg-purple-500" },
-                  { label: "Admins", value: stats?.admins || 0, color: "bg-red-500" },
+                  { label: "Mécaniciens", value: stats?.mecaniciens || 0, color: "bg-slate-600" },
+                  { label: "Admins", value: stats?.admins || 0, color: "bg-slate-400" },
                 ].map((item) => {
                   const maxVal = Math.max(
                     stats?.chauffeurs || 0,
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                     </div>
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded-full shrink-0 ml-2 ${
-                        u.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        u.is_active ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-800"
                       }`}
                     >
                       {u.is_active ? "Actif" : "Inactif"}

@@ -11,6 +11,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { proprietaireService } from "@/services/proprietaire.service";
+import BackButton from "@/components/ui/back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +75,7 @@ export default function ProprietaireDetailPage({
           <h2 className="text-xl font-semibold text-slate-900 mb-2">
             Entreprise non trouvée
           </h2>
-          <Link href="/offres">
-            <Button variant="outline" className="min-h-[44px]">Retour aux offres</Button>
-          </Link>
+          <BackButton fallback="/offres" label="Retour aux offres" className="text-sm text-slate-500 hover:text-slate-700 font-medium" />
         </div>
       </div>
     );
@@ -85,13 +84,7 @@ export default function ProprietaireDetailPage({
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <Link
-          href="/offres"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 sm:mb-6 transition-colors min-h-[44px]"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          Retour aux offres
-        </Link>
+        <BackButton fallback="/offres" label="Retour aux offres" className="text-sm text-slate-500 hover:text-slate-900 mb-4 sm:mb-6 min-h-[44px]" />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

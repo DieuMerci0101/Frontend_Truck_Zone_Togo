@@ -383,7 +383,7 @@ export interface ConversationCreate {
   premier_message?: string;
 }
 
-export type TypeMessage = "texte" | "image" | "fichier";
+export type TypeMessage = "texte" | "image" | "fichier" | "audio";
 
 export interface Message {
   id: string;
@@ -391,8 +391,12 @@ export interface Message {
   expediteur_id: string;
   contenu: string;
   type: TypeMessage;
+  media_url?: string | null;
   lu: boolean;
   created_at: string;
+  expediteur_nom?: string | null;
+  expediteur_avatar?: string | null;
+  expediteur_role?: string | null;
 }
 
 export interface MessageCreate {

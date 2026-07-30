@@ -60,8 +60,8 @@ export default function MecanicienDashboard() {
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900">{enCours.length}</p>
                 )}
               </div>
-              <div className="p-2.5 sm:p-3 rounded-xl bg-yellow-50">
-                <Clock className="h-5 w-5 text-yellow-600" />
+              <div className="p-2.5 sm:p-3 rounded-xl bg-amber-50">
+                <Clock className="h-5 w-5 text-amber-600" />
               </div>
             </div>
           </CardContent>
@@ -78,8 +78,8 @@ export default function MecanicienDashboard() {
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900">{terminees.length}</p>
                 )}
               </div>
-              <div className="p-2.5 sm:p-3 rounded-xl bg-green-50">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-100">
+                <CheckCircle className="h-5 w-5 text-slate-700" />
               </div>
             </div>
           </CardContent>
@@ -148,12 +148,12 @@ export default function MecanicienDashboard() {
               </div>
             </Link>
             <Link href="/dashboard/mecanicien/profil" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors min-h-[44px]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors min-h-[44px]">
                 <div className="flex items-center gap-3">
-                  <Wrench className="h-5 w-5 text-green-600 shrink-0" />
+                  <Wrench className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="text-sm font-medium">Gérer mes spécialités</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-green-600 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-amber-600 shrink-0" />
               </div>
             </Link>
           </CardContent>

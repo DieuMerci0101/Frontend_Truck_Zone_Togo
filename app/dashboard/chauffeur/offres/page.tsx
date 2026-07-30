@@ -123,7 +123,7 @@ export default function ChauffeurOffresPage() {
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2 mb-3 flex-1">{offre.description}</p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  <span className="text-sm font-semibold text-green-700">{formatMoney(offre.salaire_propose)}</span>
+                  <span className="text-sm font-semibold text-amber-700">{formatMoney(offre.salaire_propose)}</span>
                 </div>
                 {offre.proprietaire_info && (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg mb-3">
@@ -215,15 +215,15 @@ export default function ChauffeurOffresPage() {
                 <p className="text-xs text-gray-500">Type de contrat</p>
                 <p className="font-semibold">{TYPE_CONTRAT[selectedOffre.type_contrat as keyof typeof TYPE_CONTRAT] || selectedOffre.type_contrat}</p>
               </div>
-              <div className="p-3 bg-green-50 rounded-lg">
+              <div className="p-3 bg-amber-50 rounded-lg">
                 <p className="text-xs text-gray-500">Salaire</p>
-                <p className="font-semibold text-green-700">{formatMoney(selectedOffre.salaire_propose)}</p>
+                <p className="font-semibold text-amber-700">{formatMoney(selectedOffre.salaire_propose)}</p>
               </div>
               <div className="p-3 bg-slate-50 rounded-lg">
                 <p className="text-xs text-gray-500">Zone</p>
                 <p className="font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {selectedOffre.zone_travail}</p>
               </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
+              <div className="p-3 bg-slate-100 rounded-lg">
                 <p className="text-xs text-gray-500">Début</p>
                 <p className="font-semibold flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {formatDate(selectedOffre.date_debut)}</p>
               </div>
@@ -258,7 +258,7 @@ export default function ChauffeurOffresPage() {
             </div>
             {hasApplied ? (
               <div className="text-center py-6">
-                <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                <CheckCircle className="h-12 w-12 mx-auto text-amber-500 mb-3" />
                 <p className="text-lg font-semibold text-gray-900">Déjà postulé</p>
                 <p className="text-sm text-gray-500 mt-1">Vous avez déjà postulé à cette offre</p>
               </div>
@@ -276,9 +276,9 @@ export default function ChauffeurOffresPage() {
                   />
                   <p className="text-xs text-gray-400 mt-1">Ce message est obligatoire. Il sera envoyé au propriétaire.</p>
                 </div>
-                <div className="p-3 bg-green-50 rounded-lg flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4 text-green-600 shrink-0" />
-                  <p className="text-xs text-green-800">Un message automatique sera envoyé au propriétaire et une conversation sera créée.</p>
+                <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <p className="text-xs text-amber-800">Un message automatique sera envoyé au propriétaire et une conversation sera créée.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={() => { setShowApplyDialog(false); setApplyMessage(""); }} className="w-full sm:w-auto min-h-[44px]">Annuler</Button>

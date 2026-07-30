@@ -9,7 +9,7 @@ const services = [
     description:
       "Consultez les profils des chauffeurs disponibles, vérifiez leurs documents et recrutez en confiance.",
     href: "/chauffeurs",
-    image: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=80",
+    image: "/images/image8.jpg",
   },
   {
     title: "Gestion de flotte",
@@ -46,7 +46,7 @@ export default function ServicesSection() {
               <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <img
                   src={service.image}
-                  alt={service.title}
+                  alt={service.title === "Recrutement de chauffeurs" ? "Équipe de chauffeurs professionnels et flotte de camions poids lourds" : service.title}
                   className="object-cover h-48 w-full rounded-t-lg"
                 />
                 <div className="p-5 sm:p-6">
