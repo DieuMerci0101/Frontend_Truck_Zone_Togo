@@ -48,6 +48,7 @@ function isExpired(camion: Camion): boolean {
 }
 
 const etatBadge: Record<string, "success" | "info" | "warning" | "destructive"> = {
+  bon_etat: "success",
   excellent: "success",
   bon: "info",
   use: "warning",

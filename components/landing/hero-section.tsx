@@ -6,16 +6,21 @@ import { Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-fade";
 
-const heroSlides = [
-  "/images/image1.jpg",
-  "/images/image2.jpg",
-  "/images/image3.jpg",
-  "/images/image4.jpg",
-  "/images/image5.jpg",
-  "/images/image6.jpg",
-  "/images/video1.png",
-  "/images/image9.jpg",
-  "/images/image10.jpg",
+interface HeroSlide {
+  src: string;
+  isVideo: boolean;
+}
+
+const heroSlides: HeroSlide[] = [
+  { src: "/images/image1.jpg", isVideo: false },
+  { src: "/images/image2.jpg", isVideo: false },
+  { src: "/images/image3.jpg", isVideo: false },
+  { src: "/images/image4.jpg", isVideo: false },
+  { src: "/images/image5.jpg", isVideo: false },
+  { src: "/images/image6.jpg", isVideo: false },
+  { src: "/images/video1.mp4", isVideo: true },
+  { src: "/images/image9.jpg", isVideo: false },
+  { src: "/images/image10.jpg", isVideo: false },
 ];
 
 export default function HeroSection() {
@@ -33,13 +38,24 @@ export default function HeroSection() {
           speed={1200}
           className="w-full h-full"
         >
-          {heroSlides.map((src, idx) => (
+          {heroSlides.map((slide, idx) => (
             <SwiperSlide key={idx} className="w-full h-full">
-              <img
-                src={src}
-                alt="Transport routier"
-                className="w-full h-full object-cover object-center"
-              />
+              {slide.isVideo ? (
+                <video
+                  src={slide.src}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <img
+                  src={slide.src}
+                  alt="Transport routier"
+                  className="w-full h-full object-cover object-center"
+                />
+              )}
             </SwiperSlide>
           ))}
         </Swiper>

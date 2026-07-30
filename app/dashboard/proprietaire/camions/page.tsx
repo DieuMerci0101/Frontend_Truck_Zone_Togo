@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +31,7 @@ const camionSchema = z.object({
   capacite_charge: z.coerce.number().min(1, "Capacité requise"),
   etat: z.string().min(1, "État requis"),
   description: z.string().optional(),
+  expires_at: z.string().optional().nullable(),
   nb_essieux: z.coerce.number().min(2).max(12).optional().nullable(),
   carburant: z.string().optional().nullable(),
   boite_vitesse: z.string().optional().nullable(),
@@ -41,6 +42,7 @@ const camionSchema = z.object({
 type CamionFormValues = z.infer<typeof camionSchema>;
 
 const etatBadge: Record<string, "success" | "info" | "warning" | "destructive"> = {
+  bon_etat: "success",
   excellent: "success",
   bon: "info",
   use: "warning",
@@ -66,6 +68,9 @@ export default function ProprietaireCamionsPage() {
   const [publishDialog, setPublishDialog] = useState(false);
   const [publishCamion, setPublishCamion] = useState<Camion | null>(null);
   const [publishExpiresAt, setPublishExpiresAt] = useState("");
+  const [prolongerDialog, setProlongerDialog] = useState(false);
+  const [prolongerCamion, setProlongerCamion] = useState<Camion | null>(null);
+  const [prolongerExpiresAt, setProlongerExpiresAt] = useState("");
 
   const { data: camions, isLoading } = useQuery({
     queryKey: ["proprietaire", "camions"],
@@ -76,10 +81,12 @@ export default function ProprietaireCamionsPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CamionFormValues>({
     resolver: zodResolver(camionSchema) as Resolver<CamionFormValues>,
   });
+  const watchEtat = useWatch({ control, name: "etat" });
 
   const createMutation = useMutation({
     mutationFn: (data: CamionFormValues) =>
@@ -121,6 +128,16 @@ export default function ProprietaireCamionsPage() {
       queryClient.invalidateQueries({ queryKey: ["proprietaire", "camions"] });
     },
     onError: () => toast.error("Erreur lors de la publication"),
+  });
+
+  const prolongerMutation = useMutation({
+    mutationFn: ({ camionId, expires_at }: { camionId: string; expires_at: string }) =>
+      proprietaireService.extendPublish(camionId, expires_at),
+    onSuccess: () => {
+      toast.success("Publication prolongée avec succès");
+      queryClient.invalidateQueries({ queryKey: ["proprietaire", "camions"] });
+    },
+    onError: () => toast.error("Erreur lors de la prolongation"),
   });
 
   const photoMutation = useMutation({
@@ -174,6 +191,7 @@ export default function ProprietaireCamionsPage() {
       capacite_charge: camion.capacite_charge,
       etat: camion.etat,
       description: camion.description || "",
+      expires_at: camion.expires_at ? camion.expires_at.slice(0, 16) : "",
       nb_essieux: camion.nb_essieux || null,
       carburant: camion.carburant || "",
       boite_vitesse: camion.boite_vitesse || "",
@@ -295,6 +313,11 @@ export default function ProprietaireCamionsPage() {
                     {camion.boite_vitesse && <p>Boîte: {camion.boite_vitesse}</p>}
                     {camion.kilometrage && <p>Kilométrage: {camion.kilometrage.toLocaleString()} km</p>}
                     {camion.localisation && <p>Localisation: {camion.localisation}</p>}
+                    {camion.expires_at && (
+                      <p className={new Date(camion.expires_at) <= new Date() ? "text-red-500 font-medium" : "text-amber-600"}>
+                        Expire le {new Date(camion.expires_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2 mt-4">
                     <div className="flex flex-wrap gap-2">
@@ -302,26 +325,40 @@ export default function ProprietaireCamionsPage() {
                         <Pencil className="h-3.5 w-3.5 mr-1" />
                         Modifier
                       </Button>
-                      <Button
-                        variant={camion.is_public ? "secondary" : "default"}
-                        size="sm"
-                        disabled={!camion.is_public && camion.etat === "en_reparation"}
-                        title={!camion.is_public && camion.etat === "en_reparation" ? "Impossible de publier un camion en réparation" : ""}
-                        onClick={() => {
-                          if (camion.is_public) {
-                            publishMutation.mutate({ camionId: camion.id });
-                          } else if (camion.etat !== "en_reparation") {
-                            setPublishCamion(camion);
-                            setPublishExpiresAt("");
-                            setPublishDialog(true);
-                          }
-                        }}
-                        loading={publishMutation.isPending}
-                        className="min-h-[44px]"
-                      >
-                        {camion.is_public ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
-                        {camion.is_public ? "Dépublier" : "Publier"}
-                      </Button>
+                      {camion.is_public || (camion.etat !== "en_reparation" && camion.etat !== "use") ? (
+                        <Button
+                          variant={camion.is_public ? "secondary" : "default"}
+                          size="sm"
+                          onClick={() => {
+                            if (camion.is_public) {
+                              publishMutation.mutate({ camionId: camion.id });
+                            } else {
+                              setPublishCamion(camion);
+                              setPublishExpiresAt("");
+                              setPublishDialog(true);
+                            }
+                          }}
+                          loading={publishMutation.isPending}
+                          className="min-h-[44px]"
+                        >
+                          {camion.is_public ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
+                          {camion.is_public ? "Dépublier" : "Publier"}
+                        </Button>
+                      ) : null}
+                      {camion.is_public && camion.expires_at && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setProlongerCamion(camion);
+                            setProlongerExpiresAt("");
+                            setProlongerDialog(true);
+                          }}
+                          className="min-h-[44px]"
+                        >
+                          Prolonger
+                        </Button>
+                      )}
                       <Button
                         variant="destructive"
                         size="sm"
@@ -373,6 +410,18 @@ export default function ProprietaireCamionsPage() {
             <Input label="Capacité (tonnes)" type="number" placeholder="20" error={errors.capacite_charge?.message} {...register("capacite_charge")} />
             <Select label="État" options={Object.entries(ETAT_CAMION).map(([v, l]) => ({ value: v, label: l }))} error={errors.etat?.message} {...register("etat")} />
             <Input label="Nombre d'essieux" type="number" placeholder="2-12" {...register("nb_essieux")} />
+            {watchEtat && ["en_reparation", "use"].includes(watchEtat) && (
+              <p className="text-amber-600 text-sm">Ce camion sera enregistré dans votre flotte personnelle mais ne pourra pas être publié.</p>
+            )}
+            {watchEtat && ["bon_etat", "excellent"].includes(watchEtat) && (
+              <Input
+                type="datetime-local"
+                label="Date et heure d'échéance de publication"
+                error={errors.expires_at?.message}
+                min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+                {...register("expires_at")}
+              />
+            )}
             <Select label="Carburant" options={[{ value: "", label: "Sélectionner" }, { value: "diesel", label: "Diesel" }, { value: "essence", label: "Essence" }, { value: "gaz", label: "Gaz" }, { value: "electrique", label: "Électrique" }, { value: "hybride", label: "Hybride" }]} {...register("carburant")} />
             <Select label="Boîte de vitesses" options={[{ value: "", label: "Sélectionner" }, { value: "manuelle", label: "Manuelle" }, { value: "automatique", label: "Automatique" }]} {...register("boite_vitesse")} />
             <Input label="Kilométrage (km)" type="number" placeholder="50000" {...register("kilometrage")} />
@@ -511,6 +560,38 @@ export default function ProprietaireCamionsPage() {
               className="w-full sm:w-auto min-h-[44px]"
             >
               Publier
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Prolonger Dialog */}
+      <Dialog open={prolongerDialog} onClose={() => setProlongerDialog(false)} title={`Prolonger ${prolongerCamion?.marque} ${prolongerCamion?.modele}`} size="sm">
+        <div className="space-y-4">
+          <p className="text-gray-600">Choisissez la nouvelle date d'expiration :</p>
+          <Input
+            type="datetime-local"
+            label="Nouvelle date d'expiration"
+            value={prolongerExpiresAt}
+            onChange={(e) => setProlongerExpiresAt(e.target.value)}
+            min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+          />
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
+            <Button variant="outline" onClick={() => setProlongerDialog(false)} className="w-full sm:w-auto min-h-[44px]">Annuler</Button>
+            <Button
+              onClick={() => {
+                if (prolongerCamion && prolongerExpiresAt) {
+                  const expiresAt = new Date(prolongerExpiresAt).toISOString();
+                  prolongerMutation.mutate({ camionId: prolongerCamion.id, expires_at: expiresAt });
+                  setProlongerDialog(false);
+                  setProlongerCamion(null);
+                }
+              }}
+              disabled={!prolongerExpiresAt}
+              loading={prolongerMutation.isPending}
+              className="w-full sm:w-auto min-h-[44px]"
+            >
+              Prolonger
             </Button>
           </div>
         </div>

@@ -21,6 +21,7 @@ import type { User, UserLogin, UserRegister } from "@/types";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isLoggingOut: boolean;
   isAuthenticated: boolean;
   login: (data: UserLogin) => Promise<void>;
   adminLogin: (data: UserLogin) => Promise<void>;
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
   const refreshUser = useCallback(async () => {
@@ -115,17 +117,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    setIsLoggingOut(true);
+    toast.loading("Déconnexion en cours...", { id: "logout" });
     try {
       await authService.logout();
     } catch {
       // ignore
     }
+    await new Promise((r) => setTimeout(r, 400));
     removeToken();
     removeUser();
     removeTokenCookie();
     removeUserCookie();
     localStorage.removeItem("refresh_token");
     setUserState(null);
+    setIsLoggingOut(false);
+    toast.dismiss("logout");
     router.push("/");
   };
 
@@ -134,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
+        isLoggingOut,
         isAuthenticated: !!user,
         login,
         adminLogin,
@@ -143,6 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/90 animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 rounded-full border-2 border-slate-900 border-t-transparent animate-spin" />
+            <p className="text-sm text-slate-600 font-medium">Déconnexion...</p>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }

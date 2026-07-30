@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Truck, Menu, X } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useScrollPosition } from "@/hooks/use-scroll";
+import { LogoutModal } from "@/components/ui/logout-modal";
 
 const navLinks = [
   { label: "Accueil", href: "/" },
@@ -20,6 +21,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isAuthenticated, logout } = useAuth();
   const { isScrolled } = useScrollPosition();
   const pathname = usePathname();
@@ -115,7 +117,7 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => logout()}
+                    onClick={() => setShowLogoutModal(true)}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                       isScrolled
                         ? "text-red-600 hover:bg-red-50"
@@ -238,7 +240,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setMobileOpen(false);
-                  logout();
+                  setShowLogoutModal(true);
                 }}
                 className="w-full py-2.5 text-center text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition-colors min-h-[44px]"
               >
@@ -265,6 +267,14 @@ export default function Navbar() {
           )}
         </div>
       </div>
+      <LogoutModal
+        open={showLogoutModal}
+        onConfirm={() => {
+          setShowLogoutModal(false);
+          logout();
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </>
   );
 }

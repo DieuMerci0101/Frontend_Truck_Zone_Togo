@@ -45,6 +45,9 @@ export const proprietaireService = {
   deleteCamion: (camionId: string) =>
     api.delete<{ message: string }>(`/api/proprietaires/me/camions/${camionId}`).then((r) => r.data),
 
+  extendPublish: (camionId: string, expires_at: string) =>
+    api.patch<Camion>(`/api/proprietaires/me/camions/${camionId}/prolonger`, { expires_at }).then((r) => r.data),
+
   uploadCamionPhoto: (camionId: string, formData: FormData) =>
     api.post<{ id: string; message: string; url: string }>(
       `/api/proprietaires/me/camions/${camionId}/photos`,

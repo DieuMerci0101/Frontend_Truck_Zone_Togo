@@ -151,7 +151,7 @@ export type TypeCamion =
   | "benne_soulevable"
   | "autre";
 
-export type EtatCamion = "excellent" | "bon" | "use" | "en_reparation";
+export type EtatCamion = "bon_etat" | "excellent" | "bon" | "use" | "en_reparation";
 
 export interface ProprietaireInfo {
   id: string;

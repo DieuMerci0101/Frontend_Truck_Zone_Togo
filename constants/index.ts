@@ -63,6 +63,7 @@ export const TYPE_CAMION = {
 } as const;
 
 export const ETAT_CAMION = {
+  bon_etat: "Bon état",
   excellent: "Excellent",
   bon: "Bon",
   use: "Usé",

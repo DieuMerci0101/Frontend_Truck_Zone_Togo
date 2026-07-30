@@ -34,12 +34,12 @@ export default function AboutPage() {
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <div className="bg-slate-900 text-white py-10 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <BackButton fallback="/" label="Retour" className="text-sm text-slate-300 hover:text-white mb-4" />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <BackButton fallback="/" label="Retour à l'accueil" className="text-sm text-slate-300 hover:text-white mb-4" />
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
               À propos de{" "}
               <span className="text-amber-400">Togo Truck Connect</span>
