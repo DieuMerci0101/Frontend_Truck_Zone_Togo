@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, Phone, Eye, EyeOff, Loader2, Check } from "lucide-react";
+import { API_URL } from "@/constants";
 
 const ROLES = [
   { value: "chauffeur", label: "Chauffeur", icon: "🚛", desc: "Conduire & livrer" },
@@ -43,7 +44,6 @@ export function RegisterForm() {
     setLoading(true);
 
     try {
-      const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

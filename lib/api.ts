@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://truck-zone-togo.onrender.com";
+import { API_URL } from "@/constants";
 
 async function fetchAPI<T>(
   endpoint: string,
@@ -15,7 +15,7 @@ async function fetchAPI<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });

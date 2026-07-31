@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { setTokenCookie, setUserCookie } from "@/lib/auth";
+import { API_URL } from "@/constants";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -19,7 +20,6 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/auth/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

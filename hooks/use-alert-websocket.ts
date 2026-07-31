@@ -4,9 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://truck-zone-togo.onrender.com/ws";
-const WS_LOCAL_URL = "ws://localhost:8000/ws";
+import { WS_URL } from "@/constants";
 
 interface AlertMessage {
   type: string;
@@ -27,11 +25,7 @@ export function useAlertWebSocket() {
     if (!user?.id) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const baseUrl = typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? WS_LOCAL_URL
-      : WS_BASE_URL;
-
-    const wsUrl = `${baseUrl}/alerts/${user.id}`;
+    const wsUrl = `${WS_URL}/alerts/${user.id}`;
 
     try {
       const ws = new WebSocket(wsUrl);

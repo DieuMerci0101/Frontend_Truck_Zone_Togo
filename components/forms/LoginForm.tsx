@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Truck, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { setTokenCookie, setUserCookie } from "@/lib/auth";
+import { API_URL } from "@/constants";
 
 const ROLES = [
   { value: "chauffeur", label: "Chauffeur", icon: "🚛", desc: "Conduire & livrer" },
@@ -27,7 +28,6 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

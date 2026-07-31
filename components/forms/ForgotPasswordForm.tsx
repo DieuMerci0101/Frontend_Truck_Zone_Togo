@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Loader2 } from "lucide-react";
+import { API_URL } from "@/constants";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export function ForgotPasswordForm() {
     setLoading(true);
 
     try {
-      const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -4,6 +4,10 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "truck-zone-togo.onrender.com",
+      },
+      {
+        protocol: "https",
         hostname: "**",
       },
     ],
