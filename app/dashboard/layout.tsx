@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
+import { MechanicLocationProvider } from "@/providers/mechanic-location-provider";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardTopbar } from "@/components/layout/dashboard-topbar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +17,9 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isVerificationPage = pathname === "/dashboard/verification";
+  const isVerificationPage =
+    pathname === "/dashboard/verification" ||
+    pathname === "/dashboard/mecanicien/verification";
 
   if (isLoading) {
     return (
@@ -60,7 +63,9 @@ export default function DashboardLayout({
       />
       <div className="flex-1 lg:ml-64">
         <DashboardTopbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="p-3 sm:p-4 lg:p-6">{children}</main>
+        <main className="p-3 sm:p-4 lg:p-6">
+          <MechanicLocationProvider>{children}</MechanicLocationProvider>
+        </main>
       </div>
     </div>
   );

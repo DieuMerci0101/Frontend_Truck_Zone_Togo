@@ -1,70 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { mecanicienService } from "@/services/mecanicien.service";
+import { useMechanicLocation } from "@/providers/mechanic-location-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Navigation, Locate, RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
 
-const LeafletMap = dynamic(() => import("./leaflet-map"), { ssr: false });
+const MechanicsLiveMap = dynamic(() => import("@/components/maps/mechanics-live-map"), {
+  ssr: false,
+});
 
 export default function MechanicGeoWidget() {
-  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-
-  const positionMutation = useMutation({
-    mutationFn: ({ lat, lng }: { lat: number; lng: number }) =>
-      mecanicienService.updatePosition(lat, lng),
-    onSuccess: () => {
-      setIsActive(true);
-    },
-    onError: () => toast.error("Erreur lors de la mise à jour de la position"),
-  });
-
-  const detectGPS = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast.error("Géolocalisation non supportée");
-      return;
-    }
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setPosition(newPos);
-        positionMutation.mutate(newPos);
-        toast.success("Position mise à jour");
-        setGpsLoading(false);
-      },
-      () => {
-        toast.error("Impossible de récupérer la position");
-        setGpsLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }, [positionMutation]);
-
-  useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(() => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setPosition(newPos);
-            positionMutation.mutate(newPos);
-          },
-          () => {},
-          { enableHighAccuracy: true, timeout: 15000 }
-        );
-      }
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [isActive, positionMutation]);
+  const { position, isActive, gpsLoading, activate } = useMechanicLocation();
 
   return (
     <Card>
@@ -83,7 +31,7 @@ export default function MechanicGeoWidget() {
             <Button
               variant="outline"
               size="sm"
-              onClick={detectGPS}
+              onClick={activate}
               loading={gpsLoading}
               className="min-h-[36px]"
             >
@@ -101,12 +49,10 @@ export default function MechanicGeoWidget() {
         {position ? (
           <div className="space-y-2">
             <div className="rounded-xl overflow-hidden border border-gray-200">
-              <LeafletMap
-                lat={position.lat}
-                lng={position.lng}
+              <MechanicsLiveMap
+                center={position}
                 height="h-48"
                 zoom={15}
-                interactive={false}
               />
             </div>
             <p className="text-xs text-gray-500 text-right">
@@ -123,7 +69,7 @@ export default function MechanicGeoWidget() {
             <Button
               variant="default"
               size="sm"
-              onClick={detectGPS}
+              onClick={activate}
               loading={gpsLoading}
               className="min-h-[44px]"
             >

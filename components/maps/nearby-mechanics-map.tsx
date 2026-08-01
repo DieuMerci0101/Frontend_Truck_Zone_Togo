@@ -10,16 +10,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Navigation, Locate, Wrench, MapPin, Users } from "lucide-react";
 import dynamic from "next/dynamic";
 
-const LeafletMap = dynamic(() => import("./leaflet-map"), { ssr: false });
+const MechanicsLiveMap = dynamic(() => import("@/components/maps/mechanics-live-map"), {
+  ssr: false,
+});
 
 export default function NearbyMechanicsMap() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
 
-  const { data: nearbyMechanics, isLoading: loadingMecaniciens } = useQuery({
-    queryKey: ["mecaniciens", "proches", userPos?.lat, userPos?.lng],
-    queryFn: () =>
-      mecanicienService.getProches(userPos!.lat, userPos!.lng, 50),
+  const { data: actifs, isLoading: loadingMecaniciens } = useQuery({
+    queryKey: ["mecanicien", "actifs", userPos?.lat, userPos?.lng],
+    queryFn: () => mecanicienService.getMecaniciensActifs(userPos!.lat, userPos!.lng, 50),
     enabled: !!userPos,
     refetchInterval: 30000,
   });
@@ -39,7 +40,20 @@ export default function NearbyMechanicsMap() {
 
   useEffect(() => {
     detectPosition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const markers = (actifs || []).map((m) => ({
+    id: m.id,
+    lat: m.localisation_lat!,
+    lng: m.localisation_lng!,
+    nom: m.nom_complet,
+    photo: m.photo_url,
+    telephone: m.telephone,
+    specialites: m.specialites,
+    distance_km: m.distance_km,
+    disponibilite: m.disponibilite,
+  }));
 
   return (
     <Card>
@@ -47,7 +61,7 @@ export default function NearbyMechanicsMap() {
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
             <Users className="h-5 w-5 text-green-600" />
-            Mécaniciens à proximité
+            Mécaniciens en ligne à proximité
           </span>
           <Button
             variant="outline"
@@ -66,7 +80,7 @@ export default function NearbyMechanicsMap() {
           <div className="text-center py-6">
             <MapPin className="h-8 w-8 mx-auto text-gray-300 mb-2" />
             <p className="text-sm text-gray-500 mb-3">
-              Activez votre position pour trouver les mécaniciens près de chez vous
+              Activez votre position pour trouver les mécaniciens en ligne près de chez vous
             </p>
             <Button
               variant="default"
@@ -85,24 +99,22 @@ export default function NearbyMechanicsMap() {
               {loadingMecaniciens ? (
                 <Skeleton className="h-48 w-full" />
               ) : (
-                <div className="relative h-48">
-                  <LeafletMap
-                    lat={userPos.lat}
-                    lng={userPos.lng}
-                    height="h-48"
-                    zoom={12}
-                    interactive={false}
-                  />
-                </div>
+                <MechanicsLiveMap
+                  center={userPos}
+                  mechanics={markers}
+                  height="h-48"
+                  zoom={12}
+                />
               )}
             </div>
-            {nearbyMechanics && nearbyMechanics.length > 0 && (
+            {actifs && actifs.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-700">
-                  {nearbyMechanics.length} mécanicien{nearbyMechanics.length > 1 ? "s" : ""} trouvé{nearbyMechanics.length > 1 ? "s" : ""}
+                  {actifs.length} mécanicien{actifs.length > 1 ? "s" : ""} en ligne
+                  {actifs.length > 1 ? "s" : ""}
                 </p>
                 <div className="max-h-48 overflow-y-auto space-y-2">
-                  {nearbyMechanics.map((m) => (
+                  {actifs.map((m) => (
                     <div
                       key={m.id}
                       className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
@@ -130,18 +142,21 @@ export default function NearbyMechanicsMap() {
                           ))}
                         </div>
                       </div>
-                      <Badge variant={m.disponibilite === "disponible" ? "success" : "warning"} className="text-[10px] shrink-0">
-                        {m.disponibilite === "disponible" ? "Dispo" : "Occupé"}
+                      <Badge variant="success" className="text-[10px] shrink-0">
+                        {m.distance_km != null ? `${m.distance_km.toFixed(1)} km` : "En ligne"}
                       </Badge>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {nearbyMechanics && nearbyMechanics.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-2">
-                Aucun mécanicien disponible à proximité
-              </p>
+            {actifs && actifs.length === 0 && (
+              <div className="text-center py-4">
+                <Navigation className="h-6 w-6 mx-auto text-gray-300 mb-2" />
+                <p className="text-sm text-gray-500">
+                  Aucun mécanicien en ligne à proximité pour le moment
+                </p>
+              </div>
             )}
           </div>
         )}

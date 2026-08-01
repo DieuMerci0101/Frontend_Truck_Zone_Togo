@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Truck } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -21,8 +20,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Content */}
         <div className="relative z-10 text-white px-12 xl:px-16 max-w-xl">
           <Link href="/" className="inline-flex items-center gap-3 mb-10">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center">
-              <Truck className="h-8 w-8 text-white" />
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center overflow-hidden border border-white/20 shadow-lg">
+              <img src="/logo1.jpeg" alt="Togo Truck Connect" className="h-10 w-auto object-contain" />
             </div>
             <div className="leading-tight">
               <div className="text-2xl font-bold tracking-tight leading-none">

@@ -1,6 +1,12 @@
 // ─── User ───────────────────────────────────────────
 export type UserRole = "chauffeur" | "proprietaire" | "mecanicien" | "admin";
 
+export type VerificationStatusUser =
+  | "pending_upload"
+  | "pending_approval"
+  | "approved"
+  | "rejected";
+
 export interface User {
   id: string;
   email: string;
@@ -14,6 +20,8 @@ export interface User {
   bio?: string | null;
   is_verified: boolean;
   is_active: boolean;
+  verification_status?: VerificationStatusUser;
+  verification_reject_motif?: string | null;
   created_at: string;
 }
 
@@ -281,6 +289,11 @@ export interface OffreUpdate {
 // ─── Mecanicien ─────────────────────────────────────
 export type TarificationMecanicien = "Gratuit" | "Payant" | "Sur devis";
 export type DisponibiliteMecanicien = "disponible" | "occupe" | "indisponible";
+export type VerificationStatusMecanicien =
+  | "pending_upload"
+  | "pending_approval"
+  | "approved"
+  | "rejected";
 
 export interface ProfilMecanicien {
   id: string;
@@ -296,8 +309,26 @@ export interface ProfilMecanicien {
   rayon_intervention: number;
   bio: string | null;
   photo_url: string | null;
+  proof_document_url?: string | null;
+  verification_status?: VerificationStatusMecanicien;
+  position_active?: boolean;
+  position_updated_at?: string | null;
   created_at: string;
   user?: User;
+}
+
+export interface MecanicienActif {
+  id: string;
+  nom_complet: string;
+  telephone: string | null;
+  photo_url: string | null;
+  specialites: string[];
+  disponibilite: DisponibiliteMecanicien;
+  localisation_lat: number | null;
+  localisation_lng: number | null;
+  position_active: boolean;
+  position_updated_at: string | null;
+  distance_km: number | null;
 }
 
 export interface ProfilMecanicienUpdate {

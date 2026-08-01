@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { STATUT_INCIDENT } from "@/constants";
 import { AlertTriangle, User, MapPin, CheckCircle } from "lucide-react";
 import type { Incident } from "@/types";
@@ -143,7 +143,8 @@ export default function AdminIncidentsPage() {
                 <p className="text-xs text-slate-600 line-clamp-2 mb-3 flex-1">{inc.description}</p>
 
                 <div className="text-xs text-slate-400 space-y-1 mb-3">
-                  <p>{formatDate(inc.date_incident)}</p>
+                  <p>{formatDateTime(inc.date_incident)}</p>
+                  <p>Signalé le {formatDateTime(inc.created_at)}</p>
                   {inc.victimes && (
                     <p className="text-red-600 font-medium">{inc.nombre_victimes} victime(s)</p>
                   )}

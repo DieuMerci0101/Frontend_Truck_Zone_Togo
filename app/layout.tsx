@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     "cargo",
   ],
   authors: [{ name: "Togo Truck Connect" }],
+  icons: {
+    icon: "/logo1.jpeg",
+    shortcut: "/logo1.jpeg",
+    apple: "/logo1.jpeg",
+  },
   openGraph: {
     title: "Togo Truck Connect",
     description: "Mise en relation directe entre propriétaires de camions, chauffeurs et mécaniciens.",

@@ -1,4 +1,3 @@
-import { Truck } from "lucide-react";
 import Link from "next/link";
 import BackButton from "@/components/ui/back-button";
 
@@ -8,7 +7,11 @@ export default function NotFound() {
       <div className="relative z-10 text-center text-white px-4">
         <h1 className="text-6xl sm:text-8xl lg:text-[10rem] font-bold leading-none text-white/10">404</h1>
         <div className="mt-[-2rem] sm:mt-[-3rem] lg:mt-[-4rem]">
-          <Truck className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 mx-auto mb-4 sm:mb-6 text-orange-400" />
+          <img
+            src="/logo1.jpeg"
+            alt="Togo Truck Connect"
+            className="h-12 w-auto sm:h-14 lg:h-16 mx-auto mb-4 sm:mb-6 object-contain rounded-xl"
+          />
           <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">Page non trouvée</h2>
           <p className="text-blue-200 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 max-w-md mx-auto">
             La page que vous recherchez n&apos;existe pas ou a été déplacée.

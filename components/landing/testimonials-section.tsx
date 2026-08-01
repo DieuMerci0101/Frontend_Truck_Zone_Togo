@@ -4,17 +4,20 @@ const testimonials = [
   {
     name: "Kofi Agbeko",
     role: "Chauffeur",
-    text: "Je trouve des missions facilement et le contact avec les propriétaires est direct et efficace.",
+    image: "/image13.jpeg",
+    text: "Je trouve des missions facilement et le contact avec les propriétaires est direct et efficace. La plateforme a changé ma façon de travailler.",
   },
   {
     name: "Ama Dosseh",
     role: "Propriétaire",
-    text: "J'ai recruté plusieurs chauffeurs grâce à la plateforme. La vérification des documents est un vrai plus.",
+    image: "/image14.jpeg",
+    text: "J'ai recruté plusieurs chauffeurs grâce à la plateforme. La vérification des documents est un vrai plus pour la confiance.",
   },
   {
     name: "Kwame Mensah",
-    role: "Mécanicien",
-    text: "Les demandes d'assistance arrivent directement sur mon compte. Mon activité a bien augmenté.",
+    role: "Mécanicien certifié",
+    image: "/image15.jpeg",
+    text: "Les demandes d'assistance arrivent directement sur mon compte. Mon activité a bien augmenté grâce aux interventions à proximité.",
   },
 ];
 
@@ -35,14 +38,21 @@ export default function TestimonialsSection() {
           {testimonials.map((t) => (
             <div
               key={t.name}
-              className="border border-slate-200 rounded-xl p-6 sm:p-8 hover:border-slate-300 hover:shadow-sm transition-all"
+              className="border border-slate-200 rounded-xl p-6 sm:p-8 hover:border-slate-300 hover:shadow-sm transition-all bg-white"
             >
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed mb-6">
                 &ldquo;{t.text}&rdquo;
               </p>
-              <div className="border-t border-slate-100 pt-4">
-                <div className="font-semibold text-slate-900">{t.name}</div>
-                <div className="text-sm text-amber-600">{t.role}</div>
+              <div className="border-t border-slate-100 pt-4 flex items-center gap-3">
+                <img
+                  src={t.image}
+                  alt={`Photo de ${t.name}`}
+                  className="h-12 w-12 rounded-full object-cover border-2 border-amber-200 shrink-0"
+                />
+                <div>
+                  <div className="font-semibold text-slate-900">{t.name}</div>
+                  <div className="text-sm text-amber-600">{t.role}</div>
+                </div>
               </div>
             </div>
           ))}

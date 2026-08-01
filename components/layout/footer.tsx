@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Truck } from "lucide-react";
 
 const serviceLinks = [
   { label: "Chauffeurs", href: "/chauffeurs" },
@@ -21,8 +20,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           <div>
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-amber-600 rounded-lg flex items-center justify-center">
-                <Truck className="h-5 w-5 text-white" />
+              <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/logo1.jpeg" alt="Togo Truck Connect" className="h-7 w-auto object-contain" />
               </div>
               <span className="text-lg font-bold text-white">
                 Togo Truck Connect

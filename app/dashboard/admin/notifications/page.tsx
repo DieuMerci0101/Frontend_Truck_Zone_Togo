@@ -9,7 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Bell, Check, CheckCheck } from "lucide-react";
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  MessageSquare,
+  AlertTriangle,
+  Wrench,
+  FileText,
+  Shield,
+  Inbox,
+} from "lucide-react";
+import type { ReactElement } from "react";
 
 interface Notification {
   id: string;
@@ -29,6 +40,15 @@ const typeVariant: Record<string, "info" | "warning" | "success" | "destructive"
   document: "success",
   systeme: "info",
   admin: "info",
+};
+
+const typeIcon: Record<string, ReactElement> = {
+  message: <MessageSquare className="h-5 w-5" />,
+  incident: <AlertTriangle className="h-5 w-5" />,
+  assistance: <Wrench className="h-5 w-5" />,
+  document: <FileText className="h-5 w-5" />,
+  systeme: <Bell className="h-5 w-5" />,
+  admin: <Shield className="h-5 w-5" />,
 };
 
 export default function AdminNotificationsPage() {
@@ -103,28 +123,39 @@ export default function AdminNotificationsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Skeleton key={i} className="aspect-square w-full" />
+          ))}
         </div>
       ) : notifications && notifications.length > 0 ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {notifications.map((n) => (
-            <Card key={n.id} className={`${!n.lu ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''}`}>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`text-sm font-semibold ${!n.lu ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {n.titre}
-                      </p>
-                      <Badge variant={typeVariant[n.type] || "info"} className="text-[10px]">
-                        {n.type}
-                      </Badge>
-                      {!n.lu && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{n.contenu}</p>
-                    <p className="text-xs text-gray-400 mt-1">{formatDate(n.created_at)}</p>
-                  </div>
+            <Card
+              key={n.id}
+              className={`flex flex-col overflow-hidden aspect-square ${
+                !n.lu ? "border-2 border-amber-500 bg-amber-50/40" : ""
+              }`}
+            >
+              <CardContent className="flex flex-col p-4 sm:p-5 w-full">
+                <div className="flex items-start justify-between gap-2">
+                  <span
+                    className={`p-2 rounded-lg shrink-0 ${
+                      n.lu ? "bg-gray-100 text-gray-500" : "bg-amber-100 text-amber-600"
+                    }`}
+                  >
+                    {typeIcon[n.type] || <Bell className="h-5 w-5" />}
+                  </span>
+                  <Badge variant={typeVariant[n.type] || "info"} className="text-[10px]">
+                    {n.type}
+                  </Badge>
+                </div>
+                <h3 className="mt-3 text-sm font-semibold text-gray-900 line-clamp-2">
+                  {n.titre}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600 line-clamp-4 flex-1">{n.contenu}</p>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <span className="text-xs text-gray-400 truncate">{formatDate(n.created_at)}</span>
                   {!n.lu && (
                     <Button
                       size="sm"
@@ -132,7 +163,8 @@ export default function AdminNotificationsPage() {
                       onClick={() => markReadMutation.mutate(n.id)}
                       className="shrink-0 min-h-[36px]"
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-4 w-4 mr-1" />
+                      Lu
                     </Button>
                   )}
                 </div>
@@ -143,7 +175,7 @@ export default function AdminNotificationsPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Bell className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+            <Inbox className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">
               {filterLu === "non_lues" ? "Aucune notification non lue" : "Aucune notification"}
             </p>

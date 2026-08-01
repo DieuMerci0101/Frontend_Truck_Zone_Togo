@@ -15,7 +15,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, getStatusColor } from "@/lib/utils";
+import { formatDateTime, getStatusColor } from "@/lib/utils";
 import { TYPE_INCIDENT, GRAVITE_INCIDENT, STATUT_INCIDENT } from "@/constants";
 import { AlertTriangle, Plus, MapPin, Locate, Clock, User } from "lucide-react";
 import { MapPicker } from "@/components/maps";
@@ -151,13 +151,13 @@ export default function ChauffeurIncidentsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Skeleton key={i} className="h-48" />
           ))}
         </div>
       ) : incidents && incidents.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {incidents.map((inc: Incident) => (
             <Card key={inc.id} className="flex flex-col hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex flex-col flex-1">
@@ -174,7 +174,11 @@ export default function ChauffeurIncidentsPage() {
                   </p>
                   <p className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatDate(inc.date_incident)}
+                    {formatDateTime(inc.date_incident)}
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Signalé le {formatDateTime(inc.created_at)}
                   </p>
                   {inc.victimes && (
                     <p className="text-red-600 font-medium">{inc.nombre_victimes} victime(s)</p>

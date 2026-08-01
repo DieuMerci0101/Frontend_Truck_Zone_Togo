@@ -11,6 +11,11 @@ export function AuthCard({ children, title, subtitle }: AuthCardProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <img
+            src="/logo1.jpeg"
+            alt="Togo Truck Connect"
+            className="h-14 w-auto object-contain mx-auto mb-3"
+          />
           <h1 className="text-2xl font-bold text-blue-800">Togo Truck Connect</h1>
         </div>
         <div className="bg-white rounded-2xl shadow-lg p-8">

@@ -66,7 +66,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Spécialités", href: "/dashboard/mecanicien/specialites", icon: Wrench },
     { label: "Assistance", href: "/dashboard/mecanicien/assistance", icon: Headphones },
     { label: "Messagerie", href: "/dashboard/chat", icon: MessageSquare },
-    { label: "Localisation", href: "/dashboard/mecanicien/profil", icon: MapPin },
+    { label: "Localisation", href: "/dashboard/mecanicien/localisation", icon: MapPin },
   ],
   admin: [
     { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
@@ -103,8 +103,8 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-            <Truck className="h-4 w-4 text-white" />
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+            <img src="/logo1.jpeg" alt="Togo Truck Connect" className="h-6 w-auto object-contain" />
           </div>
           <span className="text-lg font-bold text-white">TTC</span>
         </Link>

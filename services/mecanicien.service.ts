@@ -5,7 +5,15 @@ import type {
   Assistance,
   AssistanceCreate,
   AssistanceUpdateStatut,
+  VerificationStatusMecanicien,
+  MecanicienActif,
 } from "@/types";
+
+export interface MechanicVerification {
+  verification_status: VerificationStatusMecanicien;
+  proof_document_url: string | null;
+  is_verified: boolean;
+}
 
 export interface MecanicienListParams {
   skip?: number;
@@ -13,6 +21,18 @@ export interface MecanicienListParams {
   specialite?: string;
   disponibilite?: string;
   tarification?: string;
+}
+
+export interface PositionUpdateResponse {
+  message: string;
+  localisation_lat: number;
+  localisation_lng: number;
+  position_active?: boolean;
+}
+
+export interface ActivationResponse {
+  message: string;
+  position_active: boolean;
 }
 
 export const mecanicienService = {
@@ -37,7 +57,35 @@ export const mecanicienService = {
     }).then((r) => r.data),
 
   updatePosition: (lat: number, lng: number) =>
-    api.put<{ message: string; localisation_lat: number; localisation_lng: number }>("/api/mecaniciens/me/position", { localisation_lat: lat, localisation_lng: lng }).then((r) => r.data),
+    api.put<PositionUpdateResponse>("/api/mecaniciens/me/position", { localisation_lat: lat, localisation_lng: lng }).then((r) => r.data),
+
+  updateLocation: (lat: number, lng: number) =>
+    api.patch<PositionUpdateResponse>("/api/mechanics/location", { localisation_lat: lat, localisation_lng: lng }).then((r) => r.data),
+
+  activateLocation: (lat?: number, lng?: number) =>
+    api.post<ActivationResponse>("/api/mechanics/location/activate", lat != null && lng != null ? { localisation_lat: lat, localisation_lng: lng } : {}).then((r) => r.data),
+
+  deactivateLocation: () =>
+    api.post<ActivationResponse>("/api/mechanics/location/deactivate").then((r) => r.data),
+
+  getMecaniciensActifs: (lat?: number, lng?: number, rayonKm?: number) =>
+    api.get<MecanicienActif[]>("/api/mecaniciens/actifs", {
+      params: {
+        ...(lat != null ? { lat } : {}),
+        ...(lng != null ? { lng } : {}),
+        ...(rayonKm ? { rayon_km: rayonKm } : {}),
+      },
+    }).then((r) => r.data),
+
+  // ── Vérification du mécanicien ──
+  uploadProof: (formData: FormData) =>
+    api.post<{ message: string; proof_document_url: string; verification_status: VerificationStatusMecanicien }>(
+      "/api/mecaniciens/upload-proof",
+      formData
+    ).then((r) => r.data),
+
+  getVerification: () =>
+    api.get<MechanicVerification>("/api/mecaniciens/verification").then((r) => r.data),
 
   // ── Assistance ──
   createAssistance: (data: AssistanceCreate) =>

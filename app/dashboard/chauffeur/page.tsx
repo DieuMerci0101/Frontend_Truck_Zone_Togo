@@ -60,6 +60,7 @@ export default function ChauffeurDashboard() {
     queryKey: ["chauffeur", "profile"],
     queryFn: () => chauffeurService.getMyProfile(),
     retry: false,
+    refetchInterval: 15000,
   });
 
   const { data: documents, isLoading: loadingDocs } = useQuery({
@@ -82,10 +83,13 @@ export default function ChauffeurDashboard() {
     mutationFn: (statut: DisponibiliteChauffeur) =>
       chauffeurService.updateStatut({ disponibilite: statut }),
     onSuccess: (data) => {
-      toast.success(data.message);
+      toast.success(data.message || "Disponibilité mise à jour");
       queryClient.invalidateQueries({ queryKey: ["chauffeur", "profile"] });
     },
-    onError: () => toast.error("Erreur lors de la mise à jour du statut"),
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      toast.error(e?.response?.data?.detail || e?.message || "Erreur lors de la mise à jour du statut");
+    },
   });
 
   const currentStatus = profile?.disponibilite || "disponible";

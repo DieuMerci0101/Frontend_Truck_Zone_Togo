@@ -16,7 +16,7 @@ const PUBLIC_ROUTES = [
   "/about",
 ];
 
-const VERIFICATION_ROUTES = ["/dashboard/verification"];
+const VERIFICATION_ROUTES = ["/dashboard/verification", "/dashboard/mecanicien/verification"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -59,7 +59,11 @@ export function middleware(request: NextRequest) {
 
       if (!isVerificationRoute && payload.role !== "admin") {
         if (payload.is_verified === false) {
-          return NextResponse.redirect(new URL("/dashboard/verification", request.url));
+          const target =
+            payload.role === "mecanicien"
+              ? "/dashboard/mecanicien/verification"
+              : "/dashboard/verification";
+          return NextResponse.redirect(new URL(target, request.url));
         }
       }
 

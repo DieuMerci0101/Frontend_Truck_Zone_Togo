@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Truck, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useScrollPosition } from "@/hooks/use-scroll";
 import { LogoutModal } from "@/components/ui/logout-modal";
@@ -48,11 +48,8 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <Link href="/" className="flex items-center gap-3 lg:mr-8">
-              {/* Future logo: replace div below with <img src="/images/logo.png" alt="Togo Truck Connect" className="h-9 w-auto" /> */}
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                isScrolled ? "bg-slate-900" : "bg-amber-600"
-              }`}>
-                <Truck className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-slate-200">
+                <img src="/logo1.jpeg" alt="Togo Truck Connect" className="h-8 w-auto object-contain" />
               </div>
               <div className="leading-tight">
                 <div className={`text-sm font-bold leading-none ${
@@ -177,8 +174,8 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-              <Truck className="h-4 w-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-white ring-1 ring-slate-200 flex items-center justify-center overflow-hidden">
+              <img src="/logo1.jpeg" alt="Togo Truck Connect" className="h-6 w-auto object-contain" />
             </div>
             <div className="leading-tight">
               <div className="text-sm font-bold text-slate-900 leading-none">

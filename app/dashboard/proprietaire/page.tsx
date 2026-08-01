@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/auth-provider";
 import { proprietaireService } from "@/services/proprietaire.service";
+import { chauffeurService } from "@/services/chauffeur.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { Avatar } from "@/components/ui/avatar";
+import { formatMoney } from "@/lib/utils";
 import { TYPE_CONTRAT } from "@/constants";
+import { DISPONIBILITE_CHAUFFEUR } from "@/constants";
 import {
   Truck,
   Briefcase,
@@ -17,6 +20,13 @@ import {
   ArrowRight,
   Users,
 } from "lucide-react";
+import type { DisponibiliteChauffeur } from "@/types";
+
+const statutBadge: Record<DisponibiliteChauffeur, "success" | "warning" | "destructive"> = {
+  disponible: "success",
+  en_mission: "warning",
+  indisponible: "destructive",
+};
 
 export default function ProprietaireDashboard() {
   const { user } = useAuth();
@@ -30,6 +40,17 @@ export default function ProprietaireDashboard() {
     queryKey: ["proprietaire", "offres"],
     queryFn: () => proprietaireService.getMyOffres(),
   });
+
+  const { data: chauffeurs, isLoading: loadingChauffeurs } = useQuery({
+    queryKey: ["proprietaire", "chauffeurs-live"],
+    queryFn: () => chauffeurService.list({ limit: 50 }),
+    refetchInterval: 15000,
+  });
+
+  const visibleChauffeurs =
+    chauffeurs?.filter(
+      (c) => c.user?.is_active !== false && c.disponibilite !== "indisponible"
+    ) ?? [];
 
   const statCards = [
     {
@@ -56,8 +77,8 @@ export default function ProprietaireDashboard() {
       bg: "bg-slate-100",
     },
     {
-      title: "Chauffeurs",
-      value: null,
+      title: "Chauffeurs disponibles",
+      value: loadingChauffeurs ? null : visibleChauffeurs.length,
       icon: Users,
       color: "text-amber-600",
       bg: "bg-amber-50",
@@ -112,6 +133,65 @@ export default function ProprietaireDashboard() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle className="text-lg">Chauffeurs disponibles en temps réel</CardTitle>
+          <Link href="/dashboard/proprietaire/chauffeurs">
+            <Button variant="outline" size="sm" className="min-h-[44px] text-xs">
+              Rechercher des chauffeurs
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {loadingChauffeurs ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+          ) : visibleChauffeurs.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {visibleChauffeurs.slice(0, 6).map((chauffeur) => (
+                <div
+                  key={chauffeur.id}
+                  className="flex flex-col p-3 rounded-lg bg-gray-50 min-h-[120px]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={chauffeur.user?.photo_profil || null}
+                      name={chauffeur.user?.nom_complet || "Chauffeur"}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {chauffeur.user?.nom_complet || "Chauffeur"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        Permis {chauffeur.categorie_permis} · {chauffeur.annees_experience} an(s)
+                      </p>
+                    </div>
+                    <Badge variant={statutBadge[chauffeur.disponibilite] || "default"} className="shrink-0">
+                      {DISPONIBILITE_CHAUFFEUR[chauffeur.disponibilite] || chauffeur.disponibilite}
+                    </Badge>
+                  </div>
+                  <Link
+                    href={`/chauffeurs/${chauffeur.id}`}
+                    className="mt-auto pt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 min-h-[36px]"
+                  >
+                    Voir plus
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-400">
+              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Aucun chauffeur disponible actuellement</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>

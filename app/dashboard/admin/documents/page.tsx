@@ -1,240 +1,383 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { adminService } from "@/services/admin.service";
+import { adminService, type AdminVerificationItem } from "@/services/admin.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar } from "@/components/ui/avatar";
+import { API_URL } from "@/constants";
+import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/utils";
-import { STATUT_DOCUMENT, TYPE_DOCUMENT } from "@/constants";
-import { FileText, Check, X, User, Shield, Download, ExternalLink } from "lucide-react";
-import type { Document } from "@/types";
+import {
+  FileText,
+  Check,
+  X,
+  ShieldCheck,
+  ShieldX,
+  Clock,
+  ExternalLink,
+  Download,
+  FolderOpen,
+  Truck,
+  Building2,
+  Wrench,
+  Users,
+} from "lucide-react";
+import type { VerificationStatusUser } from "@/types";
 
-const statusVariant: Record<string, "success" | "destructive" | "warning" | "info"> = {
-  valide: "success",
-  rejete: "destructive",
-  en_attente: "warning",
+type RoleTab = "tous" | "chauffeur" | "proprietaire" | "mecanicien";
+
+const ROLE_TABS: { id: RoleTab; label: string; icon: React.ElementType }[] = [
+  { id: "tous", label: "Tous", icon: Users },
+  { id: "chauffeur", label: "Chauffeurs", icon: Truck },
+  { id: "proprietaire", label: "Propriétaires de camions", icon: Building2 },
+  { id: "mecanicien", label: "Mécaniciens", icon: Wrench },
+];
+
+const STATUT_OPTIONS = [
+  { value: "", label: "Tous les statuts" },
+  { value: "en_attente", label: "En attente" },
+  { value: "valide", label: "Validé" },
+  { value: "rejete", label: "Rejeté" },
+];
+
+// "En attente" regroupe les dossiers incomplets (pending_upload) et
+// les dossiers soumis en attente de décision (pending_approval).
+const STATUT_TO_BACKEND: Record<string, string | undefined> = {
+  "": undefined,
+  en_attente: "pending_upload,pending_approval",
+  valide: "approved",
+  rejete: "rejected",
 };
+
+const DOC_LABELS: Record<string, string> = {
+  permis: "Permis de conduire",
+  cni: "Pièce d'identité",
+  certificat: "Attestation de capacité",
+  assurance: "Certificat médical",
+  justificatif: "Justificatif / Diplôme",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  chauffeur: "Chauffeur",
+  proprietaire: "Propriétaire de camions",
+  mecanicien: "Mécanicien",
+};
+
+function statusBadge(status?: VerificationStatusUser) {
+  switch (status) {
+    case "approved":
+      return <Badge variant="success"><ShieldCheck className="h-3 w-3 mr-1" />Validé</Badge>;
+    case "rejected":
+      return <Badge variant="destructive"><ShieldX className="h-3 w-3 mr-1" />Rejeté</Badge>;
+    case "pending_approval":
+      return <Badge variant="warning"><Clock className="h-3 w-3 mr-1" />En attente</Badge>;
+    default:
+      return <Badge variant="outline">Dossier incomplet</Badge>;
+  }
+}
+
+function resolveFileUrl(url: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/uploads/")) return `${API_URL}${url}`;
+  return url;
+}
+
+function isImageUrl(url: string): boolean {
+  return /\.(jpe?g|png|webp|gif)$/i.test(url.split("?")[0]);
+}
+
+function DocThumb({ url, label }: { url: string | null; label: string }) {
+  const resolved = resolveFileUrl(url);
+  if (resolved && isImageUrl(resolved)) {
+    return (
+      <img
+        src={resolved}
+        alt={label}
+        className="h-16 w-16 rounded-md object-cover border border-gray-200 bg-white"
+      />
+    );
+  }
+  return (
+    <div className="h-16 w-16 rounded-md border border-gray-200 bg-white flex items-center justify-center">
+      <FileText className="h-7 w-7 text-gray-400" />
+    </div>
+  );
+}
+
+function docBadge(role: string, statut?: string) {
+  if (role === "mecanicien") {
+    return statusBadge(statut as VerificationStatusUser);
+  }
+  const variant = statut === "valide" ? "success" : statut === "rejete" ? "destructive" : "warning";
+  const label = statut === "valide" ? "Validé" : statut === "rejete" ? "Rejeté" : "En attente";
+  return <Badge variant={variant} className="shrink-0 ml-2">{label}</Badge>;
+}
 
 export default function AdminDocumentsPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [roleTab, setRoleTab] = useState<RoleTab>("tous");
   const [filterStatut, setFilterStatut] = useState("");
-  const [rejectDoc, setRejectDoc] = useState<{ userId: string; docIds: string[] } | null>(null);
+  const [limit, setLimit] = useState(12);
+  const [rejectItem, setRejectItem] = useState<AdminVerificationItem | null>(null);
   const [rejectMotif, setRejectMotif] = useState("");
-  const limit = 10;
 
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ["admin", "documents", page, filterStatut],
+  const backendStatut = STATUT_TO_BACKEND[filterStatut];
+
+  const { data: verifications, isLoading } = useQuery({
+    queryKey: ["admin", "verifications", roleTab, filterStatut, limit],
     queryFn: () =>
-      adminService.getDocuments({
-        skip: (page - 1) * limit,
+      adminService.getVerifications({
+        statut: backendStatut || undefined,
+        role: roleTab === "tous" ? undefined : roleTab,
+        skip: 0,
         limit,
-        statut: filterStatut || undefined,
       }),
   });
 
-  const validateMutation = useMutation({
-    mutationFn: ({ id, statut, motif }: { id: string; statut: string; motif?: string }) =>
-      adminService.updateDocumentStatut(id, statut, motif),
+  const decideMutation = useMutation({
+    mutationFn: ({ userId, statut, motif }: { userId: string; statut: "approved" | "rejected"; motif?: string }) =>
+      adminService.decideVerification(userId, statut, motif),
     onSuccess: () => {
-      toast.success("Document mis à jour");
-      queryClient.invalidateQueries({ queryKey: ["admin", "documents"] });
+      toast.success("Décision enregistrée. Le dossier reste consultable dans l'historique.");
+      queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
+      setRejectItem(null);
+      setRejectMotif("");
     },
-    onError: () => toast.error("Erreur lors de la mise à jour"),
+    onError: (err: any) => {
+      toast.error(err?.message || "Erreur lors de la décision");
+    },
   });
 
-  const usersWithDocs = useMemo(() => {
-    if (!documents) return [];
-    const map = new Map<string, { user: { id: string; nom: string; email: string; role: string }; docs: Document[] }>();
-    for (const doc of documents) {
-      const key = doc.utilisateur_id;
-      if (!map.has(key)) {
-        map.set(key, {
-          user: {
-            id: key,
-            nom: doc.utilisateur_nom || "Inconnu",
-            email: doc.utilisateur_email || "",
-            role: doc.utilisateur_role || "",
-          },
-          docs: [],
-        });
-      }
-      map.get(key)!.docs.push(doc);
-    }
-    return Array.from(map.values());
-  }, [documents]);
-
-  const totalPages = usersWithDocs ? Math.ceil(usersWithDocs.length / limit) : 1;
-
-  const handleValidateAll = (docIds: string[]) => {
-    for (const id of docIds) {
-      validateMutation.mutate({ id, statut: "valide" });
-    }
+  const handleApprove = (item: AdminVerificationItem) => {
+    decideMutation.mutate({ userId: item.user_id, statut: "approved" });
   };
 
-  const handleRejectAll = () => {
-    if (!rejectDoc || !rejectMotif.trim()) {
+  const handleReject = () => {
+    if (!rejectItem || !rejectMotif.trim()) {
       toast.error("Veuillez saisir un motif de rejet");
       return;
     }
-    for (const id of rejectDoc.docIds) {
-      validateMutation.mutate({ id, statut: "rejete", motif: rejectMotif.trim() });
-    }
-    setRejectDoc(null);
-    setRejectMotif("");
+    decideMutation.mutate({ userId: rejectItem.user_id, statut: "rejected", motif: rejectMotif.trim() });
   };
+
+  const canDecide = (status?: VerificationStatusUser) =>
+    !status || status === "pending_upload" || status === "pending_approval" || status === "rejected";
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-slate-50 rounded-lg">
-            <FileText className="h-6 w-6 text-slate-700" />
+            <FolderOpen className="h-6 w-6 text-slate-700" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Modération des documents</h1>
-            <p className="text-gray-500">Validez ou rejetez les documents soumis par les utilisateurs</p>
+            <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
+            <p className="text-gray-500">
+              Validez ou rejetez les dossiers des chauffeurs, propriétaires de camions et mécaniciens
+            </p>
           </div>
         </div>
-        <Select
-          options={[
-            { value: "", label: "Tous les statuts" },
-            ...Object.entries(STATUT_DOCUMENT).map(([v, l]) => ({ value: v, label: l })),
-          ]}
+        <select
           value={filterStatut}
           onChange={(e) => {
             setFilterStatut(e.target.value);
-            setPage(1);
+            setLimit(12);
           }}
-          className="w-full sm:w-auto"
-        />
+          className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+        >
+          {STATUT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Onglets par rôle */}
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtrer par rôle">
+        {ROLE_TABS.map((tab) => {
+          const isActive = roleTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => {
+                setRoleTab(tab.id);
+                setLimit(12);
+              }}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors border min-h-[44px]",
+                isActive
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+              )}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-40 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-72 w-full" />
           ))}
         </div>
-      ) : usersWithDocs && usersWithDocs.length > 0 ? (
+      ) : verifications && verifications.length > 0 ? (
         <>
-          <div className="space-y-4">
-            {usersWithDocs.map(({ user, docs }) => {
-              const pendingDocs = docs.filter((d) => d.statut === "en_attente");
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+            {verifications.map((item) => {
+              const decidable = canDecide(item.verification_status);
               return (
-                <Card key={user.id}>
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                        <User className="h-6 w-6 text-slate-700" />
-                      </div>
+                <Card key={item.user_id} className="flex flex-col">
+                  <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar
+                        src={item.photo_profil}
+                        name={item.nom_complet || item.email || ""}
+                        size="lg"
+                      />
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">{user.nom}</h3>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                        <Badge variant="info" className="mt-1">
-                          <Shield className="h-3 w-3 mr-1" />
-                          {user.role === "chauffeur"
-                            ? "Chauffeur"
-                            : user.role === "proprietaire"
-                              ? "Propriétaire"
-                              : user.role}
-                        </Badge>
-                      </div>
-                      {pendingDocs.length > 0 && (
-                        <div className="flex gap-2 shrink-0">
-                          <Button
-                            size="sm"
-                            onClick={() => handleValidateAll(pendingDocs.map((d) => d.id))}
-                            loading={validateMutation.isPending}
-                          >
-                            <Check className="h-3.5 w-3.5 mr-1" />
-                            Valider tout
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              setRejectDoc({ userId: user.id, docIds: pendingDocs.map((d) => d.id) });
-                              setRejectMotif("");
-                            }}
-                            loading={validateMutation.isPending}
-                          >
-                            <X className="h-3.5 w-3.5 mr-1" />
-                            Rejeter tout
-                          </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-gray-900 text-base truncate">
+                            {item.nom_complet || "Inconnu"}
+                          </h3>
+                          {statusBadge(item.verification_status)}
                         </div>
-                      )}
+                        <p className="text-sm text-gray-500 truncate">{item.email || "—"}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                          <Badge variant="info">
+                            {ROLE_LABELS[item.role] || item.role}
+                          </Badge>
+                          {item.soumis_le && (
+                            <span className="text-xs text-gray-500">
+                              Soumis le {formatDate(item.soumis_le)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {docs.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50"
+                    {decidable && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleApprove(item)}
+                          loading={decideMutation.isPending}
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2 bg-white rounded-lg shrink-0">
-                              <FileText className="h-4 w-4 text-gray-600" />
-                            </div>
-                            <div className="min-w-0">
+                          <Check className="h-3.5 w-3.5 mr-1" />
+                          Valider
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={() => {
+                            setRejectItem(item);
+                            setRejectMotif("");
+                          }}
+                          loading={decideMutation.isPending}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" />
+                          Rejeter
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="grid gap-2">
+                      {item.required_documents.map((type) => {
+                        const doc = item.documents.find((d) => d.type_document === type);
+                        const missing = item.missing_documents.includes(type);
+                        const fileUrl = doc?.fichier_url || null;
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50"
+                          >
+                            <DocThumb url={fileUrl} label={DOC_LABELS[type] || type} />
+                            <div className="min-w-0 flex-1">
                               <p className="font-medium text-gray-900 text-sm">
-                                {TYPE_DOCUMENT[doc.type_document as keyof typeof TYPE_DOCUMENT] || doc.type_document}
+                                {DOC_LABELS[type] || type}
                               </p>
-                              <p className="text-xs text-gray-500">{formatDate(doc.created_at)}</p>
-                              {doc.fichier_url && (
+                              {missing && <p className="text-xs text-red-600">Non soumis</p>}
+                              {doc?.statut === "rejete" && doc.commentaire_admin && (
+                                <p className="text-xs text-red-600 truncate">
+                                  Motif : {doc.commentaire_admin}
+                                </p>
+                              )}
+                              {fileUrl && (
                                 <div className="flex gap-2 mt-1">
                                   <a
-                                    href={doc.fichier_url}
+                                    href={fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-amber-800"
-                                                  >
-                                                    <ExternalLink className="h-3 w-3" />
-                                                    Voir
-                                                  </a>
-                                                  <a
-                                                    href={doc.fichier_url}
-                                                    download
-                                                    className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-amber-800"
+                                    className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-amber-800"
                                   >
-                                    <Download className="h-3 w-3" />
-                                    Télécharger
+                                    <ExternalLink className="h-3 w-3" /> Voir
+                                  </a>
+                                  <a
+                                    href={fileUrl}
+                                    download
+                                    className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-amber-800"
+                                  >
+                                    <Download className="h-3 w-3" /> Télécharger
                                   </a>
                                 </div>
                               )}
                             </div>
+                            {missing ? (
+                              <Badge variant="destructive" className="shrink-0 ml-2">Manquant</Badge>
+                            ) : (
+                              docBadge(item.role, doc?.statut)
+                            )}
                           </div>
-                          <Badge variant={statusVariant[doc.statut] || "info"} className="shrink-0 ml-2">
-                            {STATUT_DOCUMENT[doc.statut as keyof typeof STATUT_DOCUMENT] || doc.statut}
-                          </Badge>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
+
+                    {item.verification_status === "rejected" && item.verification_reject_motif && (
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                        <ShieldX className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700">
+                          <span className="font-semibold">Motif du rejet : </span>
+                          {item.verification_reject_motif}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
             })}
           </div>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+          {verifications.length >= limit && (
+            <div className="flex justify-center">
+              <Button variant="outline" onClick={() => setLimit((l) => l + 12)} className="min-h-[44px]">
+                Charger plus
+              </Button>
+            </div>
+          )}
         </>
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">Aucun document trouvé</p>
+            <p className="text-gray-500">Aucun dossier trouvé</p>
           </CardContent>
         </Card>
       )}
 
-      <Dialog open={!!rejectDoc} onClose={() => { setRejectDoc(null); setRejectMotif(""); }} title="Rejeter les documents">
+      <Dialog open={!!rejectItem} onClose={() => { setRejectItem(null); setRejectMotif(""); }} title="Rejeter le dossier">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             Veuillez indiquer le motif du rejet. Un email sera envoyé à l&apos;utilisateur avec cette information.
@@ -246,10 +389,10 @@ className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-ambe
             rows={4}
           />
           <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => { setRejectDoc(null); setRejectMotif(""); }}>
+            <Button variant="ghost" onClick={() => { setRejectItem(null); setRejectMotif(""); }}>
               Annuler
             </Button>
-            <Button variant="destructive" onClick={handleRejectAll} loading={validateMutation.isPending} disabled={!rejectMotif.trim()}>
+            <Button variant="destructive" onClick={handleReject} loading={decideMutation.isPending} disabled={!rejectMotif.trim()}>
               Confirmer le rejet
             </Button>
           </div>

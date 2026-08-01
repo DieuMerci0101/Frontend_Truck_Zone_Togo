@@ -1,5 +1,50 @@
 import api from "./api";
-import type { AdminStats, User, Document, Incident, Assistance } from "@/types";
+import type { AdminStats, User, Document, Incident, Assistance, VerificationStatusMecanicien, VerificationStatusUser } from "@/types";
+
+export interface AdminVerificationDocument {
+  type_document: string;
+  statut: string;
+  commentaire_admin: string | null;
+  fichier_url: string | null;
+  created_at: string | null;
+}
+
+export interface AdminVerificationItem {
+  user_id: string;
+  role: User["role"];
+  nom_complet: string | null;
+  email: string | null;
+  telephone: string | null;
+  photo_profil: string | null;
+  verification_status: VerificationStatusUser;
+  verification_reject_motif: string | null;
+  required_documents: string[];
+  missing_documents: string[];
+  documents: AdminVerificationDocument[];
+  created_at: string | null;
+  soumis_le: string | null;
+}
+
+export interface AdminVerificationListParams {
+  statut?: string;
+  role?: string;
+  skip?: number;
+  limit?: number;
+}
+
+export interface AdminMechanicPending {
+  id: string;
+  user_id: string;
+  nom_complet: string | null;
+  email: string | null;
+  telephone: string | null;
+  specialites: string[];
+  annees_experience: number;
+  tarification: string;
+  proof_document_url: string | null;
+  verification_status: VerificationStatusMecanicien;
+  created_at: string;
+}
 
 export interface AdminAssistanceResponse {
   total: number;
@@ -54,4 +99,18 @@ export const adminService = {
 
   getAssistance: (params?: { statut?: string }) =>
     api.get<AdminAssistanceResponse>("/api/admin/assistance", { params }).then((r) => r.data),
+
+  // ── Vérification des mécaniciens ──
+  getMechanicsPending: (params?: { statut?: string; skip?: number; limit?: number }) =>
+    api.get<AdminMechanicPending[]>("/api/admin/mechanics/pending", { params }).then((r) => r.data),
+
+  verifyMechanic: (mechanicId: string, statut: "approved" | "rejected", motif?: string) =>
+    api.put<{ message: string; verification_status: string }>(`/api/admin/verify-mechanic/${mechanicId}`, { statut, motif }).then((r) => r.data),
+
+  // ── Vérification des utilisateurs (chauffeur / propriétaire / mécanicien) ──
+  getVerifications: (params?: AdminVerificationListParams) =>
+    api.get<AdminVerificationItem[]>("/api/admin/verifications", { params }).then((r) => r.data),
+
+  decideVerification: (userId: string, statut: "approved" | "rejected", motif?: string) =>
+    api.put<{ message: string }>(`/api/admin/verifications/${userId}`, { statut, motif }).then((r) => r.data),
 };

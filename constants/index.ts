@@ -1,4 +1,7 @@
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
+const ENV_API_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+
+export const API_BASE_URL = (ENV_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
 export const API_URL = API_BASE_URL;
 export const WS_URL = API_BASE_URL.replace(/^http/, "ws") + "/ws";
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Togo Truck Connect";
