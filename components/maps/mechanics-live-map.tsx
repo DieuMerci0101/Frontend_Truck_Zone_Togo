@@ -103,6 +103,7 @@ export default function MechanicsLiveMap({
   useEffect(() => {
     let L: any;
     let cancelled = false;
+    let onResize: (() => void) | null = null;
 
     async function init() {
       L = await import("leaflet");
@@ -124,6 +125,12 @@ export default function MechanicsLiveMap({
         zoomControl: true,
         dragging: true,
       });
+
+      // Recalcule la taille de la carte après le rendu du conteneur
+      // (essentiel sur mobile : défilement, clavier, rotation).
+      setTimeout(() => map.invalidateSize(), 150);
+      onResize = () => map.invalidateSize();
+      window.addEventListener("resize", onResize);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors",
@@ -160,6 +167,7 @@ export default function MechanicsLiveMap({
 
     return () => {
       cancelled = true;
+      if (onResize) window.removeEventListener("resize", onResize);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -169,6 +177,12 @@ export default function MechanicsLiveMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Recalcule la taille de la carte dès qu'elle est prête (conteneur dimensionné).
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
+    mapRef.current.invalidateSize();
+  }, [ready]);
 
   // Rendu des marqueurs mécaniciens (reconstruit à chaque changement).
   useEffect(() => {

@@ -223,7 +223,6 @@ export function DocumentUpload({
         ref={fileInputRef}
         type="file"
         accept=".jpg,.jpeg,.png,.pdf,image/*,application/pdf"
-        capture="environment"
         onChange={handleFileChange}
         className="hidden"
       />

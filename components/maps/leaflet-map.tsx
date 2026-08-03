@@ -49,6 +49,10 @@ export default function LeafletMap({
         dragging: interactive,
       });
 
+      // Recalcule la taille de la carte une fois le conteneur rendu,
+      // indispensable sur mobile (défilement/rotation) pour un affichage complet.
+      setTimeout(() => map.invalidateSize(), 150);
+
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; OpenStreetMap contributors',
       }).addTo(map);

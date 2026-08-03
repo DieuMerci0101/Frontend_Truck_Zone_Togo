@@ -391,9 +391,8 @@ export default function ProprietaireCamionsPage() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/jpg"
         multiple
-        capture="environment"
         onChange={handlePhotoUpload}
         className="hidden"
       />

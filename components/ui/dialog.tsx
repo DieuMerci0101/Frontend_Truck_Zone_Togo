@@ -68,6 +68,7 @@ function Dialog({ open, onClose, title, children, size = "md" }: DialogProps) {
       <div
         className={cn(
           "relative z-10 w-full mx-4 bg-white rounded-xl shadow-2xl transition-all duration-300",
+          "max-h-[92dvh] overflow-y-auto overscroll-contain",
           sizeClasses[size],
           open
             ? "scale-100 opacity-100 translate-y-0"

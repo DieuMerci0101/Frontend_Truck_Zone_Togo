@@ -32,6 +32,26 @@ interface MechanicLocationContextValue {
 
 const MechanicLocationContext = createContext<MechanicLocationContextValue | null>(null);
 
+// Options optimales pour un fix GPS rapide et fiable sur mobile.
+const GPS_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 15000,
+  maximumAge: 0,
+};
+
+function gpsErrorMessage(err: GeolocationPositionError): string {
+  switch (err.code) {
+    case err.PERMISSION_DENIED:
+      return "Veuillez autoriser l'accès à la localisation GPS dans votre navigateur";
+    case err.POSITION_UNAVAILABLE:
+      return "Position GPS indisponible. Vérifiez que le GPS est activé";
+    case err.TIMEOUT:
+      return "Le GPS met trop de temps à répondre. Essayez dans une zone dégagée";
+    default:
+      return "Impossible de récupérer votre position GPS";
+  }
+}
+
 export function MechanicLocationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -105,11 +125,11 @@ export function MechanicLocationProvider({ children }: { children: ReactNode }) 
           .catch(() => toast.error("Impossible d'activer la position"))
           .finally(() => setGpsLoading(false));
       },
-      () => {
-        toast.error("Impossible de récupérer la position");
+      (err) => {
+        toast.error(gpsErrorMessage(err));
         setGpsLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      GPS_OPTIONS
     );
   }, []);
 
@@ -138,8 +158,12 @@ export function MechanicLocationProvider({ children }: { children: ReactNode }) 
             .then(() => setLastUpdatedAt(new Date().toISOString()))
             .catch(() => {});
         },
-        () => {},
-        { enableHighAccuracy: true, timeout: 15000 }
+        (err) => {
+          // En arrière-plan, on préserve la dernière position connue.
+          if (!navigator.geolocation) return;
+          console.warn("GPS polling", err.code, err.message);
+        },
+        GPS_OPTIONS
       );
     }, 30000);
     return () => clearInterval(interval);

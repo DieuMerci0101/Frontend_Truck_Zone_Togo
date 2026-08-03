@@ -109,23 +109,32 @@ export default function ProprietaireAssistancePage() {
 
   const detectGPS = () => {
     setGpsLoading(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setValue("localisation_lat", pos.coords.latitude);
-          setValue("localisation_lng", pos.coords.longitude);
-          toast.success("Position détectée");
-          setGpsLoading(false);
-        },
-        () => {
-          toast.error("Impossible de détecter la position");
-          setGpsLoading(false);
-        }
-      );
-    } else {
-      toast.error("Géolocalisation non supportée");
+    if (!navigator.geolocation) {
+      toast.error("Géolocalisation non supportée sur cet appareil");
       setGpsLoading(false);
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setValue("localisation_lat", pos.coords.latitude);
+        setValue("localisation_lng", pos.coords.longitude);
+        toast.success("Position détectée");
+        setGpsLoading(false);
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Veuillez autoriser l'accès à la localisation GPS dans votre navigateur");
+        } else if (err.code === err.TIMEOUT) {
+          toast.error("Le GPS met trop de temps à répondre. Réessayez dans une zone dégagée");
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          toast.error("Position GPS indisponible. Vérifiez que le GPS est activé");
+        } else {
+          toast.error("Impossible de détecter la position GPS");
+        }
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   };
 
   return (

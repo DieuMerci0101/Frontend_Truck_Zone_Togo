@@ -8,6 +8,13 @@ export const conversationService = {
   create: (data: ConversationCreate) =>
     api.post<Conversation>("/api/conversations/", data).then((r) => r.data),
 
+  /**
+   * Démarre une conversation avec un participant et envoie un premier message.
+   * Si une conversation existe déjà, le message est ajouté à la discussion existante.
+   */
+  initiate: (data: ConversationCreate) =>
+    api.post<Conversation>("/api/chat/initiate", data).then((r) => r.data),
+
   getById: (id: string) =>
     api.get<Conversation>(`/api/conversations/${id}`).then((r) => r.data),
 

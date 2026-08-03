@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/utils";
-import { MapPin, Navigation, Locate, Power, Users } from "lucide-react";
+import { MapPin, Navigation, Locate, Power, Users, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MechanicsLiveMap = dynamic(() => import("@/components/maps/mechanics-live-map"), {
@@ -81,6 +81,12 @@ export default function MecanicienLocalisationPage() {
       <Card>
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-3 mb-4">
+            {gpsLoading && (
+              <span className="flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Géolocalisation en cours...
+              </span>
+            )}
             {isActive ? (
               <Badge variant="success" className="animate-pulse">
                 En ligne — visible par les chauffeurs
