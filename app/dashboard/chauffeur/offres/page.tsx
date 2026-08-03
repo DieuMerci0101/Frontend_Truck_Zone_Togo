@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { chauffeurService, type Offre } from "@/services/chauffeur.service";
+import { conversationService } from "@/services/conversation.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export default function ChauffeurOffresPage() {
   const [selectedOffre, setSelectedOffre] = useState<Offre | null>(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
   const [applyMessage, setApplyMessage] = useState("");
+  const [contactingOffreId, setContactingOffreId] = useState<string | null>(null);
 
   const { data: offres, isLoading } = useQuery({
     queryKey: ["chauffeur", "offres", filterContrat, filterZone],
@@ -66,6 +68,28 @@ export default function ChauffeurOffresPage() {
       return;
     }
     postulerMutation.mutate({ offreId: selectedOffre.id, message: applyMessage });
+  };
+
+  const contactMutation = useMutation({
+    mutationFn: ({ offreId, message }: { offreId: string; message: string }) =>
+      conversationService.initiateFromOffer({ offre_id: offreId, message }),
+    onSuccess: (conv) => {
+      toast.success("Message envoyé au propriétaire");
+      setContactingOffreId(null);
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      setTimeout(() => router.push(`/dashboard/chat/${conv.id}`), 600);
+    },
+    onError: (err: any) => {
+      setContactingOffreId(null);
+      toast.error(err.response?.data?.detail || "Erreur lors de l'envoi du message");
+    },
+  });
+
+  const handleContact = (offre: Offre) => {
+    if (contactingOffreId) return;
+    setContactingOffreId(offre.id);
+    const defaultMsg = `Bonjour, je suis intéressé(e) par votre offre « ${offre.titre} ».`;
+    contactMutation.mutate({ offreId: offre.id, message: defaultMsg });
   };
 
   const hasApplied = candidatures && candidatures.length > 0;
@@ -169,6 +193,19 @@ export default function ChauffeurOffresPage() {
                     </Button>
                   )}
                 </div>
+                {!offre.is_expired && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[44px] w-full mt-2"
+                    onClick={() => handleContact(offre)}
+                    loading={contactingOffreId === offre.id}
+                    disabled={!!contactingOffreId}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                    Contacter le propriétaire
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}

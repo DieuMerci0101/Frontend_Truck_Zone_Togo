@@ -1,6 +1,12 @@
 import api from "./api";
 import type { Conversation, ConversationCreate, Message, MessageCreate } from "@/types";
 
+export interface InitiateFromOffer {
+  camion_id?: string;
+  offre_id?: string;
+  message: string;
+}
+
 export const conversationService = {
   list: (params?: { skip?: number; limit?: number }) =>
     api.get<Conversation[]>("/api/conversations/", { params }).then((r) => r.data),
@@ -14,6 +20,13 @@ export const conversationService = {
    */
   initiate: (data: ConversationCreate) =>
     api.post<Conversation>("/api/chat/initiate", data).then((r) => r.data),
+
+  /**
+   * Démarre une conversation avec le propriétaire d'un camion ou d'une offre
+   * (notifie le propriétaire avec la référence de l'annonce).
+   */
+  initiateFromOffer: (data: InitiateFromOffer) =>
+    api.post<Conversation>("/api/chat/initiate-from-offer", data).then((r) => r.data),
 
   getById: (id: string) =>
     api.get<Conversation>(`/api/conversations/${id}`).then((r) => r.data),

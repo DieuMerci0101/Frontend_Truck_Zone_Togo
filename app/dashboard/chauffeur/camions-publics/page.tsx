@@ -62,7 +62,7 @@ function CamionCard({
 }: {
   camion: Camion;
   currentUserId?: string;
-  onContact: (ownerUserId: string, ownerName: string) => void;
+  onContact: (ownerUserId: string, ownerName: string, camionId: string) => void;
 }) {
   const photos = camion.photos && camion.photos.length > 0 ? camion.photos : [];
   const [activeIdx, setActiveIdx] = useState(0);
@@ -160,10 +160,10 @@ function CamionCard({
               variant="outline"
               size="sm"
               className="min-h-[44px] shrink-0"
-              onClick={() => onContact(ownerUserId, ownerName)}
+              onClick={() => onContact(ownerUserId, ownerName, camion.id)}
             >
               <MessageCircle className="h-3.5 w-3.5 mr-1" />
-              Contacter
+              Contacter le propriétaire
             </Button>
           )}
         </div>
@@ -178,7 +178,7 @@ export default function ChauffeurCamionsPublicsPage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [contactModal, setContactModal] = useState<{ ownerUserId: string; ownerName: string } | null>(null);
+  const [contactModal, setContactModal] = useState<{ ownerUserId: string; ownerName: string; camionId: string } | null>(null);
   const [messageText, setMessageText] = useState("");
 
   const { data: camions, isLoading } = useQuery({
@@ -192,8 +192,8 @@ export default function ChauffeurCamionsPublicsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: ({ participant_id, premier_message }: { participant_id: string; premier_message: string }) =>
-      conversationService.create({ participant_id, premier_message }),
+    mutationFn: ({ camionId, message }: { camionId: string; message: string }) =>
+      conversationService.initiateFromOffer({ camion_id: camionId, message }),
     onSuccess: (conv) => {
       toast.success("Message envoyé");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -205,14 +205,14 @@ export default function ChauffeurCamionsPublicsPage() {
   });
 
   const handleContact = useCallback(
-    (ownerUserId: string, ownerName: string) => {
+    (ownerUserId: string, ownerName: string, camionId: string) => {
       const existing = conversations?.find((c) =>
         c.participants?.some((p) => p.id === ownerUserId)
       );
       if (existing) {
         router.push(`/dashboard/chat/${existing.id}`);
       } else {
-        setContactModal({ ownerUserId, ownerName });
+        setContactModal({ ownerUserId, ownerName, camionId });
         setMessageText("");
       }
     },
@@ -222,8 +222,8 @@ export default function ChauffeurCamionsPublicsPage() {
   const handleSendMessage = () => {
     if (!contactModal || !messageText.trim()) return;
     createMutation.mutate({
-      participant_id: contactModal.ownerUserId,
-      premier_message: messageText.trim(),
+      camionId: contactModal.camionId,
+      message: messageText.trim(),
     });
   };
 

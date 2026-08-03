@@ -306,6 +306,23 @@ export default function ChatPage() {
     (p) => p.id !== user?.id
   );
 
+  const presenceInfo = (presence?: string | null) => {
+    switch (presence) {
+      case "disponible":
+        return { label: "Disponible", dot: "bg-emerald-500", text: "text-emerald-600" };
+      case "en_mission":
+        return { label: "En mission", dot: "bg-amber-500", text: "text-amber-600" };
+      case "indisponible":
+        return { label: "Indisponible", dot: "bg-red-500", text: "text-red-600" };
+      case "en_ligne":
+        return { label: "En ligne", dot: "bg-emerald-500", text: "text-emerald-600" };
+      case "hors_ligne":
+        return { label: "Hors ligne", dot: "bg-slate-300", text: "text-slate-400" };
+      default:
+        return null;
+    }
+  };
+
   const formatMsgTime = (dateStr: string) => {
     const d = new Date(dateStr);
     const day = d.getDate().toString().padStart(2, "0");
@@ -363,15 +380,31 @@ export default function ChatPage() {
                     isActive ? "bg-slate-50" : ""
                   }`}
                 >
-                  <Avatar
-                    src={other?.photo_profil}
-                    name={other?.nom_complet || "Utilisateur"}
-                    size="sm"
-                  />
+                  <div className="relative shrink-0">
+                    <Avatar
+                      src={other?.photo_profil}
+                      name={other?.nom_complet || "Utilisateur"}
+                      size="sm"
+                    />
+                    {presenceInfo(other?.presence) && (
+                      <span
+                        className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white ${presenceInfo(other?.presence)?.dot}`}
+                      />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {other?.nom_complet || "Conversation"}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {other?.nom_complet || "Conversation"}
+                      </p>
+                      {presenceInfo(other?.presence) && (
+                        <span
+                          className={`shrink-0 text-[10px] font-medium ${presenceInfo(other?.presence)?.text}`}
+                        >
+                          {presenceInfo(other?.presence)?.label}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-500 truncate">
                       {conv.last_message || "Aucun message"}
                     </p>
@@ -420,9 +453,24 @@ export default function ChatPage() {
                 <p className="text-sm font-medium text-slate-900 truncate">
                   {otherParticipant?.nom_complet || "Conversation"}
                 </p>
-                <p className="text-xs text-slate-500 truncate">
-                  {otherParticipant?.role ? getRoleLabel(otherParticipant.role) : ""}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  {presenceInfo(otherParticipant?.presence) ? (
+                    <>
+                      <span
+                        className={`w-2 h-2 rounded-full ${presenceInfo(otherParticipant?.presence)?.dot}`}
+                      />
+                      <span
+                        className={`text-xs truncate ${presenceInfo(otherParticipant?.presence)?.text}`}
+                      >
+                        {presenceInfo(otherParticipant?.presence)?.label}
+                      </span>
+                    </>
+                  ) : (
+                    <p className="text-xs text-slate-500 truncate">
+                      {otherParticipant?.role ? getRoleLabel(otherParticipant.role) : ""}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

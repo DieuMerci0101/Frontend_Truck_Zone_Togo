@@ -399,6 +399,10 @@ export interface AssistanceUpdateStatut {
 }
 
 // ─── Conversation / Messages ────────────────────────
+export interface ConversationParticipant extends User {
+  presence?: string | null;
+}
+
 export interface Conversation {
   id: string;
   type: "directe" | "groupe";
@@ -406,7 +410,7 @@ export interface Conversation {
   updated_at: string;
   last_message?: string;
   last_message_at?: string;
-  participants?: User[];
+  participants?: ConversationParticipant[];
 }
 
 export interface ConversationCreate {
