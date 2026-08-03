@@ -74,6 +74,13 @@ export const ETAT_CAMION = {
   en_reparation: "En réparation",
 } as const;
 
+export const ETAT_CAMION_SELECTABLE = {
+  excellent: "Excellent",
+  bon: "Bon",
+  use: "Usé",
+  en_reparation: "En réparation",
+} as const;
+
 export const TYPE_CONTRAT = {
   CDD: "CDD",
   CDI: "CDI",

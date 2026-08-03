@@ -15,7 +15,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TYPE_CAMION, ETAT_CAMION, API_URL } from "@/constants";
+import { TYPE_CAMION, ETAT_CAMION, ETAT_CAMION_SELECTABLE, API_URL } from "@/constants";
 import { Truck, Plus, Pencil, Trash2, Camera, Upload, Star, Eye, EyeOff, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Camion, CamionCreate, CamionUpdate } from "@/types";
 import PageAnimation from "@/components/ui/page-animation";
@@ -162,7 +162,7 @@ export default function ChauffeurCamionsPage() {
       annee: camion.annee,
       type_camion: camion.type_camion,
       capacite_charge: camion.capacite_charge,
-      etat: camion.etat,
+      etat: camion.etat === "bon_etat" ? "bon" : camion.etat,
       description: camion.description || "",
     });
     setDialogOpen(true);
@@ -254,24 +254,26 @@ export default function ChauffeurCamionsPage() {
                       <Button variant="outline" size="sm" onClick={() => openEdit(camion)} className="min-h-[44px]">
                         <Pencil className="h-3.5 w-3.5 mr-1" /> Modifier
                       </Button>
-                      <Button
-                        variant={camion.is_public ? "secondary" : "default"}
-                        size="sm"
-                        onClick={() => {
-                          if (camion.is_public) {
-                            publishMutation.mutate({ camionId: camion.id });
-                          } else {
-                            setPublishCamion(camion);
-                            setPublishExpiresAt("");
-                            setPublishDialog(true);
-                          }
-                        }}
-                        loading={publishMutation.isPending}
-                        className="min-h-[44px]"
-                      >
-                        {camion.is_public ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
-                        {camion.is_public ? "Dépublier" : "Publier"}
-                      </Button>
+                      {camion.is_public || (camion.etat !== "en_reparation" && camion.etat !== "use") ? (
+                        <Button
+                          variant={camion.is_public ? "secondary" : "default"}
+                          size="sm"
+                          onClick={() => {
+                            if (camion.is_public) {
+                              publishMutation.mutate({ camionId: camion.id });
+                            } else {
+                              setPublishCamion(camion);
+                              setPublishExpiresAt("");
+                              setPublishDialog(true);
+                            }
+                          }}
+                          loading={publishMutation.isPending}
+                          className="min-h-[44px]"
+                        >
+                          {camion.is_public ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
+                          {camion.is_public ? "Dépublier" : "Publier"}
+                        </Button>
+                      ) : null}
                       <Button variant="destructive" size="sm" onClick={() => setDeleteConfirm(camion.id)} className="min-h-[44px]">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -308,7 +310,7 @@ export default function ChauffeurCamionsPage() {
             <Input label="Année" type="number" placeholder="2020" error={errors.annee?.message} {...register("annee")} />
             <Select label="Type de camion" options={Object.entries(TYPE_CAMION).map(([v, l]) => ({ value: v, label: l }))} error={errors.type_camion?.message} {...register("type_camion")} />
             <Input label="Capacité (tonnes)" type="number" placeholder="20" error={errors.capacite_charge?.message} {...register("capacite_charge")} />
-            <Select label="État" options={Object.entries(ETAT_CAMION).map(([v, l]) => ({ value: v, label: l }))} error={errors.etat?.message} {...register("etat")} />
+            <Select label="État" options={Object.entries(ETAT_CAMION_SELECTABLE).map(([v, l]) => ({ value: v, label: l }))} error={errors.etat?.message} {...register("etat")} />
           </div>
           <Textarea label="Description (optionnel)" placeholder="Informations supplémentaires..." rows={3} {...register("description")} />
           <div className="flex flex-col sm:flex-row justify-end gap-2">

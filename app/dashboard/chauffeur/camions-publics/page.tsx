@@ -55,6 +55,123 @@ const etatBadge: Record<string, "success" | "info" | "warning" | "destructive"> 
   en_reparation: "destructive",
 };
 
+function CamionCard({
+  camion,
+  currentUserId,
+  onContact,
+}: {
+  camion: Camion;
+  currentUserId?: string;
+  onContact: (ownerUserId: string, ownerName: string) => void;
+}) {
+  const photos = camion.photos && camion.photos.length > 0 ? camion.photos : [];
+  const [activeIdx, setActiveIdx] = useState(0);
+  const mainUrl =
+    photos.length > 0 ? resolvePhotoUrl(photos[activeIdx]?.photo_url) : resolvePhotoUrl(camion.photo_principale_url);
+  const propInfo = camion.proprietaire_info;
+  const ownerName = propInfo?.nom_complet || "Propriétaire";
+  const ownerPhoto = resolveProfilePhoto(propInfo?.photo_profil);
+  const ownerUserId = propInfo?.user_id;
+  const expired = isExpired(camion);
+
+  return (
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <div className="h-44 bg-gray-200 flex items-center justify-center relative">
+        {mainUrl ? (
+          <img src={mainUrl} alt={`${camion.marque} ${camion.modele}`} className="w-full h-full object-cover" />
+        ) : (
+          <Truck className="h-12 w-12 text-gray-400" />
+        )}
+        {expired && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <Badge variant="destructive" className="text-sm px-3 py-1">Offre expirée</Badge>
+          </div>
+        )}
+      </div>
+
+      {photos.length > 1 && (
+        <div className="flex gap-1.5 px-3 py-2 overflow-x-auto bg-gray-50 border-b border-gray-100">
+          {photos.map((photo, idx) => (
+            <button
+              key={photo.id}
+              onClick={() => setActiveIdx(idx)}
+              className={`shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition-colors min-h-[44px] ${
+                idx === activeIdx ? "border-amber-500" : "border-transparent"
+              }`}
+            >
+              <img src={resolvePhotoUrl(photo.photo_url) || ""} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-2">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-900">{camion.marque} {camion.modele}</h3>
+            <p className="text-sm text-gray-500">{camion.immatriculation}</p>
+          </div>
+          <Badge variant={etatBadge[camion.etat] || "info"} className="shrink-0">
+            {ETAT_CAMION[camion.etat as keyof typeof ETAT_CAMION] || camion.etat}
+          </Badge>
+        </div>
+
+        <div className="text-sm text-gray-500 space-y-1 mt-2">
+          <p>Année: {camion.annee} — Capacité: {camion.capacite_charge}t</p>
+          <p>Type: {TYPE_CAMION[camion.type_camion as keyof typeof TYPE_CAMION] || camion.type_camion}</p>
+          {camion.carburant && (
+            <p className="flex items-center gap-1"><Fuel className="h-3 w-3" /> {camion.carburant}</p>
+          )}
+          {camion.boite_vitesse && (
+            <p className="flex items-center gap-1"><Settings className="h-3 w-3" /> {camion.boite_vitesse}</p>
+          )}
+          {camion.nb_essieux && (
+            <p>Essieux: {camion.nb_essieux}</p>
+          )}
+          {camion.kilometrage && (
+            <p className="flex items-center gap-1"><Gauge className="h-3 w-3" /> {camion.kilometrage.toLocaleString()} km</p>
+          )}
+          {camion.localisation && (
+            <p className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {camion.localisation}</p>
+          )}
+        </div>
+
+        {camion.expires_at && (
+          <p className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+            <Clock className="h-3 w-3" />
+            Expire le {formatExpiration(camion.expires_at)}
+          </p>
+        )}
+
+        {camion.description && (
+          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{camion.description}</p>
+        )}
+
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2 min-w-0">
+            <Avatar src={ownerPhoto} name={ownerName} size="sm" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{ownerName}</p>
+              <p className="text-xs text-gray-400">Propriétaire</p>
+            </div>
+          </div>
+          {ownerUserId && ownerUserId !== currentUserId && !expired && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-[44px] shrink-0"
+              onClick={() => onContact(ownerUserId, ownerName)}
+            >
+              <MessageCircle className="h-3.5 w-3.5 mr-1" />
+              Contacter
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ChauffeurCamionsPublicsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -154,93 +271,14 @@ export default function ChauffeurCamionsPublicsPage() {
         </div>
       ) : filtered && filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filtered.map((camion) => {
-            const photoUrl = resolvePhotoUrl(camion.photo_principale_url);
-            const propInfo = camion.proprietaire_info;
-            const ownerName = propInfo?.nom_complet || "Propriétaire";
-            const ownerPhoto = resolveProfilePhoto(propInfo?.photo_profil);
-            const ownerUserId = propInfo?.user_id;
-            const expired = isExpired(camion);
-            return (
-              <Card key={camion.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="h-44 bg-gray-200 flex items-center justify-center relative">
-                  {photoUrl ? (
-                    <img src={photoUrl} alt={`${camion.marque} ${camion.modele}`} className="w-full h-full object-cover" />
-                  ) : (
-                    <Truck className="h-12 w-12 text-gray-400" />
-                  )}
-                  {expired && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Badge variant="destructive" className="text-sm px-3 py-1">Offre expirée</Badge>
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900">{camion.marque} {camion.modele}</h3>
-                      <p className="text-sm text-gray-500">{camion.immatriculation}</p>
-                    </div>
-                    <Badge variant={etatBadge[camion.etat] || "info"} className="shrink-0">
-                      {ETAT_CAMION[camion.etat as keyof typeof ETAT_CAMION] || camion.etat}
-                    </Badge>
-                  </div>
-
-                  <div className="text-sm text-gray-500 space-y-1 mt-2">
-                    <p>Année: {camion.annee} — Capacité: {camion.capacite_charge}t</p>
-                    <p>Type: {TYPE_CAMION[camion.type_camion as keyof typeof TYPE_CAMION] || camion.type_camion}</p>
-                    {camion.carburant && (
-                      <p className="flex items-center gap-1"><Fuel className="h-3 w-3" /> {camion.carburant}</p>
-                    )}
-                    {camion.boite_vitesse && (
-                      <p className="flex items-center gap-1"><Settings className="h-3 w-3" /> {camion.boite_vitesse}</p>
-                    )}
-                    {camion.nb_essieux && (
-                      <p>Essieux: {camion.nb_essieux}</p>
-                    )}
-                    {camion.kilometrage && (
-                      <p className="flex items-center gap-1"><Gauge className="h-3 w-3" /> {camion.kilometrage.toLocaleString()} km</p>
-                    )}
-                    {camion.localisation && (
-                      <p className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {camion.localisation}</p>
-                    )}
-                  </div>
-
-                  {camion.expires_at && (
-                    <p className="flex items-center gap-1 text-xs text-gray-400 mt-2">
-                      <Clock className="h-3 w-3" />
-                      Expire le {formatExpiration(camion.expires_at)}
-                    </p>
-                  )}
-
-                  {camion.description && (
-                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">{camion.description}</p>
-                  )}
-
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Avatar src={ownerPhoto} name={ownerName} size="sm" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{ownerName}</p>
-                        <p className="text-xs text-gray-400">Propriétaire</p>
-                      </div>
-                    </div>
-                    {ownerUserId && ownerUserId !== user?.id && !expired && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="min-h-[44px] shrink-0"
-                        onClick={() => handleContact(ownerUserId, ownerName)}
-                      >
-                        <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                        Contacter
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filtered.map((camion) => (
+            <CamionCard
+              key={camion.id}
+              camion={camion}
+              currentUserId={user?.id}
+              onContact={handleContact}
+            />
+          ))}
         </div>
       ) : (
         <Card>

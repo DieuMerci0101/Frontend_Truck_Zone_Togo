@@ -15,7 +15,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TYPE_CAMION, ETAT_CAMION } from "@/constants";
+import { TYPE_CAMION, ETAT_CAMION, ETAT_CAMION_SELECTABLE } from "@/constants";
 import { API_URL } from "@/constants";
 import { Truck, Plus, Pencil, Trash2, Camera, Upload, Star, Eye, EyeOff, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Camion, CamionCreate, CamionUpdate, CamionPhoto } from "@/types";
@@ -189,7 +189,7 @@ export default function ProprietaireCamionsPage() {
       annee: camion.annee,
       type_camion: camion.type_camion,
       capacite_charge: camion.capacite_charge,
-      etat: camion.etat,
+      etat: camion.etat === "bon_etat" ? "bon" : camion.etat,
       description: camion.description || "",
       expires_at: camion.expires_at ? camion.expires_at.slice(0, 16) : "",
       nb_essieux: camion.nb_essieux || null,
@@ -282,9 +282,15 @@ export default function ProprietaireCamionsPage() {
                     </button>
                   </div>
                   <div className="absolute bottom-2 left-2 flex gap-1">
-                    <Badge variant={camion.is_public ? "success" : "secondary"} className="text-[10px]">
-                      {camion.is_public ? "Public" : "Privé"}
-                    </Badge>
+                    {camion.expires_at && new Date(camion.expires_at) <= new Date() ? (
+                      <Badge variant="destructive" className="text-[10px]">
+                        Expiré / Non disponible
+                      </Badge>
+                    ) : (
+                      <Badge variant={camion.is_public ? "success" : "secondary"} className="text-[10px]">
+                        {camion.is_public ? "Public" : "Privé"}
+                      </Badge>
+                    )}
                     {camion.photos && camion.photos.length > 0 && (
                       <Badge variant="info" className="text-[10px]">
                         {camion.photos.length} photo(s)
@@ -315,7 +321,9 @@ export default function ProprietaireCamionsPage() {
                     {camion.localisation && <p>Localisation: {camion.localisation}</p>}
                     {camion.expires_at && (
                       <p className={new Date(camion.expires_at) <= new Date() ? "text-red-500 font-medium" : "text-amber-600"}>
-                        Expire le {new Date(camion.expires_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {new Date(camion.expires_at) <= new Date()
+                          ? `Expiré — Non disponible (${new Date(camion.expires_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`
+                          : `Expire le ${new Date(camion.expires_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`}
                       </p>
                     )}
                   </div>
@@ -356,7 +364,7 @@ export default function ProprietaireCamionsPage() {
                           }}
                           className="min-h-[44px]"
                         >
-                          Prolonger
+                          Prolonger la publication
                         </Button>
                       )}
                       <Button
@@ -407,12 +415,12 @@ export default function ProprietaireCamionsPage() {
             <Input label="Année" type="number" placeholder="2020" error={errors.annee?.message} {...register("annee")} />
             <Select label="Type de camion" options={Object.entries(TYPE_CAMION).map(([v, l]) => ({ value: v, label: l }))} error={errors.type_camion?.message} {...register("type_camion")} />
             <Input label="Capacité (tonnes)" type="number" placeholder="20" error={errors.capacite_charge?.message} {...register("capacite_charge")} />
-            <Select label="État" options={Object.entries(ETAT_CAMION).map(([v, l]) => ({ value: v, label: l }))} error={errors.etat?.message} {...register("etat")} />
+            <Select label="État" options={Object.entries(ETAT_CAMION_SELECTABLE).map(([v, l]) => ({ value: v, label: l }))} error={errors.etat?.message} {...register("etat")} />
             <Input label="Nombre d'essieux" type="number" placeholder="2-12" {...register("nb_essieux")} />
             {watchEtat && ["en_reparation", "use"].includes(watchEtat) && (
               <p className="text-amber-600 text-sm">Ce camion sera enregistré dans votre flotte personnelle mais ne pourra pas être publié.</p>
             )}
-            {watchEtat && ["bon_etat", "excellent"].includes(watchEtat) && (
+            {watchEtat && ["bon", "excellent"].includes(watchEtat) && (
               <Input
                 type="datetime-local"
                 label="Date et heure d'échéance de publication"
