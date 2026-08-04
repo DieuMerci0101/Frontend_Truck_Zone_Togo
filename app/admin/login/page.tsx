@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { setTokenCookie, setUserCookie } from "@/lib/auth";
+import { setToken, setUser, setRefreshToken, setTokenCookie, setUserCookie } from "@/lib/auth";
 import { API_URL } from "@/constants";
 
 export default function AdminLoginPage() {
@@ -36,8 +36,9 @@ export default function AdminLoginPage() {
         throw new Error("Ce compte n'est pas un administrateur");
       }
 
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+      setUser(data.user);
 
       setTokenCookie(data.access_token);
       setUserCookie(data.user);

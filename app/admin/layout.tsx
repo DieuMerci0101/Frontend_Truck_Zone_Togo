@@ -8,6 +8,7 @@ import { authService } from "@/services/auth.service";
 import {
   removeToken,
   removeUser,
+  removeRefreshToken,
   removeTokenCookie,
   removeUserCookie,
 } from "@/lib/auth";
@@ -65,9 +66,9 @@ export default function AdminLayout({
     }
     removeToken();
     removeUser();
+    removeRefreshToken();
     removeTokenCookie();
     removeUserCookie();
-    localStorage.removeItem("refresh_token");
     router.replace("/");
   };
 

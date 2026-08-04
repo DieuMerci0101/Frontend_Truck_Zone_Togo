@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, Phone, Eye, EyeOff, Loader2, Check } from "lucide-react";
+import { setToken, setUser, setRefreshToken, setTokenCookie, setUserCookie } from "@/lib/auth";
 import { API_URL } from "@/constants";
 
 const ROLES = [
@@ -73,8 +74,11 @@ export function RegisterForm() {
       const loginData = await loginRes.json();
 
       if (loginRes.ok) {
-        localStorage.setItem("token", loginData.access_token);
-        localStorage.setItem("user", JSON.stringify(loginData.user));
+        setToken(loginData.access_token);
+        setRefreshToken(loginData.refresh_token);
+        setUser(loginData.user);
+        setTokenCookie(loginData.access_token);
+        setUserCookie(loginData.user);
       }
 
       const rolePath: Record<string, string> = {

@@ -1,32 +1,45 @@
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 }
 
 export function setToken(token: string): void {
-  localStorage.setItem("token", token);
+  sessionStorage.setItem("token", token);
 }
 
 export function removeToken(): void {
-  localStorage.removeItem("token");
+  sessionStorage.removeItem("token");
 }
 
 export function getUser(): { id: string; email: string; role: string; nom_complet: string } | null {
   if (typeof window === "undefined") return null;
-  const user = localStorage.getItem("user");
+  const user = sessionStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 }
 
 export function setUser(user: { id: string; email: string; role: string; nom_complet: string }): void {
-  localStorage.setItem("user", JSON.stringify(user));
+  sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 export function removeUser(): void {
-  localStorage.removeItem("user");
+  sessionStorage.removeItem("user");
 }
 
 export function isAuthenticated(): boolean {
   return !!getToken();
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem("refresh_token");
+}
+
+export function setRefreshToken(token: string): void {
+  sessionStorage.setItem("refresh_token", token);
+}
+
+export function removeRefreshToken(): void {
+  sessionStorage.removeItem("refresh_token");
 }
 
 export function getDashboardPath(role: string): string {
@@ -40,8 +53,10 @@ export function getDashboardPath(role: string): string {
 }
 
 // ─── Cookies pour le middleware Next.js ─────────────
-// Le middleware ne peut PAS lire localStorage (côté serveur).
-// On stocke le token dans un cookie lisible par le middleware.
+// La session (token + user) est stockée dans `sessionStorage` : elle est isolée
+// PAR ONGLET, ce qui permet d'ouvrir plusieurs sessions indépendantes.
+// Le middleware ne peut PAS lire sessionStorage (côté serveur) : on réplique le
+// token dans un cookie lisible par le middleware pour les gardes de routes.
 
 export function setTokenCookie(token: string): void {
   if (typeof document === "undefined") return;

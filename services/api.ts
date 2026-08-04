@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "@/constants";
-import { getToken, setToken, removeToken, setTokenCookie, removeTokenCookie, setUserCookie, removeUserCookie } from "@/lib/auth";
+import { getToken, setToken, removeToken, removeUser, getRefreshToken, removeRefreshToken, setTokenCookie, removeTokenCookie, setUserCookie, removeUserCookie } from "@/lib/auth";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -24,7 +24,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
+        const refreshToken = typeof window !== "undefined" ? getRefreshToken() : null;
         if (refreshToken) {
           const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
             refresh_token: refreshToken,
@@ -39,8 +39,8 @@ api.interceptors.response.use(
         removeTokenCookie();
         removeUserCookie();
         if (typeof window !== "undefined") {
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("user");
+          removeRefreshToken();
+          removeUser();
           window.location.href = "/login";
         }
       }

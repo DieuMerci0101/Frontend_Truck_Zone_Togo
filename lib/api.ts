@@ -1,10 +1,11 @@
 import { API_URL } from "@/constants";
+import { getToken } from "@/lib/auth";
 
 async function fetchAPI<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? getToken() : null;
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",

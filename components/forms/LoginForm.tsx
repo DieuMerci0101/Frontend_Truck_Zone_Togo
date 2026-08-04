@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Truck, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
-import { setTokenCookie, setUserCookie } from "@/lib/auth";
+import { setToken, setUser, setRefreshToken, setTokenCookie, setUserCookie } from "@/lib/auth";
 import { API_URL } from "@/constants";
 
 const ROLES = [
@@ -46,8 +46,9 @@ export function LoginForm() {
         throw new Error(`Ce compte n'est pas un ${ROLES.find(r => r.value === selectedRole)?.label}`);
       }
 
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+      setUser(data.user);
 
       // Cookies pour le middleware Next.js
       setTokenCookie(data.access_token);

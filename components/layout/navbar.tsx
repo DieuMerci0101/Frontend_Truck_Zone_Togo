@@ -111,7 +111,27 @@ export default function Navbar() {
                         : "text-slate-300 hover:bg-slate-800"
                     }`}
                   >
-                    Dashboard
+                    Accéder à mon Dashboard
+                  </Link>
+                  <Link
+                    href="/login"
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                      isScrolled
+                        ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+                        : "border-slate-400 text-slate-200 hover:bg-slate-800"
+                    }`}
+                  >
+                    Connexion
+                  </Link>
+                  <Link
+                    href="/register"
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                      isScrolled
+                        ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+                        : "border-slate-400 text-slate-200 hover:bg-slate-800"
+                    }`}
+                  >
+                    Inscription
                   </Link>
                   <button
                     onClick={() => setShowLogoutModal(true)}
@@ -232,7 +252,21 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="block w-full py-2.5 text-center bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors min-h-[44px]"
               >
-                Dashboard
+                Accéder à mon Dashboard
+              </Link>
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full py-2.5 text-center border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 transition-colors min-h-[44px]"
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full py-2.5 text-center border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 transition-colors min-h-[44px]"
+              >
+                Inscription
               </Link>
               <button
                 onClick={() => {

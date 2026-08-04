@@ -11,6 +11,8 @@ import {
   getUser,
   setUser,
   removeUser,
+  setRefreshToken,
+  removeRefreshToken,
   setTokenCookie,
   removeTokenCookie,
   setUserCookie,
@@ -81,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: UserLogin) => {
     const response = await authService.login(data);
     setToken(response.access_token);
-    localStorage.setItem("refresh_token", response.refresh_token);
+    setRefreshToken(response.refresh_token);
     setTokenCookie(response.access_token);
     setUser(response.user);
     setUserCookie(response.user);
@@ -106,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const adminLogin = async (data: UserLogin) => {
     const response = await authService.adminLogin(data);
     setToken(response.access_token);
-    localStorage.setItem("refresh_token", response.refresh_token);
+    setRefreshToken(response.refresh_token);
     setTokenCookie(response.access_token);
     setUser(response.user);
     setUserCookie(response.user);
@@ -125,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: data.password,
     });
     setToken(loginResponse.access_token);
-    localStorage.setItem("refresh_token", loginResponse.refresh_token);
+    setRefreshToken(loginResponse.refresh_token);
     setTokenCookie(loginResponse.access_token);
     setUser(loginResponse.user);
     setUserCookie(loginResponse.user);
@@ -154,9 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await new Promise((r) => setTimeout(r, 400));
     removeToken();
     removeUser();
+    removeRefreshToken();
     removeTokenCookie();
     removeUserCookie();
-    localStorage.removeItem("refresh_token");
     setUserState(null);
     setIsLoggingOut(false);
     toast.dismiss("logout");

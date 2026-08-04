@@ -8,7 +8,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { mecanicienService } from "@/services/mecanicien.service";
 import { authService } from "@/services/auth.service";
 import { KycWizard, type KycStep } from "@/components/upload/kyc-wizard";
-import { setToken, setTokenCookie, setUserCookie, getUser } from "@/lib/auth";
+import { setToken, setRefreshToken, getRefreshToken, setTokenCookie, setUserCookie, getUser } from "@/lib/auth";
 
 const STEPS: KycStep[] = [
   {
@@ -51,14 +51,14 @@ export default function MechanicVerificationPage() {
   useEffect(() => {
     if (verification?.verification_status === "approved") {
       const refreshToken =
-        typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
+        typeof window !== "undefined" ? getRefreshToken() : null;
       (async () => {
         try {
           if (refreshToken) {
             const data = await authService.refresh(refreshToken);
             setToken(data.access_token);
             setTokenCookie(data.access_token);
-            localStorage.setItem("refresh_token", data.refresh_token);
+            setRefreshToken(data.refresh_token);
             const storedUser = getUser();
             if (storedUser) {
               setUserCookie({ ...storedUser, role: storedUser.role });
