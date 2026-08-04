@@ -8,8 +8,193 @@ import { cn } from "@/lib/cn";
 
 const DEFAULT_COUNTRY_CODE = "TG";
 
+// ── Liste de secours (fallback) ───────────────────────────────────────────
+// Permet au sélecteur de fonctionner MÊME si l'API Render est en cours de
+// démarrage (cold start) ou indisponible : plus jamais "Aucun pays trouvé".
+const FALLBACK_ROWS: Array<[string, string, string, string]> = [
+  // 54 pays d'Afrique
+  ["DZ", "Algérie", "+213", "🇩🇿"],
+  ["AO", "Angola", "+244", "🇦🇴"],
+  ["BJ", "Bénin", "+229", "🇧🇯"],
+  ["BW", "Botswana", "+267", "🇧🇼"],
+  ["BF", "Burkina Faso", "+226", "🇧🇫"],
+  ["BI", "Burundi", "+257", "🇧🇮"],
+  ["CV", "Cap-Vert", "+238", "🇨🇻"],
+  ["CM", "Cameroun", "+237", "🇨🇲"],
+  ["CF", "République centrafricaine", "+236", "🇨🇫"],
+  ["TD", "Tchad", "+235", "🇹🇩"],
+  ["KM", "Comores", "+269", "🇰🇲"],
+  ["CG", "Congo", "+242", "🇨🇬"],
+  ["CD", "RD Congo", "+243", "🇨🇩"],
+  ["CI", "Côte d'Ivoire", "+225", "🇨🇮"],
+  ["DJ", "Djibouti", "+253", "🇩🇯"],
+  ["EG", "Égypte", "+20", "🇪🇬"],
+  ["GQ", "Guinée équatoriale", "+240", "🇬🇶"],
+  ["ER", "Érythrée", "+291", "🇪🇷"],
+  ["SZ", "Eswatini", "+268", "🇸🇿"],
+  ["ET", "Éthiopie", "+251", "🇪🇹"],
+  ["GA", "Gabon", "+241", "🇬🇦"],
+  ["GM", "Gambie", "+220", "🇬🇲"],
+  ["GH", "Ghana", "+233", "🇬🇭"],
+  ["GN", "Guinée", "+224", "🇬🇳"],
+  ["GW", "Guinée-Bissau", "+245", "🇬🇼"],
+  ["KE", "Kenya", "+254", "🇰🇪"],
+  ["LS", "Lesotho", "+266", "🇱🇸"],
+  ["LR", "Liberia", "+231", "🇱🇷"],
+  ["LY", "Libye", "+218", "🇱🇾"],
+  ["MG", "Madagascar", "+261", "🇲🇬"],
+  ["MW", "Malawi", "+265", "🇲🇼"],
+  ["ML", "Mali", "+223", "🇲🇱"],
+  ["MR", "Mauritanie", "+222", "🇲🇷"],
+  ["MU", "Maurice", "+230", "🇲🇺"],
+  ["MA", "Maroc", "+212", "🇲🇦"],
+  ["MZ", "Mozambique", "+258", "🇲🇿"],
+  ["NA", "Namibie", "+264", "🇳🇦"],
+  ["NE", "Niger", "+227", "🇳🇪"],
+  ["NG", "Nigeria", "+234", "🇳🇬"],
+  ["RW", "Rwanda", "+250", "🇷🇼"],
+  ["ST", "Sao Tomé-et-Principe", "+239", "🇸🇹"],
+  ["SN", "Sénégal", "+221", "🇸🇳"],
+  ["SC", "Seychelles", "+248", "🇸🇨"],
+  ["SL", "Sierra Leone", "+232", "🇸🇱"],
+  ["SO", "Somalie", "+252", "🇸🇴"],
+  ["ZA", "Afrique du Sud", "+27", "🇿🇦"],
+  ["SS", "Soudan du Sud", "+211", "🇸🇸"],
+  ["SD", "Soudan", "+249", "🇸🇩"],
+  ["TZ", "Tanzanie", "+255", "🇹🇿"],
+  ["TG", "Togo", "+228", "🇹🇬"],
+  ["TN", "Tunisie", "+216", "🇹🇳"],
+  ["UG", "Ouganda", "+256", "🇺🇬"],
+  ["ZM", "Zambie", "+260", "🇿🇲"],
+  ["ZW", "Zimbabwe", "+263", "🇿🇼"],
+  // Principaux pays internationaux
+  ["FR", "France", "+33", "🇫🇷"],
+  ["BE", "Belgique", "+32", "🇧🇪"],
+  ["CH", "Suisse", "+41", "🇨🇭"],
+  ["LU", "Luxembourg", "+352", "🇱🇺"],
+  ["DE", "Allemagne", "+49", "🇩🇪"],
+  ["IT", "Italie", "+39", "🇮🇹"],
+  ["ES", "Espagne", "+34", "🇪🇸"],
+  ["PT", "Portugal", "+351", "🇵🇹"],
+  ["NL", "Pays-Bas", "+31", "🇳🇱"],
+  ["GB", "Royaume-Uni", "+44", "🇬🇧"],
+  ["US", "États-Unis", "+1", "🇺🇸"],
+  ["CA", "Canada", "+1", "🇨🇦"],
+  ["CN", "Chine", "+86", "🇨🇳"],
+  ["JP", "Japon", "+81", "🇯🇵"],
+  ["IN", "Inde", "+91", "🇮🇳"],
+  ["AE", "Émirats arabes unis", "+971", "🇦🇪"],
+  ["SA", "Arabie saoudite", "+966", "🇸🇦"],
+  ["TR", "Turquie", "+90", "🇹🇷"],
+  ["RU", "Russie", "+7", "🇷🇺"],
+  ["BR", "Brésil", "+55", "🇧🇷"],
+  ["AR", "Argentine", "+54", "🇦🇷"],
+  ["MX", "Mexique", "+52", "🇲🇽"],
+  ["AU", "Australie", "+61", "🇦🇺"],
+];
+
+const FALLBACK_COUNTRIES: Country[] = FALLBACK_ROWS.map(([code, name, phone_code, flag_emoji]) => ({
+  id: `fb-${code}`,
+  name,
+  code,
+  phone_code,
+  flag_emoji,
+  is_active: true,
+}));
+
+// Longueurs valides (nombre de chiffres) du numéro national par pays.
+// [min, max] — nombre de chiffres SAUF l'indicatif international.
+const NATIONAL_LENGTH: Record<string, [number, number]> = {
+  TG: [8, 8],
+  BJ: [8, 8],
+  GH: [8, 9],
+  CI: [8, 10],
+  NG: [7, 10],
+  SN: [9, 9],
+  BF: [8, 8],
+  CM: [9, 9],
+  ML: [8, 8],
+  NE: [8, 8],
+  GN: [8, 8],
+  MR: [8, 8],
+  SL: [8, 8],
+  LR: [7, 8],
+  GM: [7, 7],
+  CV: [7, 7],
+  GA: [8, 8],
+  CG: [9, 9],
+  CD: [9, 9],
+  AO: [9, 9],
+  MZ: [9, 9],
+  MG: [9, 9],
+  MW: [7, 9],
+  ZM: [9, 9],
+  ZW: [9, 9],
+  TZ: [9, 9],
+  KE: [9, 9],
+  UG: [9, 9],
+  ET: [9, 9],
+  EG: [8, 9],
+  MA: [9, 9],
+  DZ: [9, 9],
+  TN: [8, 8],
+  LY: [9, 9],
+  TD: [8, 8],
+  CF: [8, 8],
+  DJ: [8, 8],
+  RW: [9, 9],
+  BI: [8, 8],
+  SO: [7, 9],
+  SD: [9, 9],
+  SS: [9, 9],
+  BW: [7, 8],
+  KM: [7, 7],
+  ER: [7, 7],
+  SZ: [7, 7],
+  LS: [8, 8],
+  MU: [8, 8],
+  NA: [9, 9],
+  ST: [7, 7],
+  SC: [7, 7],
+  ZA: [9, 9],
+  FR: [9, 9],
+  BE: [8, 8],
+  CH: [9, 9],
+  LU: [6, 9],
+  DE: [6, 11],
+  IT: [8, 10],
+  ES: [9, 9],
+  PT: [9, 9],
+  NL: [9, 9],
+  GB: [9, 10],
+  US: [10, 10],
+  CA: [10, 10],
+  CN: [8, 11],
+  JP: [9, 10],
+  IN: [10, 10],
+  AE: [9, 9],
+  SA: [9, 9],
+  TR: [10, 10],
+  RU: [10, 10],
+  BR: [10, 11],
+  AR: [8, 10],
+  MX: [10, 10],
+  AU: [9, 9],
+};
+
+const DEFAULT_NATIONAL_LENGTH: [number, number] = [6, 13];
+
 function getFlagEmoji(country: Country): string {
   return country.flag_emoji || "🌍";
+}
+
+/** Vérifie que le numéro national saisi correspond au format du pays. */
+export function isValidNationalNumber(country: Country | null, national: string): boolean {
+  if (!country) return false;
+  const digits = national.replace(/\D/g, "");
+  if (digits.length === 0) return false;
+  const [min, max] = NATIONAL_LENGTH[country.code] || DEFAULT_NATIONAL_LENGTH;
+  return digits.length >= min && digits.length <= max;
 }
 
 interface PhoneInputProps {
@@ -28,27 +213,33 @@ export function PhoneInput({
   disabled,
   id,
 }: PhoneInputProps) {
-  const [countries, setCountries] = useState<Country[]>([]);
+  const [countries, setCountries] = useState<Country[]>(FALLBACK_COUNTRIES);
   const [selected, setSelected] = useState<Country | null>(null);
   const [national, setNational] = useState("");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [touched, setTouched] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Chargement de la liste des pays actifs depuis l'API.
+  // Au chargement, la liste de secours est déjà affichée : le sélecteur
+  // fonctionne immédiatement. L'API vient ensuite rafraîchir la liste.
   useEffect(() => {
     let mounted = true;
     countryService
       .getCountries()
       .then((list) => {
         if (!mounted) return;
-        setCountries(list);
-        const togo = list.find((c) => c.code === DEFAULT_COUNTRY_CODE);
-        setSelected(togo || list[0] || null);
+        const serverList =
+          Array.isArray(list) && list.length > 0 ? list : FALLBACK_COUNTRIES;
+        setCountries(serverList);
+        const togo = serverList.find((c) => c.code === DEFAULT_COUNTRY_CODE);
+        setSelected(togo || serverList[0] || null);
       })
       .catch(() => {
-        if (mounted) setCountries([]);
+        // L'API est injoignable (cold start Render...) : la liste de secours
+        // reste en place, aucun blocage pour l'utilisateur.
+        if (mounted) setCountries(FALLBACK_COUNTRIES);
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -58,9 +249,27 @@ export function PhoneInput({
     };
   }, []);
 
+  // Liste affichée : tri alphabétique (A → Z) + recherche temps réel.
+  const sortedCountries = useMemo(() => {
+    return [...countries].sort((a, b) =>
+      a.name.localeCompare(b.name, "fr", { sensitivity: "base" })
+    );
+  }, [countries]);
+
+  const filtered = useMemo(() => {
+    const base = sortedCountries;
+    if (!search.trim()) return base;
+    const q = search.trim().toLowerCase();
+    return base.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q) ||
+        c.phone_code.includes(q)
+    );
+  }, [sortedCountries, search]);
+
   // Synchronisation avec la valeur fournie par le formulaire.
   useEffect(() => {
-    if (countries.length === 0) return;
     const match = countries.find((c) => value.startsWith(c.phone_code));
     if (match && match.code !== selected?.code) {
       setSelected(match);
@@ -84,17 +293,6 @@ export function PhoneInput({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return countries;
-    const q = search.trim().toLowerCase();
-    return countries.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        c.phone_code.includes(q)
-    );
-  }, [countries, search]);
-
   const emitChange = (country: Country | null, nationalNumber: string) => {
     const cleaned = nationalNumber.replace(/\D/g, "");
     onChange(country ? `${country.phone_code}${cleaned}` : cleaned);
@@ -117,12 +315,22 @@ export function PhoneInput({
     if (!disabled) setOpen((v) => !v);
   };
 
+  // Validation du format selon le pays sélectionné.
+  const digits = national.replace(/\D/g, "");
+  const [minDigits, maxDigits] = selected
+    ? NATIONAL_LENGTH[selected.code] || DEFAULT_NATIONAL_LENGTH
+    : DEFAULT_NATIONAL_LENGTH;
+  const isTooLong = digits.length > maxDigits;
+  const isTooShort = digits.length > 0 && digits.length < minDigits;
+  const showFormatError =
+    !!selected && (isTooLong || (isTooShort && touched));
+
   return (
     <div ref={containerRef} className="relative">
       <div
         className={cn(
           "flex items-stretch rounded-lg border bg-white transition-colors overflow-hidden focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-transparent",
-          error ? "border-red-400" : "border-slate-200"
+          error || showFormatError ? "border-red-400" : "border-slate-200"
         )}
       >
         {/* Sélecteur de pays (drapeau + indicatif verrouillé) */}
@@ -158,7 +366,11 @@ export function PhoneInput({
           disabled={disabled || loading}
           value={national}
           onChange={handleNationalChange}
-          onFocus={() => setOpen(false)}
+          onFocus={() => {
+            setOpen(false);
+            setTouched(false);
+          }}
+          onBlur={() => setTouched(true)}
           placeholder={selected ? "70118993" : "Numéro de téléphone"}
           className="flex-1 min-w-0 px-3 py-3 bg-white text-sm focus:outline-none disabled:opacity-50"
         />
@@ -216,7 +428,14 @@ export function PhoneInput({
         <Phone className="h-3 w-3" />
         Indicatif {selected ? `${selected.phone_code} ${selected.name}` : ""} verrouillé — saisissez la suite de votre numéro.
       </p>
-      {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
+      {showFormatError && (
+        <p className="mt-1 text-xs text-red-500 font-medium">
+          Format de numéro invalide pour ce pays
+        </p>
+      )}
+      {error && !showFormatError && (
+        <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>
+      )}
     </div>
   );
 }

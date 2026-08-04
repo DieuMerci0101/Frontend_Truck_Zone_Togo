@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import BackButton from "@/components/ui/back-button";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "@/services/auth.service";
@@ -18,7 +19,9 @@ const resetSchema = z
       .string()
       .min(8, "Le mot de passe doit contenir au moins 8 caractères")
       .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
-      .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre"),
+      .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
+      .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre")
+      .regex(/[^A-Za-z0-9]/, "Le mot de passe doit contenir au moins un caractère spécial"),
     confirm_password: z.string(),
   })
   .refine((data) => data.new_password === data.confirm_password, {
@@ -46,6 +49,10 @@ function ResetPasswordForm() {
 
   const watchedPassword = watch("new_password");
   const watchedConfirm = watch("confirm_password");
+
+  const passwordStrong = isPasswordStrong(watchedPassword || "");
+  const confirmMatches = !!watchedConfirm && watchedConfirm === watchedPassword;
+  const canSubmit = passwordStrong && confirmMatches;
 
   useEffect(() => {
     if (!email) {
@@ -116,8 +123,9 @@ function ResetPasswordForm() {
             </button>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Minimum 8 caractères, 1 majuscule, 1 chiffre
+            Le mot de passe doit respecter les exigences de sécurité ci-dessous.
           </p>
+          <PasswordStrength password={watchedPassword || ""} />
           {errors.new_password && (
             <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.new_password.message}</p>
           )}
@@ -165,7 +173,7 @@ function ResetPasswordForm() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !canSubmit}
           className="w-full bg-slate-900 text-white py-3.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
         >
           {isSubmitting ? (

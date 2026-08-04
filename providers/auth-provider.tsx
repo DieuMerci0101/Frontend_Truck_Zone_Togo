@@ -110,10 +110,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: UserRegister) => {
-    const response = await authService.register(data);
-    setUser(response);
-    toast.success("Inscription réussie ! Vous pouvez vous connecter.");
-    router.push("/login");
+    await authService.register(data);
+    toast.success("Inscription réussie !");
+    // Connexion automatique : l'utilisateur est redirigé DIRECTEMENT vers la
+    // vérification des documents (KYC), sans passer par la page de connexion.
+    const loginResponse = await authService.login({
+      email: data.email,
+      password: data.password,
+    });
+    setToken(loginResponse.access_token);
+    localStorage.setItem("refresh_token", loginResponse.refresh_token);
+    setTokenCookie(loginResponse.access_token);
+    setUser(loginResponse.user);
+    setUserCookie(loginResponse.user);
+    setUserState(loginResponse.user);
+
+    const verificationPath: Record<string, string> = {
+      chauffeur: "/dashboard/verification",
+      proprietaire: "/dashboard/verification",
+      mecanicien: "/dashboard/mecanicien/verification",
+    };
+    router.push(verificationPath[loginResponse.user.role] || "/dashboard/verification");
   };
 
   const logout = async () => {

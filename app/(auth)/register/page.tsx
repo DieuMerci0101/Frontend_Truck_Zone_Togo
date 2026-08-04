@@ -9,6 +9,7 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import BackButton from "@/components/ui/back-button";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
@@ -63,6 +64,10 @@ export default function RegisterPage() {
 
   const watchedPassword = watch("password");
   const watchedConfirm = watch("confirm_password");
+
+  const passwordStrong = isPasswordStrong(watchedPassword || "");
+  const confirmMatches = !!watchedConfirm && watchedConfirm === watchedPassword;
+  const canSubmit = passwordStrong && confirmMatches;
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -202,7 +207,8 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-1">Minimum 8 caractères</p>
+          <p className="text-xs text-slate-400 mt-1">Le mot de passe doit respecter les exigences de sécurité ci-dessous.</p>
+          <PasswordStrength password={watchedPassword || ""} />
           {errors.password && (
             <p className="mt-1 text-xs text-red-500 font-medium">
               {errors.password.message}
@@ -255,7 +261,7 @@ export default function RegisterPage() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !canSubmit}
           className="w-full bg-slate-900 text-white py-3.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] mt-2"
         >
           {isSubmitting ? (
