@@ -120,13 +120,18 @@ export default function VerificationPage() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen bg-slate-950 flex items-center justify-center p-4 overflow-hidden">
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-brand/20 blur-3xl" />
-        <div className="absolute bottom-0 -left-24 h-96 w-96 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-xl p-8 animate-pulse">
-          <div className="h-8 w-2/3 rounded-lg bg-white/10 mb-4" />
-          <div className="h-16 w-full rounded-2xl bg-white/10 mb-3" />
-          <div className="h-16 w-full rounded-2xl bg-white/10" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-gray-100 bg-white shadow-sm p-8 animate-pulse">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-slate-200" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-2/3 rounded-lg bg-slate-200" />
+              <div className="h-3 w-1/3 rounded-lg bg-slate-100" />
+            </div>
+          </div>
+          <div className="h-8 w-2/3 rounded-lg bg-slate-200 mb-4" />
+          <div className="h-16 w-full rounded-2xl bg-slate-100 mb-3" />
+          <div className="h-16 w-full rounded-2xl bg-slate-100" />
         </div>
       </div>
     );
