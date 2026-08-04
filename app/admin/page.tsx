@@ -9,8 +9,8 @@ export default function AdminIndexPage() {
 
   useEffect(() => {
     const user = getUser();
-    if (user && user.role === "admin") {
-      router.replace("/dashboard/admin");
+    if (user && String(user.role).toLowerCase() === "admin") {
+      router.replace("/admin/dashboard");
     } else {
       router.replace("/admin/login");
     }

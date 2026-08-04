@@ -30,8 +30,8 @@ export default function AdminLoginPage() {
   });
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user?.role === "admin") {
-      router.replace("/dashboard/admin");
+    if (!isLoading && isAuthenticated && String(user?.role).toLowerCase() === "admin") {
+      router.replace("/admin/dashboard");
     }
   }, [isAuthenticated, isLoading, user, router]);
 

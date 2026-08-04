@@ -88,13 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserState(response.user);
     toast.success("Connexion réussie !");
 
+    // Normalisation insensible à la casse du rôle renvoyé par le Backend
+    // ('ADMIN', 'DRIVER', 'OWNER', 'MECHANIC' ou leurs équivalents minuscules).
+    const role = String(response.user.role || "").toLowerCase();
     const dashPath: Record<string, string> = {
       chauffeur: "/dashboard/chauffeur",
+      driver: "/dashboard/chauffeur",
       proprietaire: "/dashboard/proprietaire",
+      owner: "/dashboard/proprietaire",
       mecanicien: "/dashboard/mecanicien",
-      admin: "/dashboard/admin",
+      mechanic: "/dashboard/mecanicien",
+      admin: "/admin/dashboard",
     };
-    router.push(dashPath[response.user.role] || "/dashboard");
+    router.push(dashPath[role] || "/dashboard");
   };
 
   const adminLogin = async (data: UserLogin) => {
@@ -106,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserCookie(response.user);
     setUserState(response.user);
     toast.success("Connexion administrateur réussie !");
-    router.push("/dashboard/admin");
+    router.push("/admin/dashboard");
   };
 
   const register = async (data: UserRegister) => {
@@ -127,10 +133,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const verificationPath: Record<string, string> = {
       chauffeur: "/dashboard/verification",
+      driver: "/dashboard/verification",
       proprietaire: "/dashboard/verification",
+      owner: "/dashboard/verification",
       mecanicien: "/dashboard/mecanicien/verification",
+      mechanic: "/dashboard/mecanicien/verification",
     };
-    router.push(verificationPath[loginResponse.user.role] || "/dashboard/verification");
+    const role = String(loginResponse.user.role || "").toLowerCase();
+    router.push(verificationPath[role] || "/dashboard/verification");
   };
 
   const logout = async () => {

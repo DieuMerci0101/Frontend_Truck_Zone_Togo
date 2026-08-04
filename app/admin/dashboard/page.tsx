@@ -53,6 +53,13 @@ export default function AdminDashboard() {
       color: "text-amber-600",
       bg: "bg-amber-50",
     },
+    {
+      title: "Camions",
+      value: stats?.camions,
+      icon: Truck,
+      color: "text-slate-700",
+      bg: "bg-slate-100",
+    },
   ];
 
   return (
@@ -62,7 +69,7 @@ export default function AdminDashboard() {
         <p className="text-gray-500 mt-1">Vue d&apos;ensemble de la plateforme</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {statCards.map((card) => (
           <Card key={card.title}>
             <CardContent className="p-3 sm:p-5">

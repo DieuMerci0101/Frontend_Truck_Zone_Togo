@@ -12,7 +12,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      const route = DROPDOWN_DASHBOARD_ROUTES[user.role] || "/dashboard/chauffeur";
+      const role = String(user.role || "").toLowerCase();
+      const route = DROPDOWN_DASHBOARD_ROUTES[role] || "/dashboard/chauffeur";
       router.replace(route);
     }
   }, [user, isLoading, router]);

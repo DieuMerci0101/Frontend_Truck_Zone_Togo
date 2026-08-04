@@ -30,10 +30,10 @@ const menuItems: Record<string, { label: string; href: string }[]> = {
     { label: "Messagerie", href: "/dashboard/chat" },
   ],
   admin: [
-    { label: "Tableau de bord", href: "/dashboard/admin" },
-    { label: "Utilisateurs", href: "/dashboard/admin/utilisateurs" },
-    { label: "Documents", href: "/dashboard/admin/documents" },
-    { label: "Incidents", href: "/dashboard/admin/incidents" },
+    { label: "Tableau de bord", href: "/admin/dashboard" },
+    { label: "Utilisateurs", href: "/admin/dashboard/utilisateurs" },
+    { label: "Documents", href: "/admin/dashboard/documents" },
+    { label: "Incidents", href: "/admin/dashboard/incidents" },
     { label: "Messagerie", href: "/dashboard/chat" },
   ],
 };
@@ -41,7 +41,7 @@ const menuItems: Record<string, { label: string; href: string }[]> = {
 export function Sidebar() {
   const pathname = usePathname();
   const user = getUser();
-  const role = user?.role || "chauffeur";
+  const role = String(user?.role || "chauffeur").toLowerCase();
   const items = menuItems[role] || menuItems.chauffeur;
 
   return (

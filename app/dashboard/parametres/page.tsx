@@ -10,7 +10,10 @@ export default function ParametresPage() {
 
   useEffect(() => {
     if (user?.role) {
-      router.replace(`/dashboard/${user.role}/profil`);
+      const role = String(user.role).toLowerCase();
+      router.replace(
+        role === "admin" ? "/admin/dashboard/profil" : `/dashboard/${role}/profil`
+      );
     }
   }, [user, router]);
 

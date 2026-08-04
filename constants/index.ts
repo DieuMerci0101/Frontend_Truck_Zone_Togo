@@ -196,5 +196,5 @@ export const DROPDOWN_DASHBOARD_ROUTES: Record<string, string> = {
   chauffeur: "/dashboard/chauffeur",
   proprietaire: "/dashboard/proprietaire",
   mecanicien: "/dashboard/mecanicien",
-  admin: "/dashboard/admin",
+  admin: "/admin/dashboard",
 };

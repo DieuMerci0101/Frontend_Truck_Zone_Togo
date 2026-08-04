@@ -30,7 +30,7 @@ export function getRoleLabel(role: string): string {
     mecanicien: "Mécanicien",
     admin: "Administrateur",
   };
-  return labels[role] || role;
+  return labels[String(role).toLowerCase()] || role;
 }
 
 export function getStatusColor(status: string): string {

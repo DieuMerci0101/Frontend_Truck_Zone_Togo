@@ -55,41 +55,54 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
 
+      // Normalisation insensible à la casse ('ADMIN' → 'admin').
+      const role = String(payload.role || "").toLowerCase();
+      const isVerified = payload.is_verified;
+
       const isVerificationRoute = VERIFICATION_ROUTES.some(
         (route) => pathname === route || pathname.startsWith(route + "/")
       );
 
-      if (!isVerificationRoute && payload.role !== "admin") {
-        if (payload.is_verified === false) {
+      if (!isVerificationRoute && role !== "admin") {
+        if (isVerified === false) {
           const target =
-            payload.role === "mecanicien"
+            role === "mecanicien"
               ? "/dashboard/mecanicien/verification"
               : "/dashboard/verification";
           return NextResponse.redirect(new URL(target, request.url));
         }
       }
 
-      if (isVerificationRoute && payload.is_verified !== false) {
+      if (isVerificationRoute && isVerified !== false) {
         const rolePath: Record<string, string> = {
           chauffeur: "/dashboard/chauffeur",
           proprietaire: "/dashboard/proprietaire",
           mecanicien: "/dashboard/mecanicien",
-          admin: "/dashboard/admin",
+          admin: "/admin/dashboard",
         };
         return NextResponse.redirect(
-          new URL(rolePath[payload.role] || "/dashboard/chauffeur", request.url)
+          new URL(rolePath[role] || "/dashboard/chauffeur", request.url)
         );
       }
 
-      if (pathname.startsWith("/dashboard/admin") && payload.role !== "admin") {
+      if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
         const rolePath: Record<string, string> = {
           chauffeur: "/dashboard/chauffeur",
           proprietaire: "/dashboard/proprietaire",
           mecanicien: "/dashboard/mecanicien",
         };
         return NextResponse.redirect(
-          new URL(rolePath[payload.role] || "/login", request.url)
+          new URL(rolePath[role] || "/login", request.url)
         );
+      }
+
+      // Anciennes URLs /dashboard/admin/* → nouvel espace isolé /admin/dashboard/*
+      if (pathname.startsWith("/dashboard/admin") && role === "admin") {
+        const target = pathname.replace(
+          /^\/dashboard\/admin/,
+          "/admin/dashboard"
+        );
+        return NextResponse.redirect(new URL(target, request.url));
       }
     } catch {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -120,7 +133,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
 
-      if (payload.role !== "admin") {
+      if (String(payload.role || "").toLowerCase() !== "admin") {
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
     } catch {

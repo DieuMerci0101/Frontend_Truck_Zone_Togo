@@ -30,11 +30,11 @@ export function isAuthenticated(): boolean {
 }
 
 export function getDashboardPath(role: string): string {
-  switch (role) {
-    case "chauffeur": return "/dashboard/chauffeur";
-    case "proprietaire": return "/dashboard/proprietaire";
-    case "mecanicien": return "/dashboard/mecanicien";
-    case "admin": return "/dashboard/admin";
+  switch (String(role).toLowerCase()) {
+    case "chauffeur": case "driver": return "/dashboard/chauffeur";
+    case "proprietaire": case "owner": return "/dashboard/proprietaire";
+    case "mecanicien": case "mechanic": return "/dashboard/mecanicien";
+    case "admin": return "/admin/dashboard";
     default: return "/dashboard";
   }
 }

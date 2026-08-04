@@ -41,7 +41,8 @@ export function LoginForm() {
       }
 
       // Vérifier que le rôle correspond
-      if (selectedRole && data.user.role !== selectedRole) {
+      const userRole = String(data.user.role || "").toLowerCase();
+      if (selectedRole && userRole !== selectedRole) {
         throw new Error(`Ce compte n'est pas un ${ROLES.find(r => r.value === selectedRole)?.label}`);
       }
 
@@ -54,11 +55,15 @@ export function LoginForm() {
 
       const rolePath: Record<string, string> = {
         chauffeur: "/dashboard/chauffeur",
+        driver: "/dashboard/chauffeur",
         proprietaire: "/dashboard/proprietaire",
+        owner: "/dashboard/proprietaire",
         mecanicien: "/dashboard/mecanicien",
+        mechanic: "/dashboard/mecanicien",
+        admin: "/admin/dashboard",
       };
 
-      router.push(rolePath[data.user.role] || "/dashboard");
+      router.push(rolePath[userRole] || "/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {

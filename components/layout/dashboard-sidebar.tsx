@@ -69,14 +69,14 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Localisation", href: "/dashboard/mecanicien/localisation", icon: MapPin },
   ],
   admin: [
-    { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
-    { label: "Utilisateurs", href: "/dashboard/admin/utilisateurs", icon: Users },
-    { label: "Documents", href: "/dashboard/admin/documents", icon: FileText },
-    { label: "Incidents", href: "/dashboard/admin/incidents", icon: AlertTriangle },
-    { label: "Assistance", href: "/dashboard/admin/assistance", icon: Headphones },
-    { label: "Notifications", href: "/dashboard/admin/notifications", icon: BarChart3 },
-    { label: "Statistiques", href: "/dashboard/admin", icon: BarChart3 },
-    { label: "Profil", href: "/dashboard/admin/profil", icon: User },
+    { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { label: "Utilisateurs", href: "/admin/dashboard/utilisateurs", icon: Users },
+    { label: "Documents", href: "/admin/dashboard/documents", icon: FileText },
+    { label: "Incidents", href: "/admin/dashboard/incidents", icon: AlertTriangle },
+    { label: "Assistance", href: "/admin/dashboard/assistance", icon: Headphones },
+    { label: "Notifications", href: "/admin/dashboard/notifications", icon: BarChart3 },
+    { label: "Statistiques", href: "/admin/dashboard", icon: BarChart3 },
+    { label: "Profil", href: "/admin/dashboard/profil", icon: User },
   ],
 };
 
@@ -90,8 +90,8 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
   const pathname = usePathname();
   const { logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const role = user?.role || "chauffeur";
-  const items = menuByRole[role];
+  const role = String(user?.role || "chauffeur").toLowerCase() as UserRole;
+  const items = menuByRole[role] || menuByRole.chauffeur;
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);

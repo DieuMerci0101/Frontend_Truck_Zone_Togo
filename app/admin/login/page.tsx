@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
         throw new Error(data.detail || "Erreur de connexion");
       }
 
-      if (data.user.role !== "admin") {
+      if (String(data.user.role).toLowerCase() !== "admin") {
         throw new Error("Ce compte n'est pas un administrateur");
       }
 
@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
       setTokenCookie(data.access_token);
       setUserCookie(data.user);
 
-      router.push("/dashboard/admin");
+      router.push("/admin/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
