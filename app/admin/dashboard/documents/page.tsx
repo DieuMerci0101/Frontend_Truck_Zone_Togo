@@ -58,9 +58,15 @@ const STATUT_TO_BACKEND: Record<string, string | undefined> = {
 
 const DOC_LABELS: Record<string, string> = {
   permis: "Permis de conduire",
-  cni: "Pièce d'identité",
+  cni: "Pièce d'identité (CNI)",
+  passeport: "Passeport",
   certificat: "Attestation de capacité",
   assurance: "Certificat médical",
+  casier: "Casier judiciaire",
+  rccm: "Registre de commerce (RCCM)",
+  patente: "Patente",
+  diplome: "Diplôme",
+  photo_identite: "Photo d'identité",
   justificatif: "Justificatif / Diplôme",
 };
 
