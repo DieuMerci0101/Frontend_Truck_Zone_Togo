@@ -19,9 +19,21 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+// Redirection par rôle : l'administrateur est envoyé vers son dashboard dédié,
+// jamais vers la vue chauffeur/propriétaire.
+const DASHBOARD_BY_ROLE: Record<string, string> = {
+  admin: "/admin/dashboard",
+  chauffeur: "/dashboard/chauffeur",
+  driver: "/dashboard/chauffeur",
+  proprietaire: "/dashboard/proprietaire",
+  owner: "/dashboard/proprietaire",
+  mecanicien: "/dashboard/mecanicien",
+  mechanic: "/dashboard/mecanicien",
+};
+
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { user, login, isAuthenticated, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -33,10 +45,11 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push("/dashboard");
+    if (!isLoading && isAuthenticated && user) {
+      const role = String(user.role || "").toLowerCase();
+      router.push(DASHBOARD_BY_ROLE[role] || "/dashboard");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user]);
 
   const onSubmit = async (data: LoginForm) => {
     try {
