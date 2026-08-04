@@ -8,7 +8,7 @@ const serviceLinks = [
 ];
 
 const companyLinks = [
-  { label: "À propos", href: "/about" },
+  { label: "À propos", href: "/a-propos" },
   { label: "Conditions", href: "/terms" },
   { label: "Confidentialité", href: "/privacy" },
 ];
@@ -69,13 +69,13 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li>Lomé, Togo</li>
               <li>
-                <a href="tel:+22890123456" className="hover:text-white transition-colors">
-                  +228 90 12 34 56
+                <a href="tel:+22870118993" className="hover:text-white transition-colors">
+                  +228 70 11 89 93
                 </a>
               </li>
               <li>
-                <a href="mailto:contact@togotruckconnect.com" className="hover:text-white transition-colors break-all">
-                  contact@togotruckconnect.com
+                <a href="mailto:patgodson01@gmail.com" className="hover:text-white transition-colors break-all">
+                  patgodson01@gmail.com
                 </a>
               </li>
             </ul>

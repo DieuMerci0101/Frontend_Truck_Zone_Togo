@@ -35,10 +35,13 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-16 sm:py-20 lg:py-24 bg-white">
+    <section
+      id="features"
+      className="py-6 sm:py-12 bg-amber-50/50"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
             Fonctionnalités
           </h2>
           <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
@@ -46,11 +49,11 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="border border-slate-200 rounded-xl p-6 sm:p-8 hover:border-slate-300 hover:shadow-sm transition-all"
+              className="bg-white shadow-sm border border-slate-200/60 rounded-xl p-5 sm:p-6 hover:shadow-md hover:border-slate-300 transition-all"
             >
               <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 sm:mb-3">
                 {feature.title}

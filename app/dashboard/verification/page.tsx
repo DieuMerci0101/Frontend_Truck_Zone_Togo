@@ -1,42 +1,82 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
 import { chauffeurService } from "@/services/chauffeur.service";
 import { proprietaireService } from "@/services/proprietaire.service";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, CheckCircle, AlertCircle, FileText, RefreshCw } from "lucide-react";
+import {
+  KycWizard,
+  type KycStep,
+  type KycWizardProps,
+} from "@/components/upload/kyc-wizard";
+import { ROLES } from "@/constants";
 import type { UserRole } from "@/types";
-import { DocumentUpload, type DocumentZone } from "@/components/upload/document-upload";
 
-const DOCS_BY_ROLE: Record<string, DocumentZone[]> = {
+const STEPS_BY_ROLE: Record<string, KycStep[]> = {
   chauffeur: [
-    { key: "permis", label: "Permis de conduire", description: "Permis valide pour la catégorie C ou CE" },
-    { key: "cni", label: "Pièce d'identité", description: "Carte nationale d'identité en cours de validité" },
-    { key: "certificat", label: "Attestation de capacité", description: "Attestation de capacité professionnelle" },
-    { key: "assurance", label: "Certificat médical", description: "Certificat d'aptitude médicale de conduite" },
+    {
+      id: "permis",
+      label: "Permis de conduire",
+      description: "Permis valide pour la catégorie C ou CE",
+      docTypes: [{ value: "permis", label: "Permis de conduire" }],
+    },
+    {
+      id: "identite",
+      label: "Pièce d'identité",
+      description: "Carte nationale d'identité ou passeport en cours de validité",
+      docTypes: [
+        { value: "cni", label: "Carte Nationale d'Identité (CNI)" },
+        { value: "passeport", label: "Passeport" },
+      ],
+    },
+    {
+      id: "casier",
+      label: "Document professionnel complémentaire",
+      description: "Casier judiciaire ou certificat professionnel",
+      docTypes: [{ value: "casier", label: "Casier judiciaire / Certificat" }],
+    },
+    {
+      id: "photo",
+      label: "Photo d'identité",
+      description: "Photo d'identité récente ou justificatif final",
+      docTypes: [{ value: "photo_identite", label: "Photo d'identité" }],
+    },
   ],
   proprietaire: [
-    { key: "cni", label: "Pièce d'identité", description: "Carte nationale d'identité en cours de validité" },
-    { key: "certificat", label: "Carte grise / Registre de commerce", description: "Preuve d'immatriculation de votre entreprise ou véhicule" },
+    {
+      id: "entreprise",
+      label: "Preuve de l'entreprise",
+      description: "Registre de commerce (RCCM) ou patente de votre entreprise",
+      docTypes: [
+        { value: "rccm", label: "Registre de commerce (RCCM)" },
+        { value: "patente", label: "Patente" },
+      ],
+    },
+    {
+      id: "identite",
+      label: "Pièce d'identité",
+      description: "Carte nationale d'identité ou passeport en cours de validité",
+      docTypes: [
+        { value: "cni", label: "Carte Nationale d'Identité (CNI)" },
+        { value: "passeport", label: "Passeport" },
+      ],
+    },
   ],
 };
 
 export default function VerificationPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout, isLoggingOut } = useAuth();
   const queryClient = useQueryClient();
 
   const role = user?.role as UserRole;
-  const requiredDocs = DOCS_BY_ROLE[role] || [];
+  const steps = STEPS_BY_ROLE[role] || [];
   const isChauffeur = role === "chauffeur";
 
   const service = isChauffeur ? chauffeurService : proprietaireService;
 
-  const { data: documents, isLoading, refetch } = useQuery({
+  const { data: documents, isLoading } = useQuery({
     queryKey: [isChauffeur ? "chauffeur" : "proprietaire", "documents"],
     queryFn: () => service.getDocuments(),
     refetchInterval: 10000,
@@ -45,108 +85,66 @@ export default function VerificationPage() {
   const uploadMutation = useMutation({
     mutationFn: (formData: FormData) => service.uploadDocument(formData),
     onError: (err: any) => {
-      toast.error(err?.response?.data?.detail || err.message || "Erreur lors de l'upload");
+      toast.error(
+        err?.response?.data?.detail ||
+          err?.message ||
+          "Erreur lors de l'envoi du document"
+      );
     },
   });
 
-  const getDocStatus = (key: string) => {
-    const d = documents?.find((doc) => doc.type_document === key);
+  const getDocStatus: KycWizardProps["getDocStatus"] = (docType) => {
+    const d = documents?.find((doc) => doc.type_document === docType);
     return d
-      ? { statut: d.statut, commentaire_admin: d.commentaire_admin, fichier_url: d.fichier_url, created_at: d.created_at }
+      ? {
+          statut: d.statut,
+          commentaire_admin: d.commentaire_admin,
+          fichier_url: d.fichier_url,
+          created_at: d.created_at,
+        }
       : undefined;
   };
 
-  const allValidated = requiredDocs.every((doc) => {
-    const d = getDocStatus(doc.key);
-    return d?.statut === "valide";
-  });
-
-  const anyRejected = requiredDocs.some((doc) => {
-    const d = getDocStatus(doc.key);
-    return d?.statut === "rejete";
-  });
+  const allValidated = useMemo(
+    () =>
+      steps.every((step) =>
+        step.docTypes.some((opt) => getDocStatus(opt.value)?.statut === "valide")
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [documents, steps]
+  );
 
   useEffect(() => {
-    if (allValidated) {
-      refreshUser();
-    }
+    if (allValidated) refreshUser();
   }, [allValidated, refreshUser]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="p-6 space-y-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-8 animate-pulse">
+          <div className="h-8 w-2/3 rounded bg-slate-800 mb-4" />
+          <div className="h-16 w-full rounded bg-slate-800 mb-3" />
+          <div className="h-16 w-full rounded bg-slate-800" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6">
-        <div className="text-center">
-          <div className="inline-flex p-3 bg-amber-100 rounded-full mb-4">
-            <Shield className="h-8 w-8 text-amber-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Vérification de votre compte</h1>
-          <p className="text-gray-500 mt-2">
-            Pour accéder à l&apos;ensemble des fonctionnalités, vous devez soumettre vos documents pour validation.
-          </p>
-        </div>
-
-        {anyRejected && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">
-                Un ou plusieurs documents ont été rejetés. Veuillez consulter le motif ci-dessous et soumettre de nouveaux fichiers.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {allValidated && (
-          <Card className="border-amber-200 bg-amber-50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-amber-500 shrink-0" />
-              <p className="text-sm text-amber-700">
-                Tous vos documents sont validés !
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Documents requis
-            </CardTitle>
-            <CardDescription>
-              Formats acceptés : PDF, JPG, PNG — Max 10 Mo par fichier
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <DocumentUpload
-              zones={requiredDocs}
-              getStatus={getDocStatus}
-              onUpload={(formData) => uploadMutation.mutateAsync(formData)}
-              onUploaded={() =>
-                queryClient.invalidateQueries({ queryKey: [isChauffeur ? "chauffeur" : "proprietaire", "documents"] })
-              }
-            />
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-center gap-3">
-          <Button variant="outline" onClick={() => refetch()} className="min-h-[44px]">
-            <RefreshCw className="h-4 w-4 mr-2" /> Actualiser
-          </Button>
-        </div>
-      </div>
-    </div>
+    <KycWizard
+      roleLabel={ROLES[role] || "Compte"}
+      title="Vérification de votre compte"
+      subtitle="Pour accéder à l'ensemble des fonctionnalités, soumettez les documents requis. Chaque document est examiné par un administrateur."
+      steps={steps}
+      getDocStatus={getDocStatus}
+      onUpload={(fd) => uploadMutation.mutateAsync(fd)}
+      onUploaded={() =>
+        queryClient.invalidateQueries({
+          queryKey: [isChauffeur ? "chauffeur" : "proprietaire", "documents"],
+        })
+      }
+      onLogout={logout}
+      isLoggingOut={isLoggingOut}
+    />
   );
 }

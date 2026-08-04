@@ -1,7 +1,14 @@
 const ENV_API_URL =
   process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const API_BASE_URL = (ENV_API_URL || "https://truck-zone-togo.onrender.com").replace(/\/+$/, "");
+// L'URL de production (Render) sert de base. Tous les services appellent des
+// chemins préfixés `/api/...`, donc on normalise : un éventuel suffixe `/api`
+// fourni dans NEXT_PUBLIC_API_URL est retiré pour obtenir la racine de l'API.
+export const API_BASE_URL = (
+  ENV_API_URL || "https://truck-zone-togo.onrender.com"
+)
+  .replace(/\/+$/, "")
+  .replace(/\/api$/, "");
 export const API_URL = API_BASE_URL;
 export const WS_URL = API_BASE_URL.replace(/^http/, "ws") + "/ws";
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Togo Truck Connect";
@@ -88,10 +95,16 @@ export const TYPE_CONTRAT = {
 } as const;
 
 export const TYPE_DOCUMENT = {
-  permis: "Permis",
-  cni: "CNI",
+  permis: "Permis de conduire",
+  cni: "Carte Nationale d'Identité (CNI)",
+  passeport: "Passeport",
   certificat: "Certificat",
   assurance: "Assurance",
+  casier: "Casier judiciaire",
+  rccm: "Registre de commerce (RCCM)",
+  patente: "Patente",
+  diplome: "Diplôme / Attestation",
+  photo_identite: "Photo d'identité",
 } as const;
 
 export const STATUT_DOCUMENT = {

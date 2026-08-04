@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import BackButton from "@/components/ui/back-button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
@@ -18,7 +19,7 @@ const registerSchema = z
     email: z.string().email("Adresse email invalide"),
     telephone: z
       .string()
-      .regex(/^\+228\d{8}$/, "Le numéro doit être au format +228XXXXXXXX"),
+      .regex(/^\+[1-9]\d{6,14}$/, "Numéro invalide. Vérifiez l'indicatif et la suite du numéro."),
     password: z
       .string()
       .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
@@ -50,6 +51,8 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -169,19 +172,12 @@ export default function RegisterPage() {
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Téléphone
           </label>
-          <input
-            type="tel"
-            placeholder="+228 90 12 34 56"
-            className={`w-full px-4 py-3 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
-              errors.telephone ? "border-red-400" : "border-slate-200"
-            }`}
-            {...register("telephone")}
+          <PhoneInput
+            id="telephone"
+            value={getValues("telephone")}
+            onChange={(fullNumber) => setValue("telephone", fullNumber, { shouldValidate: true })}
+            error={errors.telephone?.message}
           />
-          {errors.telephone && (
-            <p className="mt-1 text-xs text-red-500 font-medium">
-              {errors.telephone.message}
-            </p>
-          )}
         </div>
 
         {/* Password */}

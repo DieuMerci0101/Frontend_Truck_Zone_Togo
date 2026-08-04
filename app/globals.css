@@ -184,4 +184,15 @@
   .tooltip:hover::after {
     @apply opacity-100;
   }
+
+  /* Découpage en biseau de l'image du carrousel Hero (desktop uniquement) */
+  .hero-image-clip {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  @media (min-width: 768px) {
+    .hero-image-clip {
+      clip-path: polygon(0 0, 100% 0, calc(100% - 56px) 100%, 0 100%);
+    }
+  }
 }

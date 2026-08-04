@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import BackButton from "@/components/ui/back-button";
-import { Eye, EyeOff, Shield } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -152,20 +152,6 @@ export default function LoginPage() {
           >
             Créer un compte gratuit
           </Link>
-        </p>
-      </div>
-
-      {/* Admin Link */}
-      <div className="mt-4">
-        <Link
-          href="/admin-login"
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg border-2 border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors min-h-[44px]"
-        >
-          <Shield className="h-4 w-4 text-amber-600" />
-          Espace administrateur
-        </Link>
-        <p className="mt-2 text-center text-[11px] text-slate-400">
-          Réservé à l&apos;administration de la plateforme
         </p>
       </div>
 

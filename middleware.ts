@@ -14,6 +14,8 @@ const PUBLIC_ROUTES = [
   "/offres",
   "/contact",
   "/about",
+  "/a-propos",
+  "/admin/login",
 ];
 
 const VERIFICATION_ROUTES = ["/dashboard/verification", "/dashboard/mecanicien/verification"];
@@ -94,9 +96,41 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // ── Espace Admin isolé : /admin/* (hors /admin/login) ──
+  // Requiert un token valide avec le rôle ADMIN, sinon redirection /admin/login.
+  if (pathname.startsWith("/admin")) {
+    const token = request.cookies.get("tt_token")?.value;
+
+    if (!token) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
+
+      const payload = JSON.parse(
+        Buffer.from(parts[1], "base64").toString("utf-8")
+      );
+
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
+
+      if (payload.role !== "admin") {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

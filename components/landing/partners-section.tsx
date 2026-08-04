@@ -11,7 +11,7 @@ const partners = [
 
 export default function PartnersSection() {
   return (
-    <section className="py-12 sm:py-16 bg-white border-t border-slate-100">
+    <section className="py-8 sm:py-10 bg-slate-50 border-t border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">

@@ -1,6 +1,16 @@
 // ─── User ───────────────────────────────────────────
 export type UserRole = "chauffeur" | "proprietaire" | "mecanicien" | "admin";
 
+// ─── Pays / indicatifs internationaux ───────────────
+export interface Country {
+  id: string;
+  name: string;
+  code: string; // ISO 2 lettres (ex: "TG")
+  phone_code: string; // indicatif E.164 (ex: "+228")
+  flag_emoji?: string | null;
+  is_active?: boolean;
+}
+
 export type VerificationStatusUser =
   | "pending_upload"
   | "pending_approval"
@@ -504,7 +514,17 @@ export interface IncidentCommentaireCreate {
 }
 
 // ─── Document ───────────────────────────────────────
-export type TypeDocument = "permis" | "cni" | "certificat" | "assurance";
+export type TypeDocument =
+  | "permis"
+  | "cni"
+  | "passeport"
+  | "certificat"
+  | "assurance"
+  | "casier"
+  | "rccm"
+  | "patente"
+  | "diplome"
+  | "photo_identite";
 export type StatutDocument = "en_attente" | "valide" | "rejete";
 
 export interface Document {

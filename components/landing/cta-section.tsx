@@ -3,12 +3,12 @@ import { ArrowRight } from "lucide-react";
 
 export default function CtaSection() {
   return (
-    <section className="relative py-16 sm:py-20 overflow-hidden">
+    <section className="relative py-10 sm:py-14 overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80')",
+            backgroundImage:
+              "url('/images/image 5.jpg')",
         }}
       />
       <div className="absolute inset-0 bg-slate-900/70" />
@@ -19,17 +19,17 @@ export default function CtaSection() {
         <p className="text-base sm:text-lg text-slate-400 mb-8 max-w-xl mx-auto">
           Créez votre compte gratuitement et accédez à l&apos;ensemble des services.
         </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
           <Link
             href="/register"
-            className="inline-flex items-center justify-center gap-2 bg-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm"
+            className="inline-flex items-center justify-center gap-2 bg-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors shadow-sm min-h-[44px]"
           >
-            Créer un compte
+            Commencer dès maintenant
             <ArrowRight className="h-5 w-5" />
           </Link>
           <Link
-            href="/about"
-            className="inline-flex items-center justify-center gap-2 border border-slate-400 text-slate-200 px-8 py-3 rounded-lg font-semibold hover:bg-slate-800 transition-colors"
+            href="/a-propos"
+            className="inline-flex items-center justify-center gap-2 border-2 border-white/40 text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 hover:border-white/60 transition-colors min-h-[44px]"
           >
             En savoir plus
           </Link>
