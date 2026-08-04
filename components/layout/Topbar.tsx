@@ -12,7 +12,7 @@ export function Topbar() {
     removeUser();
     removeTokenCookie();
     removeUserCookie();
-    router.push("/login");
+    router.push("/");
   };
 
   return (

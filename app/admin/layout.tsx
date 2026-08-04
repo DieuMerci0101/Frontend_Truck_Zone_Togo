@@ -68,7 +68,7 @@ export default function AdminLayout({
     removeTokenCookie();
     removeUserCookie();
     localStorage.removeItem("refresh_token");
-    router.replace("/admin/login");
+    router.replace("/");
   };
 
   if (isLogin) {

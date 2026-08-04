@@ -8,7 +8,6 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/verify-otp",
   "/reset-password",
-  "/admin-login",
   "/chauffeurs",
   "/mecaniciens",
   "/offres",
