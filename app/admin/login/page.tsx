@@ -19,11 +19,15 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
     try {
       const res = await fetch(`${API_URL}/api/auth/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -49,8 +53,15 @@ export default function AdminLoginPage() {
 
       router.push("/admin/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      if (err?.name === "AbortError") {
+        setError(
+          "Le serveur met trop de temps à répondre (démarrage en cours ?). Veuillez réessayer dans quelques instants."
+        );
+      } else {
+        setError(err.message);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -129,12 +140,18 @@ export default function AdminLoginPage() {
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Connexion en cours...
+                Connexion au serveur en cours...
               </>
             ) : (
               "Se connecter"
             )}
           </button>
+          {loading && (
+            <p className="text-xs text-slate-500 text-center">
+              Veuillez patienter, le serveur peut prendre quelques secondes pour
+              démarrer.
+            </p>
+          )}
         </form>
 
         {/* Footer */}

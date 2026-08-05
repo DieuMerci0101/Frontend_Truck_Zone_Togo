@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useScrollPosition } from "@/hooks/use-scroll";
-import { LogoutModal } from "@/components/ui/logout-modal";
 
 const navLinks = [
   { label: "Accueil", href: "/" },
@@ -21,8 +20,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { isScrolled } = useScrollPosition();
   const pathname = usePathname();
 
@@ -133,16 +131,6 @@ export default function Navbar() {
                   >
                     Inscription
                   </Link>
-                  <button
-                    onClick={() => setShowLogoutModal(true)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      isScrolled
-                        ? "text-red-600 hover:bg-red-50"
-                        : "text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    Déconnexion
-                  </button>
                 </>
               ) : (
                 <>
@@ -268,15 +256,6 @@ export default function Navbar() {
               >
                 Inscription
               </Link>
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  setShowLogoutModal(true);
-                }}
-                className="w-full py-2.5 text-center text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition-colors min-h-[44px]"
-              >
-                Déconnexion
-              </button>
             </>
           ) : (
             <>
@@ -298,14 +277,6 @@ export default function Navbar() {
           )}
         </div>
       </div>
-      <LogoutModal
-        open={showLogoutModal}
-        onConfirm={() => {
-          setShowLogoutModal(false);
-          logout();
-        }}
-        onCancel={() => setShowLogoutModal(false)}
-      />
     </>
   );
 }
