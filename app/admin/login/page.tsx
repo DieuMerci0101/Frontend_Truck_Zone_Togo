@@ -32,8 +32,12 @@ export default function AdminLoginPage() {
         throw new Error(data.detail || "Erreur de connexion");
       }
 
+      if (!data || !data.user || !data.access_token) {
+        throw new Error("Réponse du serveur invalide. Veuillez réessayer.");
+      }
+
       if (String(data.user.role).toLowerCase() !== "admin") {
-        throw new Error("Ce compte n'est pas un administrateur");
+        throw new Error("Accès refusé. Privilèges administrateur requis.");
       }
 
       setToken(data.access_token);

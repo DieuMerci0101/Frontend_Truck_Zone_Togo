@@ -301,9 +301,10 @@ export default function AdminDocumentsPage() {
                     )}
 
                     <div className="grid gap-2">
-                      {item.required_documents.map((type) => {
-                        const doc = item.documents.find((d) => d.type_document === type);
-                        const missing = item.missing_documents.includes(type);
+                      {(item.required_documents || []).map((type) => {
+                        const docs = item.documents || [];
+                        const doc = docs.find((d) => d.type_document === type);
+                        const missing = (item.missing_documents || []).includes(type);
                         const fileUrl = doc?.fichier_url || null;
                         return (
                           <div
