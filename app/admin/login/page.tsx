@@ -1,67 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { setToken, setUser, setRefreshToken, setTokenCookie, setUserCookie } from "@/lib/auth";
-import { API_URL } from "@/constants";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { adminLogin, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Session administrateur déjà active : on ne réaffiche pas la page de
+  // connexion, on redirige directement vers le dashboard.
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (String(user.role).toLowerCase() === "admin") {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/admin/login");
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
-
     try {
-      const res = await fetch(`${API_URL}/api/auth/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        signal: controller.signal,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.detail || "Erreur de connexion");
-      }
-
-      if (!data || !data.user || !data.access_token) {
-        throw new Error("Réponse du serveur invalide. Veuillez réessayer.");
-      }
-
-      if (String(data.user.role).toLowerCase() !== "admin") {
-        throw new Error("Accès refusé. Privilèges administrateur requis.");
-      }
-
-      setToken(data.access_token);
-      setRefreshToken(data.refresh_token);
-      setUser(data.user);
-
-      setTokenCookie(data.access_token);
-      setUserCookie(data.user);
-
-      router.push("/admin/dashboard");
+      // Le provider met à jour le state `user` du contexte AVANT la
+      // redirection : le garde-fou du layout ne peut donc plus nous
+      // renvoyer vers /admin/login (clignotement / retour en arrière).
+      await adminLogin({ email, password });
     } catch (err: any) {
-      if (err?.name === "AbortError") {
-        setError(
-          "Le serveur met trop de temps à répondre (démarrage en cours ?). Veuillez réessayer dans quelques instants."
-        );
-      } else {
-        setError(err.message);
-      }
+      const message = err?.message || "Erreur de connexion";
+      setError(
+        /timeout/i.test(message)
+          ? "Le serveur met trop de temps à répondre (démarrage en cours ?). Veuillez réessayer dans quelques instants."
+          : message
+      );
     } finally {
-      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -110,7 +92,7 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-              placeholder="admin@togotruckconnect.com"
+              placeholder="admin@togotruck.com"
               required
             />
           </div>

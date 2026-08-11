@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -16,16 +17,17 @@ const config: Config = {
         foreground: "hsl(var(--foreground))",
         brand: {
           DEFAULT: "#E59E00",
-          50: "#FDF6E6",
-          100: "#FBEAC2",
-          200: "#F5D68A",
-          300: "#EFC14D",
-          400: "#EAAE1F",
+          50: "#FFF7E6",
+          100: "#FFEFC4",
+          200: "#FBDD8A",
+          300: "#F7C94D",
+          400: "#F38E22",
           500: "#E59E00",
-          600: "#B87E00",
-          700: "#8A5E00",
-          800: "#5C3F00",
-          900: "#2E1F00",
+          600: "#D18A00",
+          700: "#B06F00",
+          800: "#7A4C00",
+          900: "#422A00",
+          950: "#241600",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -84,9 +86,19 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(18px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "ken-burns": {
+          "0%": { transform: "scale(1)" },
+          "100%": { transform: "scale(1.06)" },
+        },
       },
       animation: {
         "animate-in": "animate-in 0.2s ease-out",
+        "fade-up": "fade-up 0.6s ease-out both",
+        "ken-burns": "ken-burns 8s ease-out forwards",
       },
     },
   },

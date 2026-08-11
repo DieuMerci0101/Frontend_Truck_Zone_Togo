@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/providers/auth-provider";
 import { conversationService } from "@/services/conversation.service";
+import toast from "react-hot-toast";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -198,6 +199,7 @@ export default function ChatPage() {
   const [recording, setRecording] = useState(false);
 
   const selectedConvId = searchParams.get("conv") || null;
+  const recipientId = searchParams.get("recipientId") || null;
   const [mobileView, setMobileView] = useState<"list" | "chat">(
     selectedConvId ? "chat" : "list"
   );
@@ -264,6 +266,30 @@ export default function ChatPage() {
     },
     [router, lireMutation]
   );
+
+  // Ouverture de la messagerie directe via ?recipientId={userId} :
+  // crée / récupère la conversation avec ce destinataire puis la sélectionne.
+  const initiateMutation = useMutation({
+    mutationFn: (participant_id: string) =>
+      conversationService.initiate({ participant_id }),
+    onSuccess: (conv) => {
+      router.replace(`/dashboard/chat?conv=${conv.id}`, { scroll: false });
+      setMobileView("chat");
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      lireMutation.mutate(conv.id);
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      toast.error(e?.response?.data?.detail || e?.message || "Impossible d'ouvrir la conversation");
+      router.replace("/dashboard/chat", { scroll: false });
+    },
+  });
+
+  useEffect(() => {
+    if (!recipientId || selectedConvId) return;
+    initiateMutation.mutate(recipientId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipientId, selectedConvId]);
 
   const backToList = useCallback(() => {
     router.replace("/dashboard/chat", { scroll: false });

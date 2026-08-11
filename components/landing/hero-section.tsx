@@ -2,53 +2,41 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowRight, Pause, Play } from "lucide-react";
+import { ArrowRight, MapPin, Pause, Play } from "lucide-react";
 
 const heroSlides = [
   {
-    title: "Mise en relation directe entre propriétaires de camion, chauffeurs et mécaniciens",
+    title: "Recherchez vos camions et suivez votre flotte en temps réel",
     description:
-      "Trouvez rapidement des chauffeurs qualifiés ou une assistance mécanique fiable partout où vous êtes.",
-    cta: "Commencer dès maintenant",
+      "Trouvez rapidement des poids lourds disponibles, gérez vos camions et gardez un œil sur l'ensemble de votre flotte au Togo, où que vous soyez.",
+    cta: "Rejoindre la plateforme",
     href: "/register",
+    secondaryCta: "Trouver un mécanicien",
+    secondaryHref: "/mecaniciens",
     image: "/images/image 1.jpg",
-    alt: "Camion poids lourd sur une route de transport de marchandises",
+    alt: "Camion poids lourd transportant des marchandises sur une route au Togo",
   },
   {
-    title: "Chauffeurs : trouvez des opportunités rapidement",
+    title: "Des chauffeurs vérifiés, disponibles en temps réel et en toute sécurité",
     description:
-      "Connectez-vous aux propriétaires de camions et décrochez vos prochaines missions sans perdre de temps.",
-    cta: "Commencer dès maintenant",
+      "Chaque chauffeur est soumis à une vérification KYC stricte. Consultez leur disponibilité en direct et collaborez en toute confiance.",
+    cta: "Rejoindre la plateforme",
     href: "/register",
+    secondaryCta: "Voir les offres",
+    secondaryHref: "/offres",
     image: "/images/image 6.jpg",
-    alt: "Chauffeur professionnel sur une route de camionnage",
+    alt: "Chauffeur professionnel au volant d'un poids lourd",
   },
   {
-    title: "Mécaniciens : offrez votre assistance en direct",
+    title: "Un réseau de mécaniciens géolocalisés pour vos dépannages d'urgence",
     description:
-      "Recevez des demandes de dépannage à proximité et développez votre activité d'intervention.",
-    cta: "Commencer dès maintenant",
-    href: "/register",
-    image: "/images/image 3.jpg",
-    alt: "Mécanicien intervenant sur un camion en atelier",
-  },
-  {
-    title: "Propriétaires : gérez et publiez votre flotte de camions",
-    description:
-      "Publiez vos camions, suivez leur état et recrutez des chauffeurs vérifiés en toute confiance.",
-    cta: "Commencer dès maintenant",
-    href: "/register",
-    image: "/images/image 2.jpg",
-    alt: "Flotte de camions poids lourds de transport de marchandises",
-  },
-  {
-    title: "Des opportunités pour tous les acteurs du transport",
-    description:
-      "Un tableau de bord complet pour vos offres, missions, documents et statistiques.",
-    cta: "Commencer dès maintenant",
-    href: "/register",
-    image: "/images/image 5.jpg",
-    alt: "Ensemble des services de transport et de recrutement de la plateforme",
+      "Signalez une panne et soyez mis en relation avec le mécanicien certifié le plus proche, avec alertes d'intervention et suivi en direct.",
+    cta: "Demander une assistance mécanique",
+    href: "/mecaniciens",
+    secondaryCta: "Voir les offres",
+    secondaryHref: "/offres",
+    image: "/images/image 10.jpg",
+    alt: "Mécanicien intervenant sur un camion en atelier de maintenance",
   },
 ];
 
@@ -69,75 +57,104 @@ export default function HeroSection() {
   }, [paused, nextSlide]);
 
   return (
-    /* pt = hauteur navbar (64px/80px) + marge d'aération généreuse.
-       min-h = 100vh - zone réservée pour laisser dépasser le titre "Fonctionnalités". */
-    <section className="bg-slate-50 pt-[92px] sm:pt-[96px] lg:pt-[112px] pb-4 sm:pb-6 flex flex-col min-h-[calc(100vh-9rem)]">
-      <div className="w-[94%] max-w-7xl mx-auto flex flex-col flex-1">
-        {/* ─── Carte Bannière (hauteur adaptative 100vh) ─── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:grid md:grid-cols-2 flex-1 min-h-[500px] sm:min-h-[520px] md:min-h-[560px]">
-          {/* Visuel : image biseautée qui s'imbrique dans le bloc texte */}
-          <div className="relative h-44 sm:h-56 md:h-full bg-slate-900 overflow-hidden md:z-10 md:mr-[-56px] hero-image-clip">
-            {heroSlides.map((slide, idx) => (
-              <div
-                key={slide.title}
-                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                  idx === activeIndex ? "opacity-100" : "opacity-0"
-                }`}
-                aria-hidden={idx !== activeIndex}
-              >
-                <img
-                  src={slide.image}
-                  alt={slide.alt}
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
-            ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent md:bg-none" />
-          </div>
+    <section className="relative min-h-[85svh] flex flex-col overflow-hidden bg-slate-950">
+      {/* ─── Arrière-plans en fondu enchaîné (crossfade, boucle infinie) ─── */}
+      {heroSlides.map((slide, idx) => (
+        <div
+          key={slide.title}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            idx === activeIndex ? "opacity-100" : "opacity-0"
+          }`}
+          aria-hidden={idx !== activeIndex}
+        >
+          <img
+            src={slide.image}
+            alt={slide.alt}
+            loading={idx === 0 ? "eager" : "lazy"}
+            className={`w-full h-full object-cover object-center ${
+              idx === activeIndex ? "animate-ken-burns" : ""
+            }`}
+          />
+        </div>
+      ))}
 
-          {/* Texte */}
-          <div className="relative flex-1 md:h-full bg-white">
+      {/* ─── Voile sombre dynamique : contraste + lisibilité ─── */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/60 to-transparent" />
+      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
+
+      {/* ─── Contenu synchronisé — grid stacking : les slides partagent la même
+             cellule, aucune variation de hauteur → boucle parfaitement fluide ─── */}
+      <div className="relative flex-1 flex items-center pt-24 pb-8 sm:pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="grid">
             {heroSlides.map((slide, idx) => (
               <div
                 key={slide.title}
-                className={`absolute inset-0 flex flex-col justify-center p-6 sm:p-7 md:p-10 lg:p-16 md:pl-24 transition-all duration-700 ease-in-out ${
+                className={`col-start-1 row-start-1 max-w-2xl lg:max-w-6xl lg:w-[80%] transition-all duration-700 ease-in-out ${
                   idx === activeIndex
                     ? "opacity-100 translate-x-0"
-                    : "opacity-0 translate-x-6 pointer-events-none"
+                    : "opacity-0 translate-x-8 pointer-events-none"
                 }`}
                 aria-hidden={idx !== activeIndex}
               >
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight mb-3 sm:mb-4">
+                <h1
+                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight line-clamp-2 min-h-[2.2em] ${
+                    idx === activeIndex ? "animate-fade-up" : ""
+                  }`}
+                >
                   {slide.title}
                 </h1>
-                <p className="text-sm sm:text-base text-slate-500 leading-relaxed mb-5 sm:mb-6 max-w-md">
+                <p
+                  className={`mt-4 text-sm sm:text-base md:text-lg text-slate-200 leading-relaxed max-w-xl lg:max-w-3xl line-clamp-3 ${
+                    idx === activeIndex ? "animate-fade-up [animation-delay:120ms]" : ""
+                  }`}
+                >
                   {slide.description}
                 </p>
-                <Link
-                  href={slide.href}
-                  className="inline-flex items-center justify-center gap-2 bg-[#E59E00] hover:bg-[#C98A00] text-white font-semibold px-6 py-2.5 rounded-lg shadow-sm transition-colors w-full sm:w-auto min-h-[44px]"
+                <div
+                  className={`mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 ${
+                    idx === activeIndex ? "animate-fade-up [animation-delay:240ms]" : ""
+                  }`}
                 >
-                  {slide.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                  <Link
+                    href={slide.href}
+                    className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg shadow-brand-500/20 transition-all hover:shadow-brand-500/30 hover:-translate-y-0.5 min-h-[48px]"
+                  >
+                    {slide.cta}
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                  <Link
+                    href={slide.secondaryHref}
+                    className="inline-flex items-center justify-center gap-2 border border-white/30 text-white font-semibold px-6 py-3 rounded-xl backdrop-blur-sm hover:bg-white/10 hover:border-white/60 transition-all min-h-[48px]"
+                  >
+                    {slide.secondaryCta === "Trouver un mécanicien" ? (
+                      <MapPin className="h-5 w-5 text-brand-300" />
+                    ) : (
+                      <ArrowRight className="h-5 w-5" />
+                    )}
+                    {slide.secondaryCta}
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* ─── Contrôles : pointillés + Play/Pause (accent ambre) ─── */}
-        <div className="flex flex-col items-center mt-4 gap-2.5">
+      {/* ─── Contrôles du carrousel ─── */}
+      <div className="relative z-10 pb-6 sm:pb-7">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {heroSlides.map((slide, idx) => (
               <button
                 key={slide.title}
                 onClick={() => setActiveIndex(idx)}
                 aria-label={`Aller à la diapositive ${idx + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 min-h-[8px] ${
+                className={`h-2.5 rounded-full transition-all duration-300 min-h-[10px] ${
                   idx === activeIndex
-                    ? "w-7 bg-[#E59E00]"
-                    : "w-2 bg-slate-300 hover:bg-slate-400"
+                    ? "w-9 bg-brand-400"
+                    : "w-2.5 bg-white/40 hover:bg-white/70"
                 }`}
               />
             ))}
@@ -145,12 +162,18 @@ export default function HeroSection() {
           <button
             onClick={() => setPaused((p) => !p)}
             aria-label={paused ? "Reprendre la lecture" : "Mettre en pause"}
-            className="w-9 h-9 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center text-[#E59E00] hover:text-[#C98A00] hover:border-[#E59E00]/50 transition-colors min-h-[36px] min-w-[36px]"
+            className="inline-flex items-center gap-2 border border-white/25 text-white font-medium text-sm px-3.5 py-2 rounded-full backdrop-blur-sm hover:bg-white/10 transition-colors min-h-[44px]"
           >
             {paused ? (
-              <Play className="h-4 w-4 ml-0.5" />
+              <>
+                <Play className="h-4 w-4" />
+                Lecture
+              </>
             ) : (
-              <Pause className="h-4 w-4" />
+              <>
+                <Pause className="h-4 w-4" />
+                Pause
+              </>
             )}
           </button>
         </div>

@@ -30,7 +30,7 @@ const camionSchema = z.object({
   type_camion: z.string().min(1, "Type requis"),
   capacite_charge: z.coerce.number().min(1, "Capacité requise"),
   etat: z.string().min(1, "État requis"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   expires_at: z.string().optional().nullable(),
   nb_essieux: z.coerce.number().min(2).max(12).optional().nullable(),
   carburant: z.string().optional().nullable(),
@@ -54,6 +54,19 @@ function resolvePhotoUrl(url: string | null | undefined): string | null {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   if (url.startsWith("/uploads/")) return `${API_URL}${url}`;
   return url;
+}
+
+function sanitizeCamionPayload(data: CamionFormValues): CamionFormValues {
+  return {
+    ...data,
+    description: data.description || null,
+    expires_at: data.expires_at || null,
+    nb_essieux: data.nb_essieux || null,
+    carburant: data.carburant || null,
+    boite_vitesse: data.boite_vitesse || null,
+    kilometrage: data.kilometrage || null,
+    localisation: data.localisation || null,
+  };
 }
 
 export default function ProprietaireCamionsPage() {
@@ -202,10 +215,11 @@ export default function ProprietaireCamionsPage() {
   };
 
   const onSubmit = (data: CamionFormValues) => {
+    const payload = sanitizeCamionPayload(data);
     if (editingCamion) {
-      updateMutation.mutate({ id: editingCamion.id, data });
+      updateMutation.mutate({ id: editingCamion.id, data: payload });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(payload);
     }
   };
 

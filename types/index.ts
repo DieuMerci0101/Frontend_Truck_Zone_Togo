@@ -24,6 +24,7 @@ export interface User {
   telephone: string;
   role: UserRole;
   photo_profil?: string | null;
+  photo_profil_version?: number;
   date_naissance?: string | null;
   lieu_naissance?: string | null;
   adresse?: string | null;
@@ -40,7 +41,10 @@ export interface UserRegister {
   email: string;
   password: string;
   confirm_password: string;
-  telephone: string;
+  /** Pays sélectionné (table `countries`). */
+  country_id: string;
+  /** Numéro national (hors indicatif) — l'indicatif est ajouté côté serveur. */
+  phone_number: string;
   role: "chauffeur" | "proprietaire" | "mecanicien";
 }
 

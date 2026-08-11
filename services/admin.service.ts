@@ -2,6 +2,7 @@ import api from "./api";
 import type { AdminStats, User, Document, Incident, Assistance, VerificationStatusMecanicien, VerificationStatusUser } from "@/types";
 
 export interface AdminVerificationDocument {
+  id: string;
   type_document: string;
   statut: string;
   commentaire_admin: string | null;
@@ -72,6 +73,22 @@ export interface AdminIncidentListParams {
   statut?: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  user_id: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string | null;
+}
+
+export interface AdminAuditParams {
+  skip?: number;
+  limit?: number;
+  action?: string;
+}
+
 export const adminService = {
   getStats: () =>
     api.get<AdminStats>("/api/admin/stats").then((r) => r.data),
@@ -91,6 +108,12 @@ export const adminService = {
   updateDocumentStatut: (documentId: string, statut: string, motif?: string) =>
     api.put<{ message: string }>(`/api/admin/documents/${documentId}/statut`, { statut, motif }).then((r) => r.data),
 
+  approveDocument: (documentId: string) =>
+    api.patch<{ message: string }>(`/api/admin/documents/${documentId}/approve`).then((r) => r.data),
+
+  rejectDocument: (documentId: string, motif: string) =>
+    api.patch<{ message: string }>(`/api/admin/documents/${documentId}/reject`, { motif }).then((r) => r.data),
+
   getIncidents: (params?: AdminIncidentListParams) =>
     api.get<Incident[]>("/api/admin/incidents", { params }).then((r) => r.data),
 
@@ -99,6 +122,10 @@ export const adminService = {
 
   getAssistance: (params?: { statut?: string }) =>
     api.get<AdminAssistanceResponse>("/api/admin/assistance", { params }).then((r) => r.data),
+
+  // ── Journal d'audit ──
+  getAudit: (params?: AdminAuditParams) =>
+    api.get<AuditLogEntry[]>("/api/admin/audit", { params }).then((r) => r.data),
 
   // ── Vérification des mécaniciens ──
   getMechanicsPending: (params?: { statut?: string; skip?: number; limit?: number }) =>

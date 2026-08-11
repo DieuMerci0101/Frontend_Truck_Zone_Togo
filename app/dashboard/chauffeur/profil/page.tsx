@@ -226,6 +226,7 @@ export default function ChauffeurProfilPage() {
                 name={user?.nom_complet || ""}
                 size="lg"
                 className="h-20 w-20 sm:h-24 sm:w-24 text-2xl"
+                version={user?.photo_profil_version}
               />
               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="h-6 w-6 text-white" />

@@ -81,7 +81,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
 };
 
 interface DashboardSidebarProps {
-  user: { id: string; nom_complet: string; email: string; role: UserRole; photo_profil?: string | null } | null;
+  user: { id: string; nom_complet: string; email: string; role: UserRole; photo_profil?: string | null; photo_profil_version?: number } | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -145,7 +145,7 @@ export function DashboardSidebar({ user, isOpen, onClose }: DashboardSidebarProp
 
       <div className="border-t border-gray-800 p-4">
         <div className="flex items-center gap-3 mb-3">
-          <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="sm" />
+          <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="sm" version={user?.photo_profil_version} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">
               {user?.nom_complet || "Utilisateur"}

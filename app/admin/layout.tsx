@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
-import { authService } from "@/services/auth.service";
 import {
   removeToken,
   removeUser,
@@ -26,6 +25,7 @@ import {
   ShieldCheck,
   Menu,
   X,
+  ScrollText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -35,6 +35,7 @@ const NAV_ITEMS = [
   { label: "Gestion des incidents", href: "/admin/dashboard/incidents", icon: AlertTriangle },
   { label: "Utilisateurs", href: "/admin/dashboard/utilisateurs", icon: Users },
   { label: "Notifications", href: "/admin/dashboard/notifications", icon: Bell },
+  { label: "Journal d'audit", href: "/admin/dashboard/audit", icon: ScrollText },
   { label: "Profil", href: "/admin/dashboard/profil", icon: UserIcon },
 ];
 
@@ -45,7 +46,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isLogin = pathname === "/admin/login";
@@ -54,22 +55,21 @@ export default function AdminLayout({
   useEffect(() => {
     if (isLogin || isLoading) return;
     if (!user || String(user.role).toLowerCase() !== "admin") {
+      // Session absente / expirée / rôle non-admin : on purge tout token
+      // résiduel corrompu avant de renvoyer proprement vers /admin/login.
+      removeToken();
+      removeUser();
+      removeRefreshToken();
+      removeTokenCookie();
+      removeUserCookie();
       router.replace("/admin/login");
     }
   }, [user, isLoading, isLogin, router]);
 
   const handleLogout = async () => {
-    try {
-      await authService.logout();
-    } catch {
-      // ignore
-    }
-    removeToken();
-    removeUser();
-    removeRefreshToken();
-    removeTokenCookie();
-    removeUserCookie();
-    router.replace("/");
+    // Passe par le AuthContext : purge immédiate de la session + reset du
+    // state React global + redirection "/" + router.refresh().
+    await logout();
   };
 
   if (isLogin) {
@@ -135,7 +135,7 @@ export default function AdminLayout({
 
       <div className="border-t border-slate-800 p-4">
         <div className="flex items-center gap-3 mb-3">
-          <Avatar src={user?.photo_profil || null} name={user?.nom_complet || "Admin"} size="sm" />
+          <Avatar src={user?.photo_profil || null} name={user?.nom_complet || "Admin"} size="sm" version={user?.photo_profil_version} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">
               {user?.nom_complet || "Administrateur"}
@@ -204,7 +204,7 @@ export default function AdminLayout({
               </p>
               <p className="text-[11px] font-semibold text-amber-600">Administrateur</p>
             </div>
-            <Avatar src={user?.photo_profil || null} name={user?.nom_complet || "Admin"} size="sm" />
+            <Avatar src={user?.photo_profil || null} name={user?.nom_complet || "Admin"} size="sm" version={user?.photo_profil_version} />
             <button
               type="button"
               onClick={handleLogout}

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 import { API_URL } from "@/constants";
+import { mediaUrl } from "@/lib/media";
 
 type AvatarSize = "sm" | "md" | "lg";
 
@@ -11,6 +12,12 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   alt?: string;
   name?: string;
   size?: AvatarSize;
+  /**
+   * Version du média (ex: `user.photo_profil_version`) utilisée comme
+   * cache-buster : `src? v=<version>`. Force le navigateur à recharger
+   * l'image dès qu'elle change en base.
+   */
+  version?: number | string | null;
 }
 
 const sizeClasses: Record<AvatarSize, string> = {
@@ -42,10 +49,11 @@ function Avatar({
   alt,
   name = "",
   size = "md",
+  version,
   ...props
 }: AvatarProps) {
   const [imgError, setImgError] = React.useState(false);
-  const resolved = resolvePhotoUrl(src);
+  const resolved = mediaUrl(resolvePhotoUrl(src), version);
   const showImage = resolved && !imgError;
 
   return (

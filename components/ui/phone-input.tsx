@@ -6,8 +6,6 @@ import { countryService } from "@/services/country.service";
 import type { Country } from "@/types";
 import { cn } from "@/lib/cn";
 
-const DEFAULT_COUNTRY_CODE = "TG";
-
 // ── Liste de secours (fallback) ───────────────────────────────────────────
 // Permet au sélecteur de fonctionner MÊME si l'API Render est en cours de
 // démarrage (cold start) ou indisponible : plus jamais "Aucun pays trouvé".
@@ -197,10 +195,21 @@ export function isValidNationalNumber(country: Country | null, national: string)
   return digits.length >= min && digits.length <= max;
 }
 
+export interface PhoneChangeMeta {
+  /** Pays sélectionné (ou null si aucun). */
+  country: Country | null;
+  /** Numéro national saisi (chiffres uniquement). */
+  national: string;
+  /** Numéro complet : indicatif + numéro national (ou numéro seul sans pays). */
+  fullNumber: string;
+  /** Pays sélectionné ET nombre de chiffres conforme au pays. */
+  isValid: boolean;
+}
+
 interface PhoneInputProps {
-  /** Numéro complet au format E.164 (ex: "+22870118993") */
+  /** Numéro complet au format E.164 (ex: "+22870118993"). */
   value: string;
-  onChange: (fullNumber: string) => void;
+  onChange: (fullNumber: string, meta: PhoneChangeMeta) => void;
   error?: string;
   disabled?: boolean;
   id?: string;
@@ -224,6 +233,7 @@ export function PhoneInput({
 
   // Au chargement, la liste de secours est déjà affichée : le sélecteur
   // fonctionne immédiatement. L'API vient ensuite rafraîchir la liste.
+  // AUCUN pays n'est pré-sélectionné ni verrouillé par défaut.
   useEffect(() => {
     let mounted = true;
     countryService
@@ -233,8 +243,6 @@ export function PhoneInput({
         const serverList =
           Array.isArray(list) && list.length > 0 ? list : FALLBACK_COUNTRIES;
         setCountries(serverList);
-        const togo = serverList.find((c) => c.code === DEFAULT_COUNTRY_CODE);
-        setSelected(togo || serverList[0] || null);
       })
       .catch(() => {
         // L'API est injoignable (cold start Render...) : la liste de secours
@@ -268,7 +276,8 @@ export function PhoneInput({
     );
   }, [sortedCountries, search]);
 
-  // Synchronisation avec la valeur fournie par le formulaire.
+  // Synchronisation avec la valeur fournie par le formulaire : si la valeur
+  // commence par l'indicatif d'un pays connu, ce pays est sélectionné.
   useEffect(() => {
     const match = countries.find((c) => value.startsWith(c.phone_code));
     if (match && match.code !== selected?.code) {
@@ -276,7 +285,9 @@ export function PhoneInput({
     }
     if (selected && value.startsWith(selected.phone_code)) {
       setNational(value.slice(selected.phone_code.length));
-    } else if (!match) {
+    } else if (match) {
+      setNational(value.slice(match.phone_code.length));
+    } else {
       setNational(value.replace(/^\+\d+/, ""));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -295,19 +306,27 @@ export function PhoneInput({
 
   const emitChange = (country: Country | null, nationalNumber: string) => {
     const cleaned = nationalNumber.replace(/\D/g, "");
-    onChange(country ? `${country.phone_code}${cleaned}` : cleaned);
+    const fullNumber = country ? `${country.phone_code}${cleaned}` : cleaned;
+    onChange(fullNumber, {
+      country,
+      national: cleaned,
+      fullNumber,
+      isValid: isValidNationalNumber(country, cleaned),
+    });
   };
 
   const handleSelectCountry = (country: Country) => {
     setSelected(country);
     setOpen(false);
     setSearch("");
+    setTouched(false);
     emitChange(country, national);
   };
 
   const handleNationalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/\D/g, "");
     setNational(digits);
+    setTouched(true);
     emitChange(selected, digits);
   };
 
@@ -322,39 +341,40 @@ export function PhoneInput({
     : DEFAULT_NATIONAL_LENGTH;
   const isTooLong = digits.length > maxDigits;
   const isTooShort = digits.length > 0 && digits.length < minDigits;
-  const showFormatError =
-    !!selected && (isTooLong || (isTooShort && touched));
+  const hasCountryFormatIssue = !!selected && (isTooLong || (isTooShort && touched));
+  const phoneValid = !!selected && digits.length > 0 && !isTooLong && digits.length >= minDigits;
+
+  const showFormatError = hasCountryFormatIssue || error || (!!selected && touched && digits.length === 0);
 
   return (
     <div ref={containerRef} className="relative">
       <div
         className={cn(
           "flex items-stretch rounded-lg border bg-white transition-colors overflow-hidden focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-transparent",
-          error || showFormatError ? "border-red-400" : "border-slate-200"
+          showFormatError ? "border-red-400" : "border-slate-200"
         )}
       >
-        {/* Sélecteur de pays (drapeau + indicatif verrouillé) */}
+        {/* Sélecteur de pays (drapeau + indicatif), libre : aucun pays verrouillé */}
         <button
           type="button"
           onClick={handlePhoneCodeClick}
-          disabled={disabled || loading}
+          disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="flex items-center gap-2 pl-3 pr-2 border-r border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors min-w-[118px] sm:min-w-[130px] text-left"
+          className="flex items-center gap-2 pl-3 pr-2 border-r border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors min-w-[150px] sm:min-w-[170px] text-left"
         >
-          {loading ? (
-            <span className="text-xs text-slate-400">Chargement…</span>
-          ) : (
-            <>
-              <span className="text-base leading-none">
-                {selected ? getFlagEmoji(selected) : "🌍"}
-              </span>
-              <span className="text-sm font-semibold text-slate-700 tabular-nums">
-                {selected ? selected.phone_code : "+..."}
-              </span>
-              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
-            </>
-          )}
+          <span className="text-base leading-none">
+            {selected ? getFlagEmoji(selected) : "🌍"}
+          </span>
+          <span
+            className={cn(
+              "text-sm font-semibold tabular-nums truncate",
+              selected ? "text-slate-700" : "text-slate-400"
+            )}
+          >
+            {selected ? `${selected.phone_code}` : "Choisir"}
+          </span>
+          <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
         </button>
 
         {/* Saisie du numéro national */}
@@ -363,15 +383,12 @@ export function PhoneInput({
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"
-          disabled={disabled || loading}
+          disabled={disabled}
           value={national}
           onChange={handleNationalChange}
-          onFocus={() => {
-            setOpen(false);
-            setTouched(false);
-          }}
+          onFocus={() => setOpen(false)}
           onBlur={() => setTouched(true)}
-          placeholder={selected ? "70118993" : "Numéro de téléphone"}
+          placeholder={selected ? "70 11 89 93" : "Sélectionnez un pays puis saisissez"}
           className="flex-1 min-w-0 px-3 py-3 bg-white text-sm focus:outline-none disabled:opacity-50"
         />
       </div>
@@ -426,15 +443,15 @@ export function PhoneInput({
 
       <p className="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
         <Phone className="h-3 w-3" />
-        Indicatif {selected ? `${selected.phone_code} ${selected.name}` : ""} verrouillé — saisissez la suite de votre numéro.
+        {selected
+          ? `Indicatif ${selected.phone_code} (${selected.name}) — saisissez la suite de votre numéro.`
+          : "Sélectionnez un pays : son indicatif est ajouté automatiquement."}
       </p>
       {showFormatError && (
         <p className="mt-1 text-xs text-red-500 font-medium">
-          Format de numéro invalide pour ce pays
+          {error ||
+            "Veuillez saisir un numéro de téléphone valide pour le pays sélectionné."}
         </p>
-      )}
-      {error && !showFormatError && (
-        <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>
       )}
     </div>
   );

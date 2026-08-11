@@ -194,7 +194,7 @@ export default function ProprietaireProfilPage() {
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="lg" className="h-20 w-20 sm:h-24 sm:w-24 text-2xl" />
+              <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="lg" className="h-20 w-20 sm:h-24 sm:w-24 text-2xl" version={user?.photo_profil_version} />
               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="h-6 w-6 text-white" />
               </div>

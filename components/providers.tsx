@@ -15,10 +15,10 @@ export function Providers({ children }: { children: ReactNode }) {
           toastOptions={{
             duration: 4000,
             style: {
-              background: "#fff",
-              color: "#1f2937",
+              background: "var(--toast-bg)",
+              color: "var(--toast-color)",
               borderRadius: "12px",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--toast-border)",
               padding: "12px 16px",
               boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
               fontSize: "14px",

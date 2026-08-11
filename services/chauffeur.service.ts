@@ -68,7 +68,7 @@ export const chauffeurService = {
     api.put<ProfilChauffeur>("/api/chauffeurs/me", data).then((r) => r.data),
 
   updateStatut: (data: DisponibiliteUpdate) =>
-    api.put<{ message: string; disponibilite: string }>("/api/chauffeurs/me/statut", data).then((r) => r.data),
+    api.patch<{ message: string; disponibilite: string }>("/api/drivers/availability", data).then((r) => r.data),
 
   getDocuments: () =>
     api.get<Document[]>("/api/chauffeurs/me/documents").then((r) => r.data),

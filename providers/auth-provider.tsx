@@ -62,17 +62,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = getToken();
       const storedUser = getUser();
       if (token && storedUser) {
+        // Restaure immédiatement la session depuis le stockage local :
+        // évite le "flash" / la boucle de redirection pendant la vérif du token.
         setUserState(storedUser as User);
         try {
           const userData = await authService.getMe();
           setUserState(userData);
           setUser(userData);
-        } catch {
-          removeToken();
-          removeUser();
-          removeTokenCookie();
-          removeUserCookie();
-          setUserState(null);
+        } catch (err: any) {
+          const isNetworkError =
+            String(err?.message).toLowerCase().includes("network error") ||
+            String(err?.code).toUpperCase() === "ERR_NETWORK";
+          if (isNetworkError) {
+            // Erreur réseau / serveur momentanée : on CONSERVE la session
+            // stockée au lieu de la détruire (causait le flash + retour login).
+            setUserState(storedUser as User);
+          } else {
+            // Token corrompu, expiré ou refusé par le backend : on
+            // réinitialise la session pour éviter toute boucle de redirection.
+            removeToken();
+            removeUser();
+            removeRefreshToken();
+            removeTokenCookie();
+            removeUserCookie();
+            setUserState(null);
+          }
         }
       }
       setIsLoading(false);
@@ -148,21 +162,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoggingOut(true);
     toast.loading("Déconnexion en cours...", { id: "logout" });
-    try {
-      await authService.logout();
-    } catch {
-      // ignore
-    }
-    await new Promise((r) => setTimeout(r, 400));
+
+    // 1. Purge synchrone et IMMÉDIATE de la session : le state `user` est
+    //    réinitialisé avant toute attente → la Navbar / les guards se
+    //    synchronisent sans flash ni état de session résiduel.
     removeToken();
     removeUser();
     removeRefreshToken();
     removeTokenCookie();
     removeUserCookie();
     setUserState(null);
+
+    // 2. Invalidation serveur best-effort (non bloquante pour l'UI).
+    try {
+      await authService.logout();
+    } catch {
+      // ignore
+    }
+
     setIsLoggingOut(false);
     toast.dismiss("logout");
+
+    // 3. Redirection + purge du cache React/Next.js.
     router.push("/");
+    router.refresh();
   };
 
   return (

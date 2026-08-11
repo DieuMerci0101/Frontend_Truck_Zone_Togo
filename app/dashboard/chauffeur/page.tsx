@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/auth-provider";
 import { chauffeurService } from "@/services/chauffeur.service";
 import { incidentService } from "@/services/incident.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "react-hot-toast";
 import {
   FileText,
   Briefcase,
@@ -19,7 +17,6 @@ import {
   ArrowRight,
   Truck,
   Wrench,
-  ToggleLeft,
   Circle,
   Clock,
 } from "lucide-react";
@@ -54,8 +51,6 @@ const statusConfig: Record<
 
 export default function ChauffeurDashboard() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["chauffeur", "profile"],
     queryFn: () => chauffeurService.getMyProfile(),
@@ -77,19 +72,6 @@ export default function ChauffeurDashboard() {
     queryKey: ["chauffeur", "mes-demandes"],
     queryFn: () => chauffeurService.getMesDemandes(),
     retry: false,
-  });
-
-  const updateStatutMutation = useMutation({
-    mutationFn: (statut: DisponibiliteChauffeur) =>
-      chauffeurService.updateStatut({ disponibilite: statut }),
-    onSuccess: (data) => {
-      toast.success(data.message || "Disponibilité mise à jour");
-      queryClient.invalidateQueries({ queryKey: ["chauffeur", "profile"] });
-    },
-    onError: (err: unknown) => {
-      const e = err as { response?: { data?: { detail?: string } }; message?: string };
-      toast.error(e?.response?.data?.detail || e?.message || "Erreur lors de la mise à jour du statut");
-    },
   });
 
   const currentStatus = profile?.disponibilite || "disponible";
@@ -145,52 +127,23 @@ export default function ChauffeurDashboard() {
         </Link>
       </div>
 
-      {/* Status Toggle Card */}
-      <Card className="border-2">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <ToggleLeft className="h-5 w-5 text-slate-700" />
-            Ma disponibilité
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-3">
-            {(Object.keys(statusConfig) as DisponibiliteChauffeur[]).map((key) => {
-              const config = statusConfig[key];
-              const Icon = config.icon;
-              const isActive = currentStatus === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => updateStatutMutation.mutate(key)}
-                  disabled={updateStatutMutation.isPending}
-                  className={`flex-1 flex items-center gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 min-h-[60px] ${
-                    isActive
-                      ? `${config.bg} ${config.color} border-current shadow-sm`
-                      : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <Icon className={`h-5 w-5 shrink-0 ${isActive ? config.color : ""}`} />
-                  <div className="text-left">
-                    <p className={`text-sm font-semibold ${isActive ? config.color : ""}`}>
-                      {config.label}
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">{config.description}</p>
-                  </div>
-                  {isActive && (
-                    <Badge variant="success" className="ml-auto text-xs">
-                      Actif
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-gray-400 mt-2 sm:mt-3">
-            Un statut <strong>Disponible</strong> rend votre profil visible immédiatement par les propriétaires dans leurs recherches.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Statut de disponibilité — géré dans la barre supérieure */}
+      <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <span
+          className={`h-2.5 w-2.5 rounded-full shrink-0 ${
+            currentStatus === "disponible"
+              ? "bg-emerald-500"
+              : currentStatus === "en_mission"
+              ? "bg-red-500"
+              : "bg-slate-400"
+          }`}
+        />
+        <p className="text-sm text-amber-900">
+          Statut : <strong>{statusInfo.label}</strong> —{" "}
+          {statusInfo.description}. Changez-le à tout moment depuis l&apos;icône
+          de disponibilité dans la barre supérieure.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {statCards.map((card) => (

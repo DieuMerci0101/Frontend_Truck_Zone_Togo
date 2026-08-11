@@ -11,6 +11,7 @@ import { LogoutModal } from "@/components/ui/logout-modal";
 import { notificationService } from "@/services/notification.service";
 import { getRoleLabel } from "@/lib/utils";
 import { cn } from "@/lib/cn";
+import { AvailabilityDropdown } from "@/components/layout/availability-dropdown";
 import {
   Menu,
   Bell,
@@ -156,6 +157,9 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-4">
+            {String(user?.role || "").toLowerCase() === "chauffeur" && (
+              <AvailabilityDropdown />
+            )}
             <div className="relative">
               <button
                 onClick={openNotifications}
@@ -259,7 +263,7 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
                 }}
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]"
               >
-                <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="sm" />
+                <Avatar src={user?.photo_profil || null} name={user?.nom_complet || ""} size="sm" version={user?.photo_profil_version} />
                 <div className="hidden sm:block text-left">
                   <p className="text-sm font-medium text-gray-900 leading-tight">
                     {user?.nom_complet || "Utilisateur"}

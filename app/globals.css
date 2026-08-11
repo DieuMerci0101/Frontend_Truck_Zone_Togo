@@ -22,6 +22,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    --toast-bg: #ffffff;
+    --toast-color: #1f2937;
+    --toast-border: #e5e7eb;
+  }
+
+  .dark {
+    --toast-bg: #1e293b;
+    --toast-color: #e2e8f0;
+    --toast-border: #334155;
   }
 
   * {
@@ -39,6 +48,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+  }
+
+  .dark body {
+    background-color: #0b1220;
+    color: #e2e8f0;
   }
 
   img, video {
@@ -183,16 +197,5 @@
 
   .tooltip:hover::after {
     @apply opacity-100;
-  }
-
-  /* Découpage en biseau de l'image du carrousel Hero (desktop uniquement) */
-  .hero-image-clip {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-
-  @media (min-width: 768px) {
-    .hero-image-clip {
-      clip-path: polygon(0 0, 100% 0, calc(100% - 56px) 100%, 0 100%);
-    }
   }
 }

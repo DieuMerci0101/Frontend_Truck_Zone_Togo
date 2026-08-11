@@ -35,16 +35,13 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section
-      id="features"
-      className="py-6 sm:py-12 bg-amber-50/50"
-    >
+    <section id="features" className="pt-8 sm:pt-14 pb-4 sm:pb-6 bg-amber-50/50 dark:bg-slate-900/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 sm:mb-3 dark:text-white">
             Fonctionnalités
           </h2>
-          <p className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-slate-500 max-w-2xl mx-auto dark:text-slate-400">
             Une plateforme conçue pour le transport routier
           </p>
         </div>
@@ -53,12 +50,12 @@ export default function FeaturesSection() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="bg-white shadow-sm border border-slate-200/60 rounded-xl p-5 sm:p-6 hover:shadow-md hover:border-slate-300 transition-all"
+              className="bg-white shadow-sm border border-slate-200/60 rounded-xl p-5 sm:p-6 hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800/60 dark:border-slate-700/60 dark:hover:border-slate-500"
             >
-              <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 sm:mb-3">
+              <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 sm:mb-3 dark:text-white">
                 {feature.title}
               </h3>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed dark:text-slate-300">
                 {feature.description}
               </p>
             </div>

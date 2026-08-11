@@ -9,6 +9,7 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import BackButton from "@/components/ui/back-button";
 import { PhoneInput } from "@/components/ui/phone-input";
+import type { Country } from "@/types";
 import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,9 +19,8 @@ const registerSchema = z
   .object({
     nom_complet: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
     email: z.string().email("Adresse email invalide"),
-    telephone: z
-      .string()
-      .regex(/^\+[1-9]\d{6,14}$/, "Numéro invalide. Vérifiez l'indicatif et la suite du numéro."),
+    country_id: z.string().min(1, "Veuillez sélectionner un pays"),
+    phone_number: z.string().min(1, "Veuillez saisir un numéro de téléphone"),
     password: z
       .string()
       .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
@@ -47,18 +47,22 @@ export default function RegisterPage() {
   const { register: registerUser, isAuthenticated, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [fullNumber, setFullNumber] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [phoneValid, setPhoneValid] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    getValues,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      telephone: "+228",
+      country_id: "",
+      phone_number: "",
     },
   });
 
@@ -76,8 +80,32 @@ export default function RegisterPage() {
   }, [isAuthenticated, isLoading, router]);
 
   const onSubmit = async (data: RegisterForm) => {
+    // Validation stricte du numéro selon le pays sélectionné : bloque la
+    // soumission tant que le format n'est pas conforme.
+    if (!phoneValid) {
+      setError("phone_number", {
+        type: "manual",
+        message: "Veuillez saisir un numéro de téléphone valide pour le pays sélectionné.",
+      });
+      if (!selectedCountry) {
+        setError("country_id", {
+          type: "manual",
+          message: "Veuillez sélectionner un pays",
+        });
+      }
+      return;
+    }
+
     try {
-      await registerUser(data);
+      await registerUser({
+        nom_complet: data.nom_complet,
+        email: data.email,
+        password: data.password,
+        confirm_password: data.confirm_password,
+        country_id: data.country_id,
+        phone_number: data.phone_number,
+        role: data.role,
+      });
     } catch (err: any) {
       toast.error(err.message || "Erreur d'inscription");
     }
@@ -175,13 +203,19 @@ export default function RegisterPage() {
         {/* Phone */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Téléphone
+            Téléphone *
           </label>
           <PhoneInput
             id="telephone"
-            value={getValues("telephone")}
-            onChange={(fullNumber) => setValue("telephone", fullNumber, { shouldValidate: true })}
-            error={errors.telephone?.message}
+            value={fullNumber}
+            onChange={(full, meta) => {
+              setFullNumber(full);
+              setSelectedCountry(meta.country);
+              setPhoneValid(meta.isValid);
+              setValue("country_id", meta.country?.id || "", { shouldValidate: true });
+              setValue("phone_number", meta.national, { shouldValidate: true });
+            }}
+            error={errors.country_id?.message || errors.phone_number?.message}
           />
         </div>
 

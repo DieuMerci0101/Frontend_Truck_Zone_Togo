@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { chauffeurService } from "@/services/chauffeur.service";
-import { conversationService } from "@/services/conversation.service";
 import { useAuth } from "@/providers/auth-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +19,6 @@ import {
   Search,
   MapPin,
   MessageCircle,
-  Send,
-  X,
   Phone,
   Mail,
   Shield,
@@ -46,11 +42,6 @@ export default function ProprietaireChauffeursPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategorie, setFilterCategorie] = useState("");
   const [filterDispo, setFilterDispo] = useState("");
-
-  // Modal de rédaction de message
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedChauffeur, setSelectedChauffeur] = useState<ProfilChauffeur | null>(null);
-  const [messageText, setMessageText] = useState("");
 
   // Fiche détaillée
   const [detailChauffeur, setDetailChauffeur] = useState<ProfilChauffeur | null>(null);
@@ -78,26 +69,6 @@ export default function ProprietaireChauffeursPage() {
     refetchInterval: 30000,
   });
 
-  const sendMutation = useMutation({
-    mutationFn: ({
-      participant_id,
-      premier_message,
-    }: {
-      participant_id: string;
-      premier_message: string;
-    }) => conversationService.initiate({ participant_id, premier_message }),
-    onSuccess: (conv) => {
-      toast.success("Message envoyé");
-      setModalOpen(false);
-      setMessageText("");
-      setSelectedChauffeur(null);
-      router.push(`/dashboard/chat?conv=${conv.id}`);
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "Impossible d'envoyer le message");
-    },
-  });
-
   const chauffeurs = pages?.pages.flat() || [];
 
   const filtered = chauffeurs.filter((c) => {
@@ -111,18 +82,9 @@ export default function ProprietaireChauffeursPage() {
     );
   });
 
-  const openMessageModal = (ch: ProfilChauffeur) => {
-    setSelectedChauffeur(ch);
-    setMessageText("");
-    setModalOpen(true);
-  };
-
-  const handleSend = () => {
-    if (!selectedChauffeur || !messageText.trim()) return;
-    sendMutation.mutate({
-      participant_id: selectedChauffeur.user_id,
-      premier_message: messageText.trim(),
-    });
+  const openChat = (ch: ProfilChauffeur) => {
+    setDetailChauffeur(null);
+    router.push(`/dashboard/chat?recipientId=${ch.user_id}`);
   };
 
   const renderInfoList = (ch: ProfilChauffeur) => (
@@ -272,7 +234,7 @@ export default function ProprietaireChauffeursPage() {
                         }}
                       >
                         <Eye className="h-3.5 w-3.5 mr-1" />
-                        Profil
+                        Voir plus de détails
                       </Button>
                       {canContact && (
                         <Button
@@ -280,11 +242,11 @@ export default function ProprietaireChauffeursPage() {
                           className="flex-1 min-h-[44px] bg-amber-600 hover:bg-amber-700"
                           onClick={(e) => {
                             e.stopPropagation();
-                            openMessageModal(ch);
+                            openChat(ch);
                           }}
                         >
                           <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                          Contacter
+                          Messagerie
                         </Button>
                       )}
                     </div>
@@ -380,84 +342,13 @@ export default function ProprietaireChauffeursPage() {
               {detailChauffeur.user?.id &&
                 detailChauffeur.user.id !== user?.id && (
                   <Button
-                    onClick={() => {
-                      setDetailChauffeur(null);
-                      openMessageModal(detailChauffeur);
-                    }}
+                    onClick={() => openChat(detailChauffeur)}
                     className="w-full sm:w-auto min-h-[44px] bg-amber-600 hover:bg-amber-700"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Contacter par message
+                    Messagerie directe
                   </Button>
                 )}
-            </div>
-          </div>
-        )}
-      </Dialog>
-
-      {/* Modale de rédaction */}
-      <Dialog
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSelectedChauffeur(null);
-          setMessageText("");
-        }}
-        title={
-          selectedChauffeur
-            ? `Message à ${selectedChauffeur.user?.nom_complet || "ce chauffeur"}`
-            : "Nouveau message"
-        }
-        size="md"
-      >
-        {selectedChauffeur && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Avatar
-                src={selectedChauffeur.user?.photo_profil}
-                name={selectedChauffeur.user?.nom_complet || "Chauffeur"}
-                size="sm"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {selectedChauffeur.user?.nom_complet || "Chauffeur"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Permis {selectedChauffeur.categorie_permis} ·{" "}
-                  {selectedChauffeur.user?.telephone || "—"}
-                </p>
-              </div>
-            </div>
-            <textarea
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Rédigez votre message... (ex: proposition de mission, demande de disponibilité)"
-              className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[110px]"
-              rows={4}
-              autoFocus
-            />
-            <div className="flex flex-col sm:flex-row justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setModalOpen(false);
-                  setSelectedChauffeur(null);
-                  setMessageText("");
-                }}
-                className="w-full sm:w-auto min-h-[44px]"
-              >
-                <X className="h-4 w-4 mr-1.5" />
-                Annuler
-              </Button>
-              <Button
-                onClick={handleSend}
-                disabled={!messageText.trim() || sendMutation.isPending}
-                loading={sendMutation.isPending}
-                className="w-full sm:w-auto min-h-[44px]"
-              >
-                <Send className="h-4 w-4 mr-1.5" />
-                Envoyer le message
-              </Button>
             </div>
           </div>
         )}

@@ -1,12 +1,41 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { adminService } from "@/services/admin.service";
+import { useState } from "react";
+import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { adminService, type AdminVerificationItem } from "@/services/admin.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, UserCheck, Truck, Wrench, Shield } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import {
+  Users,
+  UserCheck,
+  Truck,
+  Wrench,
+  Shield,
+  FolderOpen,
+  Check,
+  X,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
+
+const ROLE_LABELS: Record<string, string> = {
+  chauffeur: "Chauffeur",
+  proprietaire: "Propriétaire de camions",
+  mecanicien: "Mécanicien",
+};
 
 export default function AdminDashboard() {
+  const queryClient = useQueryClient();
+  const [rejectItem, setRejectItem] = useState<AdminVerificationItem | null>(null);
+  const [rejectMotif, setRejectMotif] = useState("");
+
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["admin", "stats"],
     queryFn: () => adminService.getStats(),
@@ -16,6 +45,60 @@ export default function AdminDashboard() {
     queryKey: ["admin", "users", "recent"],
     queryFn: () => adminService.getUsers({ limit: 5 }),
   });
+
+  const { data: pending, isLoading: loadingPending } = useQuery({
+    queryKey: ["admin", "verifications", "pending"],
+    queryFn: () =>
+      adminService.getVerifications({
+        statut: "pending_upload,pending_approval",
+        limit: 5,
+      }),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (item: AdminVerificationItem) => {
+      const docs = (item.documents || []).filter((d) => d.fichier_url);
+      if (item.role === "mecanicien") {
+        await adminService.decideVerification(item.user_id, "approved");
+      } else {
+        await Promise.all(docs.map((d) => adminService.approveDocument(d.id)));
+      }
+      return { message: "ok" };
+    },
+    onSuccess: () => {
+      toast.success("Dossier validé");
+      queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erreur lors de la validation");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ item, motif }: { item: AdminVerificationItem; motif: string }) => {
+      const docs = (item.documents || []).filter((d) => d.fichier_url);
+      if (item.role === "mecanicien") {
+        await adminService.decideVerification(item.user_id, "rejected", motif);
+      } else {
+        await Promise.all(docs.map((d) => adminService.rejectDocument(d.id, motif)));
+      }
+      return { message: "ok" };
+    },
+    onSuccess: () => {
+      toast.success("Dossier rejeté");
+      queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
+      setRejectItem(null);
+      setRejectMotif("");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erreur lors du rejet");
+    },
+  });
+
+  const handleConfirmReject = () => {
+    if (!rejectItem || !rejectMotif.trim()) return;
+    rejectMutation.mutate({ item: rejectItem, motif: rejectMotif.trim() });
+  };
 
   const statCards = [
     {
@@ -174,6 +257,111 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-slate-700" />
+              <CardTitle className="text-lg">Dossiers KYC en attente</CardTitle>
+              {!loadingPending && (pending?.length ?? 0) > 0 && (
+                <Badge variant="warning">{pending?.length}</Badge>
+              )}
+            </div>
+            <Link
+              href="/admin/dashboard/documents"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-amber-800 min-h-[44px] px-2"
+            >
+              Voir tous les dossiers <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingPending ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : pending && pending.length > 0 ? (
+            <div className="space-y-3">
+              {pending.map((item) => (
+                <div
+                  key={item.user_id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {item.nom_complet || "Inconnu"}
+                      </p>
+                      <Badge variant="info">{ROLE_LABELS[item.role] || item.role}</Badge>
+                      <Badge variant="warning">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {item.soumis_le ? `Soumis le ${formatDate(item.soumis_le)}` : "En attente"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate">{item.email || "—"}</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={() => approveMutation.mutate(item)}
+                      loading={approveMutation.isPending}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      Valider
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        setRejectItem(item);
+                        setRejectMotif("");
+                      }}
+                      loading={rejectMutation.isPending}
+                    >
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Rejeter
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm text-center py-6">
+              Aucun dossier en attente
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!rejectItem} onClose={() => { setRejectItem(null); setRejectMotif(""); }} title="Rejeter le dossier">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Veuillez indiquer le motif du rejet. Un email sera envoyé à l&apos;utilisateur.
+          </p>
+          <Textarea
+            placeholder="Motif du rejet..."
+            value={rejectMotif}
+            onChange={(e) => setRejectMotif(e.target.value)}
+            rows={4}
+          />
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => { setRejectItem(null); setRejectMotif(""); }}>
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmReject}
+              loading={rejectMutation.isPending}
+              disabled={!rejectMotif.trim()}
+            >
+              Confirmer le rejet
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
