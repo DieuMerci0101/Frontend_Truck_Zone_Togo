@@ -134,6 +134,12 @@ export default function AdminDocumentsPage() {
   const [limit, setLimit] = useState(12);
   const [rejectItem, setRejectItem] = useState<AdminVerificationItem | null>(null);
   const [rejectMotif, setRejectMotif] = useState("");
+  // État de chargement CIBLÉ par utilisateur + action : seul le bouton cliqué
+  // affiche le spinner (les autres cartes restent actives).
+  const [actionLoading, setActionLoading] = useState<{
+    userId: string;
+    action: "approve" | "reject";
+  } | null>(null);
 
   const backendStatut = STATUT_TO_BACKEND[filterStatut];
 
@@ -151,6 +157,8 @@ export default function AdminDocumentsPage() {
   const decideMutation = useMutation({
     mutationFn: ({ userId, statut, motif }: { userId: string; statut: "approved" | "rejected"; motif?: string }) =>
       adminService.decideVerification(userId, statut, motif),
+    onMutate: (vars) => setActionLoading({ userId: vars.userId, action: vars.statut === "approved" ? "approve" : "reject" }),
+    onSettled: () => setActionLoading(null),
     onSuccess: () => {
       toast.success("Décision enregistrée. Le dossier reste consultable dans l'historique.");
       queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
@@ -243,6 +251,11 @@ export default function AdminDocumentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
             {verifications.map((item) => {
               const decidable = canDecide(item.verification_status);
+              const isApproving =
+                actionLoading?.userId === item.user_id && actionLoading?.action === "approve";
+              const isRejecting =
+                actionLoading?.userId === item.user_id && actionLoading?.action === "reject";
+              const isRowDisabled = actionLoading?.userId === item.user_id;
               return (
                 <Card key={item.user_id} className="flex flex-col">
                   <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
@@ -279,7 +292,8 @@ export default function AdminDocumentsPage() {
                           size="sm"
                           className="flex-1"
                           onClick={() => handleApprove(item)}
-                          loading={decideMutation.isPending}
+                          loading={isApproving}
+                          disabled={isRowDisabled && !isApproving}
                         >
                           <Check className="h-3.5 w-3.5 mr-1" />
                           Valider
@@ -292,7 +306,8 @@ export default function AdminDocumentsPage() {
                             setRejectItem(item);
                             setRejectMotif("");
                           }}
-                          loading={decideMutation.isPending}
+                          loading={isRejecting}
+                          disabled={isRowDisabled && !isRejecting}
                         >
                           <X className="h-3.5 w-3.5 mr-1" />
                           Rejeter

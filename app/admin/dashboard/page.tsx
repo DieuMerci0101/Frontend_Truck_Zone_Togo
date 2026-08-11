@@ -35,6 +35,12 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [rejectItem, setRejectItem] = useState<AdminVerificationItem | null>(null);
   const [rejectMotif, setRejectMotif] = useState("");
+  // État de chargement CIBLÉ : identifie l'utilisateur ET l'action en cours.
+  // Un seul bouton de la liste affiche le spinner (et non toute la liste).
+  const [actionLoading, setActionLoading] = useState<{
+    userId: string;
+    action: "approve" | "reject";
+  } | null>(null);
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["admin", "stats"],
@@ -65,6 +71,8 @@ export default function AdminDashboard() {
       }
       return { message: "ok" };
     },
+    onMutate: (item) => setActionLoading({ userId: item.user_id, action: "approve" }),
+    onSettled: () => setActionLoading(null),
     onSuccess: () => {
       toast.success("Dossier validé");
       queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
@@ -84,6 +92,8 @@ export default function AdminDashboard() {
       }
       return { message: "ok" };
     },
+    onMutate: ({ item }) => setActionLoading({ userId: item.user_id, action: "reject" }),
+    onSettled: () => setActionLoading(null),
     onSuccess: () => {
       toast.success("Dossier rejeté");
       queryClient.invalidateQueries({ queryKey: ["admin", "verifications"] });
@@ -285,7 +295,13 @@ export default function AdminDashboard() {
             </div>
           ) : pending && pending.length > 0 ? (
             <div className="space-y-3">
-              {pending.map((item) => (
+              {pending.map((item) => {
+                const isApproving =
+                  actionLoading?.userId === item.user_id && actionLoading?.action === "approve";
+                const isRejecting =
+                  actionLoading?.userId === item.user_id && actionLoading?.action === "reject";
+                const isRowDisabled = actionLoading?.userId === item.user_id;
+                return (
                 <div
                   key={item.user_id}
                   className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
@@ -307,7 +323,8 @@ export default function AdminDashboard() {
                     <Button
                       size="sm"
                       onClick={() => approveMutation.mutate(item)}
-                      loading={approveMutation.isPending}
+                      loading={isApproving}
+                      disabled={isRowDisabled && !isApproving}
                     >
                       <Check className="h-3.5 w-3.5 mr-1" />
                       Valider
@@ -319,14 +336,16 @@ export default function AdminDashboard() {
                         setRejectItem(item);
                         setRejectMotif("");
                       }}
-                      loading={rejectMutation.isPending}
+                      loading={isRejecting}
+                      disabled={isRowDisabled && !isRejecting}
                     >
                       <X className="h-3.5 w-3.5 mr-1" />
                       Rejeter
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-400 text-sm text-center py-6">
