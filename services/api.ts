@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "@/constants";
-import { getToken, setToken, removeToken, removeUser, getRefreshToken, removeRefreshToken, setTokenCookie, removeTokenCookie, setUserCookie, removeUserCookie } from "@/lib/auth";
+import { getToken, setToken, removeToken, removeUser, getRefreshToken, removeRefreshToken, setTokenCookie, removeTokenCookie, setUserCookie, removeUserCookie, setUser } from "@/lib/auth";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -31,6 +31,13 @@ api.interceptors.response.use(
           });
           setToken(data.access_token);
           setTokenCookie(data.access_token);
+          // Synchronise l'utilisateur stocké avec la réponse du refresh :
+          // la photo de profil (et sa version) est ainsi conservée/rafraîchie
+          // même après expiration du jeton.
+          if (data.user) {
+            setUser(data.user);
+            setUserCookie(data.user);
+          }
           originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
           return api(originalRequest);
         }

@@ -98,6 +98,13 @@ export default function Navbar() {
             </div>
 
             <div className="hidden lg:flex items-center gap-3">
+              <ThemeToggle
+                className={
+                  isScrolled
+                    ? "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    : "text-slate-300 hover:bg-slate-800"
+                }
+              />
               {isLoading ? (
                 <div className="flex items-center gap-3" aria-hidden="true">
                   <div className="h-9 w-40 rounded-lg bg-slate-200/70 animate-pulse dark:bg-slate-700/70" />

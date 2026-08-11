@@ -54,6 +54,14 @@ function Avatar({
 }: AvatarProps) {
   const [imgError, setImgError] = React.useState(false);
   const resolved = mediaUrl(resolvePhotoUrl(src), version);
+
+  // Réinitialise l'état d'erreur quand l'URL de la photo change (upload,
+  // reconnexion, nouvelle version) : évite de rester sur les initiales après
+  // un échec de chargement ponctuel.
+  React.useEffect(() => {
+    setImgError(false);
+  }, [resolved]);
+
   const showImage = resolved && !imgError;
 
   return (

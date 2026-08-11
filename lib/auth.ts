@@ -11,13 +11,22 @@ export function removeToken(): void {
   sessionStorage.removeItem("token");
 }
 
-export function getUser(): { id: string; email: string; role: string; nom_complet: string } | null {
+export interface StoredUser {
+  id: string;
+  email: string;
+  role: string;
+  nom_complet: string;
+  photo_profil?: string | null;
+  photo_profil_version?: number;
+}
+
+export function getUser(): StoredUser | null {
   if (typeof window === "undefined") return null;
   const user = sessionStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 }
 
-export function setUser(user: { id: string; email: string; role: string; nom_complet: string }): void {
+export function setUser(user: StoredUser): void {
   sessionStorage.setItem("user", JSON.stringify(user));
 }
 
@@ -68,7 +77,7 @@ export function removeTokenCookie(): void {
   document.cookie = "tt_token=; path=/; max-age=0";
 }
 
-export function setUserCookie(user: { id: string; email: string; role: string; nom_complet: string }): void {
+export function setUserCookie(user: StoredUser): void {
   if (typeof document === "undefined") return;
   document.cookie = `tt_role=${user.role}; path=/; max-age=86400; SameSite=Lax`;
 }
