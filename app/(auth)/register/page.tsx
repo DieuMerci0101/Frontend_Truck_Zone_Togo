@@ -212,7 +212,7 @@ export default function RegisterPage() {
               setFullNumber(full);
               setSelectedCountry(meta.country);
               setPhoneValid(meta.isValid);
-              setValue("country_id", meta.country?.id || "", { shouldValidate: true });
+              setValue("country_id", meta.country?.code || "", { shouldValidate: true });
               setValue("phone_number", meta.national, { shouldValidate: true });
             }}
             error={errors.country_id?.message || errors.phone_number?.message}
