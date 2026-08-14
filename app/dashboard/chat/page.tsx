@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/providers/auth-provider";
 import { conversationService } from "@/services/conversation.service";
+import { socketService } from "@/services/socket.service";
 import toast from "react-hot-toast";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -12,262 +13,36 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getRoleLabel } from "@/lib/utils";
+import { formatMsgTime } from "@/lib/chat-utils";
+import AudioPlayer from "./_components/AudioPlayer";
+import VoiceRecorder from "./_components/VoiceRecorder";
+import MediaMessage from "./_components/MediaMessage";
+import ReplyPreview from "./_components/ReplyPreview";
+import QuotedMessageCard from "./_components/QuotedMessageCard";
 import {
   ArrowLeft,
   MessageSquare,
   Search,
   Send,
   Mic,
-  Square,
-  Trash2,
-  Play,
-  Pause,
-  CheckCheck,
   Paperclip,
-  Download,
-  FileText,
+  Reply,
+  CheckCheck,
+  Loader2,
 } from "lucide-react";
-import type { Conversation, Message } from "@/types";
+import type { Message } from "@/types";
 
-function fileNameFromUrl(url: string) {
-  try {
-    return decodeURIComponent(url.split("/").pop() || "document");
-  } catch {
-    return "document";
-  }
+interface ReceiveMessagePayload extends Message {}
+
+interface TypingPayload {
+  conversation_id: string;
+  user_id: string;
+  is_typing: boolean;
 }
 
-function MediaMessage({
-  msg,
-  isMine,
-}: {
-  msg: Message;
-  isMine: boolean;
-}) {
-  const base = isMine
-    ? "bg-slate-700 text-white rounded-br-md"
-    : "bg-white text-slate-900 rounded-bl-md border border-slate-200";
-
-  if (msg.type === "image" && msg.media_url) {
-    return (
-      <div className={`rounded-2xl p-1.5 ${base} overflow-hidden`}>
-        <a href={msg.media_url} target="_blank" rel="noopener noreferrer">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={msg.media_url}
-            alt="Photo"
-            className="max-h-72 max-w-full rounded-xl object-cover"
-          />
-        </a>
-        {msg.contenu && <p className="text-sm px-2 py-1.5 whitespace-pre-wrap break-words">{msg.contenu}</p>}
-      </div>
-    );
-  }
-
-  if (msg.type === "video" && msg.media_url) {
-    return (
-      <div className={`rounded-2xl p-1.5 ${base} overflow-hidden`}>
-        <video
-          src={msg.media_url}
-          controls
-          preload="metadata"
-          className="max-h-72 max-w-full rounded-xl bg-black"
-        />
-        {msg.contenu && <p className="text-sm px-2 py-1.5 whitespace-pre-wrap break-words">{msg.contenu}</p>}
-      </div>
-    );
-  }
-
-  if (msg.type === "fichier" && msg.media_url) {
-    return (
-      <a
-        href={msg.media_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        download
-        className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${base} hover:opacity-90 transition-opacity min-w-[220px]`}
-      >
-        <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-            isMine ? "bg-white/20" : "bg-amber-100"
-          }`}
-        >
-          <FileText className={`h-5 w-5 ${isMine ? "text-white" : "text-amber-600"}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{fileNameFromUrl(msg.media_url)}</p>
-          {msg.contenu && (
-            <p className="text-xs opacity-80 truncate">{msg.contenu}</p>
-          )}
-        </div>
-        <Download className="h-4 w-4 shrink-0 opacity-70" />
-      </a>
-    );
-  }
-
-  return null;
-}
-
-function AudioPlayer({ src }: { src: string }) {
-  const [playing, setPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onLoadedMetadata = () => setDuration(audio.duration);
-    const onEnded = () => setPlaying(false);
-
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("loadedmetadata", onLoadedMetadata);
-    audio.addEventListener("ended", onEnded);
-    return () => {
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      audio.removeEventListener("ended", onEnded);
-    };
-  }, []);
-
-  const toggle = () => {
-    if (!audioRef.current) return;
-    if (playing) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
-    setPlaying(!playing);
-  };
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  return (
-    <div className="flex items-center gap-2 min-w-[180px]">
-      <audio ref={audioRef} src={src} preload="metadata" />
-      <button
-        onClick={toggle}
-        className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 hover:bg-white/30 transition-colors"
-      >
-        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-      </button>
-      <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-white rounded-full transition-all duration-200"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <span className="text-[11px] opacity-70 w-8 text-right shrink-0">
-        {duration > 0 ? formatTime(duration - currentTime) : formatTime(duration)}
-      </span>
-    </div>
-  );
-}
-
-function VoiceRecorder({ onSend, onCancel }: { onSend: (blob: Blob) => void; onCancel: () => void }) {
-  const [recording, setRecording] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const chunks = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
-
-  useEffect(() => {
-    if (!navigator.mediaDevices?.getUserMedia) return;
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        mediaRecorder.current = mr;
-        chunks.current = [];
-
-        mr.ondataavailable = (e) => {
-          if (e.data.size > 0) chunks.current.push(e.data);
-        };
-
-        mr.onstop = () => {
-          const blob = new Blob(chunks.current, { type: "audio/webm" });
-          stream.getTracks().forEach((t) => t.stop());
-          onSend(blob);
-        };
-
-        mr.start();
-        setRecording(true);
-
-        timerRef.current = setInterval(() => {
-          setElapsed((prev) => prev + 1);
-        }, 1000);
-      })
-      .catch(() => {
-        onCancel();
-      });
-
-    return () => {
-      clearInterval(timerRef.current);
-      if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-        mediaRecorder.current.stream.getTracks().forEach((t) => t.stop());
-      }
-    };
-  }, []);
-
-  const stopRecording = () => {
-    clearInterval(timerRef.current);
-    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-      mediaRecorder.current.stop();
-    }
-    setRecording(false);
-  };
-
-  const cancelRecording = () => {
-    clearInterval(timerRef.current);
-    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-      mediaRecorder.current.stream.getTracks().forEach((t) => t.stop());
-      mediaRecorder.current.stop();
-    }
-    setRecording(false);
-    onCancel();
-  };
-
-  const formatElapsed = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-red-50 rounded-xl border border-red-200">
-      <div className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-        <span className="text-sm font-medium text-red-600">Enregistrement</span>
-      </div>
-      <span className="text-sm font-mono text-red-500">{formatElapsed(elapsed)}</span>
-      <div className="flex items-center gap-1 ml-auto">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={cancelRecording}
-          className="min-h-[36px] min-w-[36px] text-red-500 hover:text-red-700 hover:bg-red-100"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={stopRecording}
-          className="min-h-[36px] min-w-[36px] text-red-500 hover:text-red-700 hover:bg-red-100"
-        >
-          <Square className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
+interface ReadStatusPayload {
+  conversation_id: string;
+  reader_id: string;
 }
 
 export default function ChatPage() {
@@ -276,9 +51,14 @@ export default function ChatPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [messageInput, setMessageInput] = useState("");
   const [recording, setRecording] = useState(false);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [otherTyping, setOtherTyping] = useState(false);
 
   const selectedConvId = searchParams.get("conv") || null;
   const recipientId = searchParams.get("recipientId") || null;
@@ -289,7 +69,7 @@ export default function ChatPage() {
   const { data: conversations, isLoading: convsLoading } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => conversationService.list(),
-    refetchInterval: 10000,
+    refetchInterval: 15000,
   });
 
   const { data: selectedConv } = useQuery({
@@ -303,37 +83,167 @@ export default function ChatPage() {
     queryFn: () =>
       conversationService.getMessages(selectedConvId!, { limit: 100 }),
     enabled: !!selectedConvId,
-    refetchInterval: 5000,
+    // Le temps réel via Socket.io remplace le polling ; ce refetch reste un
+    // filet de sécurité (synchronisation multi-onglets / reprise réseau).
+    refetchInterval: 60000,
   });
 
+  const otherParticipant = selectedConv?.participants?.find(
+    (p) => p.id !== user?.id
+  );
+
+  /** Ajoute un message à l'historique local, sans doublon (temps réel + REST). */
+  const appendMessage = useCallback(
+    (msg: Message) => {
+      queryClient.setQueryData<Message[]>(
+        ["conversation", msg.conversation_id, "messages"],
+        (old) => {
+          if (!old) return [msg];
+          if (old.some((m) => m.id === msg.id)) return old;
+          const next = [...old, msg].sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+          return next;
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "non-lues"] });
+      if (msg.conversation_id === selectedConvId) {
+        requestAnimationFrame(() =>
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        );
+      }
+    },
+    [queryClient, selectedConvId]
+  );
+
+  // ─── Temps réel (Socket.io) ───────────────────────────────
+  useEffect(() => {
+    if (!selectedConvId) return;
+
+    const onReceive = (payload: unknown) => {
+      appendMessage(payload as ReceiveMessagePayload);
+    };
+    const onTyping = (payload: unknown) => {
+      const p = payload as TypingPayload;
+      if (String(p.conversation_id) !== selectedConvId) return;
+      setOtherTyping(p.is_typing && p.user_id !== user?.id);
+    };
+    const onReadStatus = (payload: unknown) => {
+      const p = payload as ReadStatusPayload;
+      if (String(p.conversation_id) !== selectedConvId) return;
+      if (p.reader_id === user?.id) return;
+      queryClient.setQueryData<Message[]>(
+        ["conversation", selectedConvId, "messages"],
+        (old) =>
+          old
+            ? old.map((m) =>
+                m.expediteur_id === user?.id ? { ...m, lu: true } : m
+              )
+            : old
+      );
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    };
+
+    socketService.on("receive_message", onReceive);
+    socketService.on("typing", onTyping);
+    socketService.on("read_status", onReadStatus);
+    socketService.joinRoom(selectedConvId);
+
+    // Signale la lecture après un court délai (laisse le temps au cache de se remplir).
+    const t = setTimeout(() => {
+      socketService.markRead(selectedConvId!);
+    }, 600);
+
+    return () => {
+      clearTimeout(t);
+      socketService.off("receive_message", onReceive);
+      socketService.off("typing", onTyping);
+      socketService.off("read_status", onReadStatus);
+      socketService.leaveRoom(selectedConvId);
+    };
+  }, [selectedConvId, user?.id, queryClient, appendMessage]);
+
+  // ─── Envoi texte (Socket.io d'abord, REST en repli) ────────
   const sendMutation = useMutation({
-    mutationFn: (contenu: string) =>
-      conversationService.sendMessage(selectedConvId!, { contenu }),
-    onSuccess: () => {
+    mutationFn: async (contenu: string) => {
+      const payload = {
+        conversation_id: selectedConvId!,
+        contenu,
+        reply_to_message_id: replyTo?.id ?? null,
+      };
+      if (socketService.isConnected) {
+        try {
+          const ack = await socketService.emitWithAck<{
+            ok?: boolean;
+            error?: string;
+            message?: Message;
+          }>("send_message", payload);
+          if (ack?.ok && ack.message) return ack.message;
+          if (ack?.error) throw new Error(ack.error);
+        } catch {
+          // Repli REST si le temps réel a échoué.
+        }
+      }
+      return conversationService.sendMessage(selectedConvId!, {
+        contenu,
+        reply_to_message_id: replyTo?.id ?? null,
+      });
+    },
+    onSuccess: (msg?: Message) => {
       setMessageInput("");
+      setReplyTo(null);
+      if (msg) appendMessage(msg);
       queryClient.invalidateQueries({
         queryKey: ["conversation", selectedConvId, "messages"],
       });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      toast.error(e?.response?.data?.detail || e?.message || "Envoi impossible");
+    },
   });
 
+  // ─── Envoi audio ───────────────────────────────────────────
   const sendAudioMutation = useMutation({
     mutationFn: (blob: Blob) =>
-      conversationService.sendAudioMessage(selectedConvId!, blob),
-    onSuccess: () => {
+      conversationService.sendAudioMessage(
+        selectedConvId!,
+        blob,
+        undefined,
+        replyTo?.id ?? null
+      ),
+    onSuccess: (msg?: Message) => {
+      setRecording(false);
+      setReplyTo(null);
+      if (msg) appendMessage(msg);
       queryClient.invalidateQueries({
         queryKey: ["conversation", selectedConvId, "messages"],
       });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      toast.error(e?.response?.data?.detail || e?.message || "Envoi du vocal impossible");
+      setRecording(false);
+    },
   });
 
+  // ─── Envoi média ───────────────────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sendMediaMutation = useMutation({
     mutationFn: (file: File) =>
-      conversationService.sendMediaMessage(selectedConvId!, file),
-    onSuccess: () => {
+      conversationService.sendMediaMessage(
+        selectedConvId!,
+        file,
+        undefined,
+        replyTo?.id ?? null
+      ),
+    onSuccess: (msg?: Message) => {
+      setReplyTo(null);
+      if (msg) appendMessage(msg);
       queryClient.invalidateQueries({
         queryKey: ["conversation", selectedConvId, "messages"],
       });
@@ -371,6 +281,7 @@ export default function ChatPage() {
     (convId: string) => {
       router.replace(`/dashboard/chat?conv=${convId}`, { scroll: false });
       setMobileView("chat");
+      setReplyTo(null);
       lireMutation.mutate(convId);
     },
     [router, lireMutation]
@@ -407,6 +318,7 @@ export default function ChatPage() {
 
   const handleSend = () => {
     if (!messageInput.trim() || !selectedConvId) return;
+    socketService.sendTyping(selectedConvId, false);
     sendMutation.mutate(messageInput.trim());
   };
 
@@ -417,15 +329,29 @@ export default function ChatPage() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageInput(e.target.value);
+    if (!selectedConvId || !socketService.isConnected) return;
+    socketService.sendTyping(selectedConvId, true);
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => {
+      if (selectedConvId) socketService.sendTyping(selectedConvId, false);
+    }, 1500);
+  };
+
   const handleAudioSend = (blob: Blob) => {
     if (!selectedConvId) return;
     sendAudioMutation.mutate(blob);
-    setRecording(false);
   };
 
   const handleAudioCancel = () => {
     setRecording(false);
   };
+
+  const scrollToMessage = useCallback((msgId: string) => {
+    const el = messageRefs.current[msgId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   const filteredConversations = conversations?.filter((c) => {
     if (!searchQuery) return true;
@@ -436,10 +362,6 @@ export default function ChatPage() {
       c.last_message?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
-
-  const otherParticipant = selectedConv?.participants?.find(
-    (p) => p.id !== user?.id
-  );
 
   const presenceInfo = (presence?: string | null) => {
     switch (presence) {
@@ -456,15 +378,6 @@ export default function ChatPage() {
       default:
         return null;
     }
-  };
-
-  const formatMsgTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
-    const hours = d.getHours().toString().padStart(2, "0");
-    const mins = d.getMinutes().toString().padStart(2, "0");
-    return `${day}/${month} ${hours}:${mins}`;
   };
 
   return (
@@ -632,7 +545,12 @@ export default function ChatPage() {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}
+                        ref={(el) => {
+                          messageRefs.current[msg.id] = el;
+                        }}
+                        className={`group flex flex-col ${
+                          isMine ? "items-end" : "items-start"
+                        }`}
                       >
                         {/* Sender header */}
                         <div
@@ -674,6 +592,14 @@ export default function ChatPage() {
                             isMine ? "mr-[34px]" : "ml-[34px]"
                           }`}
                         >
+                          {msg.reply_to && (
+                            <QuotedMessageCard
+                              message={msg.reply_to}
+                              isMine={isMine}
+                              onClick={() => scrollToMessage(msg.reply_to!.id)}
+                            />
+                          )}
+
                           {msg.type === "audio" && msg.media_url ? (
                             <div
                               className={`rounded-2xl px-4 py-3 ${
@@ -682,10 +608,22 @@ export default function ChatPage() {
                                   : "bg-white text-slate-900 rounded-bl-md border border-slate-200"
                               }`}
                             >
-                              <AudioPlayer src={msg.media_url} />
+                              <AudioPlayer
+                                src={msg.media_url}
+                                isMine={isMine}
+                                withDownload
+                              />
                             </div>
-                          ) : msg.type === "image" || msg.type === "video" || msg.type === "fichier" ? (
-                            <MediaMessage msg={msg} isMine={isMine} />
+                          ) : msg.type === "image" ||
+                            msg.type === "video" ||
+                            msg.type === "fichier" ? (
+                            <MediaMessage
+                              msg={msg}
+                              isMine={isMine}
+                              onQuoteClick={(target) =>
+                                scrollToMessage(target.id)
+                              }
+                            />
                           ) : (
                             <div
                               className={`rounded-2xl px-4 py-2.5 ${
@@ -699,6 +637,25 @@ export default function ChatPage() {
                               </p>
                             </div>
                           )}
+
+                          {/* Bouton Répondre (survol) */}
+                          <div
+                            className={`flex mt-1 ${
+                              isMine ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <button
+                              onClick={() => {
+                                setReplyTo(msg);
+                                messageInputRef.current?.focus();
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-amber-600"
+                              title="Répondre à ce message"
+                            >
+                              <Reply className="h-3 w-3" />
+                              Répondre
+                            </button>
+                          </div>
 
                           {/* Lu indicator for sent messages */}
                           {isMine && (
@@ -719,6 +676,14 @@ export default function ChatPage() {
                       </div>
                     );
                   })}
+
+                  {/* Indicateur "en train d'écrire…" */}
+                  {otherTyping && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+                      {otherParticipant?.nom_complet || "Quelqu'un"} écrit…
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               ) : (
@@ -734,55 +699,69 @@ export default function ChatPage() {
             {/* Input */}
             <div className="p-3 border-t border-slate-200 bg-white">
               {recording ? (
-                <VoiceRecorder onSend={handleAudioSend} onCancel={handleAudioCancel} />
+                <VoiceRecorder
+                  onSend={handleAudioSend}
+                  onCancel={handleAudioCancel}
+                  sending={sendAudioMutation.isPending}
+                />
               ) : (
-                <div className="flex gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
-                    className="hidden"
-                    onChange={handleFilePicked}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={sendMediaMutation.isPending}
-                    className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
-                    title="Joindre une photo, une vidéo ou un document"
-                  >
-                    {sendMediaMutation.isPending ? (
-                      <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Paperclip className="h-5 w-5" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setRecording(true)}
-                    className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
-                    title="Message vocal"
-                  >
-                    <Mic className="h-5 w-5" />
-                  </Button>
-                  <textarea
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Écrire un message..."
-                    className="flex-1 resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[44px] max-h-[120px] bg-slate-50"
-                    rows={1}
-                  />
-                  <Button
-                    onClick={handleSend}
-                    disabled={!messageInput.trim() || sendMutation.isPending}
-                    size="icon"
-                    className="min-h-[44px] min-w-[44px] shrink-0 bg-slate-800 hover:bg-slate-700 text-white"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                <div className="flex flex-col gap-2">
+                  {replyTo && (
+                    <ReplyPreview
+                      message={replyTo}
+                      isMine={replyTo.expediteur_id === user?.id}
+                      onCancel={() => setReplyTo(null)}
+                    />
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                      className="hidden"
+                      onChange={handleFilePicked}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={sendMediaMutation.isPending}
+                      className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                      title="Joindre une photo, une vidéo ou un document"
+                    >
+                      {sendMediaMutation.isPending ? (
+                        <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Paperclip className="h-5 w-5" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setRecording(true)}
+                      className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                      title="Message vocal"
+                    >
+                      <Mic className="h-5 w-5" />
+                    </Button>
+                    <textarea
+                      ref={messageInputRef}
+                      value={messageInput}
+                      onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Écrire un message..."
+                      className="flex-1 resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[44px] max-h-[120px] bg-slate-50"
+                      rows={1}
+                    />
+                    <Button
+                      onClick={handleSend}
+                      disabled={!messageInput.trim() || sendMutation.isPending}
+                      size="icon"
+                      className="min-h-[44px] min-w-[44px] shrink-0 bg-slate-800 hover:bg-slate-700 text-white"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

@@ -440,9 +440,12 @@ export interface Message {
   id: string;
   conversation_id: string;
   expediteur_id: string;
+  destinataire_id?: string | null;
   contenu: string;
   type: TypeMessage;
   media_url?: string | null;
+  reply_to_message_id?: string | null;
+  reply_to?: Message | null;
   lu: boolean;
   created_at: string;
   expediteur_nom?: string | null;
@@ -453,6 +456,7 @@ export interface Message {
 export interface MessageCreate {
   contenu: string;
   type?: TypeMessage;
+  reply_to_message_id?: string | null;
 }
 
 // ─── Incident ───────────────────────────────────────

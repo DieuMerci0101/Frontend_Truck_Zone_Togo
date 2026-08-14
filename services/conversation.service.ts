@@ -37,10 +37,11 @@ export const conversationService = {
   sendMessage: (conversationId: string, data: MessageCreate) =>
     api.post<Message>(`/api/conversations/${conversationId}/messages`, data).then((r) => r.data),
 
-  sendAudioMessage: (conversationId: string, file: Blob, contenu?: string) => {
+  sendAudioMessage: (conversationId: string, file: Blob, contenu?: string, reply_to_message_id?: string | null) => {
     const formData = new FormData();
     formData.append("file", file, "audio.webm");
     if (contenu) formData.append("contenu", contenu);
+    if (reply_to_message_id) formData.append("reply_to_message_id", reply_to_message_id);
     return api.post<Message>(`/api/conversations/${conversationId}/messages/audio`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }).then((r) => r.data);
@@ -51,10 +52,11 @@ export const conversationService = {
    * Le type (`image` | `video` | `fichier`) est déduit côté serveur du
    * Content-Type du fichier.
    */
-  sendMediaMessage: (conversationId: string, file: File, contenu?: string) => {
+  sendMediaMessage: (conversationId: string, file: File, contenu?: string, reply_to_message_id?: string | null) => {
     const formData = new FormData();
     formData.append("file", file);
     if (contenu) formData.append("contenu", contenu);
+    if (reply_to_message_id) formData.append("reply_to_message_id", reply_to_message_id);
     return api.post<Message>(`/api/conversations/${conversationId}/messages/media`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }).then((r) => r.data);
