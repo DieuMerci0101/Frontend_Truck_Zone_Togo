@@ -593,12 +593,93 @@ export interface PushConfig {
 
 // ─── Admin ──────────────────────────────────────────
 export interface AdminStats {
+  utilisateurs?: {
+    total: number;
+    actifs: number;
+    par_role: Record<string, number>;
+    en_attente_verification: number;
+  };
+  offres?: {
+    total: number;
+    actives: number;
+    pourvues: number;
+    expirees: number;
+    nouvelles_7j: number;
+  };
+  interventions?: {
+    total: number;
+    en_attente: number;
+    en_cours: number;
+    terminees: number;
+    nouvelles_7j: number;
+  };
+  documents_en_attente?: {
+    documents: number;
+    mecaniciens: number;
+    total: number;
+  };
+  candidatures?: {
+    total: number;
+    en_attente: number;
+    acceptees: number;
+    refusees: number;
+  };
+  messagerie?: {
+    conversations: number;
+    messages: number;
+  };
+  camions?: {
+    total: number;
+    publics: number;
+  };
+  evolution?: {
+    utilisateurs: { mois: string; count: number }[];
+    offres: { mois: string; count: number }[];
+    interventions: { mois: string; count: number }[];
+  };
+  calcule_le?: string;
+  // Compatibilité avec l'ancienne structure (le temps de migrer)
   total_utilisateurs?: number;
   chauffeurs?: number;
   proprietaires?: number;
   mecaniciens?: number;
   admins?: number;
-  [key: string]: number | undefined;
+  camions_legacy?: number;
+  [key: string]: number | string | Record<string, unknown> | undefined;
+}
+
+// ─── Tableau de bord (vue client, module 5) ─────────
+export interface CandidatureLeger {
+  id: string;
+  offre_titre?: string | null;
+  statut: string;
+  chauffeur_nom?: string | null;
+  updated_at?: string | null;
+}
+
+export interface DashboardOverview {
+  role: string;
+  date: string;
+  statut_verification: string;
+  is_verified: boolean;
+  notifications_non_lues: number;
+  messages_non_lus: number;
+  disponibilite?: string | null;
+  position_active?: boolean | null;
+  candidatures_en_attente: number;
+  candidatures_acceptees: number;
+  candidatures_refusees: number;
+  candidatures_total?: number;
+  dernieres_reponses_candidatures: CandidatureLeger[];
+  candidatures_recues: number;
+  candidatures_recues_en_attente: number;
+  dernieres_candidatures_recues: CandidatureLeger[];
+  offres_actives: number;
+  camions_publies: number;
+  interventions_actives: number;
+  interventions_terminees: number;
+  demandes_disponibles: number;
+  stats?: AdminStats | null;
 }
 
 // ─── API Pagination ─────────────────────────────────

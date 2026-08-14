@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { chauffeurService, type Offre } from "@/services/chauffeur.service";
+import { dashboardService } from "@/services/dashboard.service";
 import { conversationService } from "@/services/conversation.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,31 @@ export default function ChauffeurOffresPage() {
     queryFn: () => chauffeurService.getMesCandidatures(selectedOffre!.id),
     enabled: !!selectedOffre,
   });
+
+  // Réponses aux candidatures (léger) pour marquer les offres déjà traitées.
+  const { data: overview } = useQuery({
+    queryKey: ["dashboard", "overview"],
+    queryFn: () => dashboardService.getOverview(),
+    retry: false,
+    refetchInterval: 30000,
+  });
+
+  const candidatureStatutByTitre: Record<string, string> = {};
+  (overview?.dernieres_reponses_candidatures ?? []).forEach((c) => {
+    if (c.offre_titre && !candidatureStatutByTitre[c.offre_titre]) {
+      candidatureStatutByTitre[c.offre_titre] = c.statut;
+    }
+  });
+
+  const candidatureBadge = (titre: string) => {
+    const statut = candidatureStatutByTitre[titre];
+    if (!statut) return null;
+    if (statut === "acceptee")
+      return <Badge variant="success" className="text-[10px]">Candidature acceptée</Badge>;
+    if (statut === "refusee")
+      return <Badge variant="destructive" className="text-[10px]">Candidature non retenue</Badge>;
+    return <Badge variant="warning" className="text-[10px]">Candidature en attente</Badge>;
+  };
 
   const postulerMutation = useMutation({
     mutationFn: ({ offreId, message }: { offreId: string; message?: string }) =>
@@ -136,7 +162,8 @@ export default function ChauffeurOffresPage() {
               <CardContent className="p-4 flex flex-col flex-1">
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <h3 className="font-semibold text-gray-900 line-clamp-1">{offre.titre}</h3>
-                  <div className="flex gap-1 shrink-0">
+                  <div className="flex gap-1 shrink-0 flex-wrap justify-end">
+                    {candidatureBadge(offre.titre)}
                     {offre.is_expired && (
                       <Badge variant="destructive" className="text-[10px]">Expirée</Badge>
                     )}
@@ -265,6 +292,29 @@ export default function ChauffeurOffresPage() {
                 <p className="font-semibold flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {formatDate(selectedOffre.date_debut)}</p>
               </div>
             </div>
+            {candidatures && candidatures.length > 0 && (() => {
+              const st = candidatures[0].statut;
+              return (
+                <div
+                  className={`p-3 rounded-lg flex items-center gap-2 ${
+                    st === "acceptee" ? "bg-emerald-50" : st === "refusee" ? "bg-red-50" : "bg-amber-50"
+                  }`}
+                >
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <p
+                    className={`text-sm font-medium ${
+                      st === "acceptee" ? "text-emerald-700" : st === "refusee" ? "text-red-700" : "text-amber-700"
+                    }`}
+                  >
+                    {st === "acceptee"
+                      ? "Votre candidature a été acceptée. Félicitations !"
+                      : st === "refusee"
+                      ? "Le propriétaire a répondu : votre candidature n'a pas été retenue."
+                      : "Votre candidature est en attente de réponse."}
+                  </p>
+                </div>
+              );
+            })()}
             {selectedOffre.expires_at && (
               <div className={`p-3 rounded-lg flex items-center gap-2 ${selectedOffre.is_expired ? 'bg-red-50' : 'bg-amber-50'}`}>
                 <Clock className="h-4 w-4 shrink-0" />

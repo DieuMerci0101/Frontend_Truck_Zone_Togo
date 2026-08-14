@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { proprietaireService } from "@/services/proprietaire.service";
+import { proprietaireService, type CandidatureRecue } from "@/services/proprietaire.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
+import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, formatDate } from "@/lib/utils";
 import { TYPE_CONTRAT, ZONES_CIRCULATION, API_URL } from "@/constants";
-import { Briefcase, Plus, Pencil, Trash2, Clock } from "lucide-react";
+import { Briefcase, Plus, Pencil, Trash2, Clock, Users, Check, X } from "lucide-react";
 import type { Offre, OffreCreate, OffreUpdate, Camion } from "@/types";
 import PageAnimation from "@/components/ui/page-animation";
 import CardAnimation from "@/components/ui/card-animation";
@@ -64,16 +65,69 @@ const statutBadge: Record<string, "success" | "info" | "default"> = {
   expirée: "default",
 };
 
+const candStatutBadge: Record<string, "warning" | "success" | "destructive" | "default"> = {
+  en_attente: "warning",
+  acceptee: "success",
+  refusee: "destructive",
+};
+
+const candStatutLabel: Record<string, string> = {
+  en_attente: "En attente",
+  acceptee: "Acceptée",
+  refusee: "Non retenue",
+};
+
 export default function ProprietaireOffresPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOffre, setEditingOffre] = useState<Offre | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [candidaturesOffre, setCandidaturesOffre] = useState<Offre | null>(null);
+  const [decisionLoading, setDecisionLoading] = useState<string | null>(null);
 
   const { data: offres, isLoading } = useQuery({
     queryKey: ["proprietaire", "offres"],
     queryFn: () => proprietaireService.getMyOffres(),
   });
+
+  // Candidatures reçues, groupées par offre (chargées une seule fois).
+  const { data: candidaturesByOffre } = useQuery({
+    queryKey: ["proprietaire", "candidatures"],
+    queryFn: async () => {
+      const actives = (offres ?? []).filter((o) => o.statut !== "expirée");
+      const entries = await Promise.all(
+        actives.map(async (o) => [o.id, await proprietaireService.getOffreCandidatures(o.id)] as const)
+      );
+      return Object.fromEntries(entries) as Record<string, CandidatureRecue[]>;
+    },
+    enabled: !!offres && offres.length > 0,
+  });
+
+  const decideMutation = useMutation({
+    mutationFn: ({
+      offreId,
+      candidatureId,
+      statut,
+    }: {
+      offreId: string;
+      candidatureId: string;
+      statut: "acceptee" | "refusee";
+    }) => proprietaireService.decideCandidature(offreId, candidatureId, statut),
+    onMutate: ({ candidatureId }) => setDecisionLoading(candidatureId),
+    onSettled: () => setDecisionLoading(null),
+    onSuccess: (res, vars) => {
+      toast.success(res.offre_pourvue ? "Candidature acceptée : l'offre est pourvue" : "Candidature refusée");
+      queryClient.invalidateQueries({ queryKey: ["proprietaire", "candidatures"] });
+      queryClient.invalidateQueries({ queryKey: ["proprietaire", "offres"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || "Erreur lors de la réponse");
+    },
+  });
+
+  const openCandidatures = (offre: Offre) => setCandidaturesOffre(offre);
+  const visibleCands = candidaturesOffre ? (candidaturesByOffre?.[candidaturesOffre.id] ?? []) : [];
 
   const { data: camions } = useQuery({
     queryKey: ["proprietaire", "camions"],
@@ -214,6 +268,24 @@ export default function ProprietaireOffresPage() {
                     </div>
                   )}
                   <div className="flex gap-2 mt-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openCandidatures(offre)}
+                      className="min-h-[44px] flex-1"
+                    >
+                      <Users className="h-3.5 w-3.5 mr-1" />
+                      Candidatures
+                      {(() => {
+                        const list = candidaturesByOffre?.[offre.id];
+                        const pending = list?.filter((c) => c.statut === "en_attente").length ?? 0;
+                        return list && list.length > 0 ? (
+                          <Badge variant={pending > 0 ? "warning" : "success"} className="ml-1 text-[10px]">
+                            {pending > 0 ? pending : list.length}
+                          </Badge>
+                        ) : null;
+                      })()}
+                    </Button>
                     {canEdit && (
                       <Button variant="outline" size="sm" onClick={() => openEdit(offre)} className="min-h-[44px] flex-1">
                         <Pencil className="h-3.5 w-3.5 mr-1" /> Modifier
@@ -288,6 +360,87 @@ export default function ProprietaireOffresPage() {
           <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="w-full sm:w-auto min-h-[44px]">Annuler</Button>
           <Button variant="destructive" loading={deleteMutation.isPending} onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)} className="w-full sm:w-auto min-h-[44px]">Supprimer</Button>
         </div>
+      </Dialog>
+
+      {/* Candidatures Dialog */}
+      <Dialog
+        open={!!candidaturesOffre}
+        onClose={() => setCandidaturesOffre(null)}
+        title={candidaturesOffre ? `Candidatures — ${candidaturesOffre.titre}` : "Candidatures"}
+        size="lg"
+      >
+        {candidaturesOffre && visibleCands.length === 0 ? (
+          <div className="text-center py-10 text-gray-400">
+            <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Aucune candidature reçue pour cette offre</p>
+          </div>
+        ) : candidaturesOffre ? (
+          <div className="space-y-4">
+            {visibleCands.map((c) => (
+              <div key={c.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <Avatar src={c.chauffeur_photo} name={c.chauffeur_nom || "Chauffeur"} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {c.chauffeur_nom || "Chauffeur"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Postulé le {formatDate(c.created_at ?? "")}
+                    </p>
+                  </div>
+                  <Badge variant={candStatutBadge[c.statut] || "default"} className="shrink-0">
+                    {candStatutLabel[c.statut] || c.statut}
+                  </Badge>
+                </div>
+                {c.message && (
+                  <p className="text-sm text-gray-600 bg-white rounded-lg p-3 mb-3">
+                    « {c.message} »
+                  </p>
+                )}
+                {c.statut === "en_attente" && (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      size="sm"
+                      className="min-h-[40px] flex-1"
+                      loading={decisionLoading === c.id}
+                      disabled={decisionLoading !== null && decisionLoading !== c.id}
+                      onClick={() =>
+                        decideMutation.mutate({
+                          offreId: candidaturesOffre.id,
+                          candidatureId: c.id,
+                          statut: "acceptee",
+                        })
+                      }
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Accepter la candidature
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="min-h-[40px] flex-1"
+                      loading={decisionLoading === c.id}
+                      disabled={decisionLoading !== null && decisionLoading !== c.id}
+                      onClick={() =>
+                        decideMutation.mutate({
+                          offreId: candidaturesOffre.id,
+                          candidatureId: c.id,
+                          statut: "refusee",
+                        })
+                      }
+                    >
+                      <X className="h-4 w-4 mr-1" /> Refuser
+                    </Button>
+                  </div>
+                )}
+                {c.statut !== "en_attente" && (
+                  <p className="text-xs text-gray-400">
+                    Répondu le {formatDate(c.updated_at ?? "")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </Dialog>
     </PageAnimation>
   );

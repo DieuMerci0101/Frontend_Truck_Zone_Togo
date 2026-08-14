@@ -13,6 +13,25 @@ import type {
   Assistance,
 } from "@/types";
 
+export interface CandidatureRecue {
+  id: string;
+  offre_id: string;
+  chauffeur_id: string;
+  chauffeur_nom: string | null;
+  chauffeur_photo: string | null;
+  message: string | null;
+  statut: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface ReponseCandidature {
+  message: string;
+  statut: string;
+  conversation_id: string;
+  offre_pourvue: boolean;
+}
+
 export const proprietaireService = {
   list: (params?: { skip?: number; limit?: number }) =>
     api.get<ProfilProprietaire[]>("/api/proprietaires/", { params }).then((r) => r.data),
@@ -79,6 +98,13 @@ export const proprietaireService = {
 
   deleteOffre: (offreId: string) =>
     api.delete<{ message: string }>(`/api/proprietaires/me/offres/${offreId}`).then((r) => r.data),
+
+  // ── Candidatures reçues (module 5) ──
+  getOffreCandidatures: (offreId: string) =>
+    api.get<CandidatureRecue[]>(`/api/offres/${offreId}/candidatures`).then((r) => r.data),
+
+  decideCandidature: (offreId: string, candidatureId: string, statut: "acceptee" | "refusee") =>
+    api.put<ReponseCandidature>(`/api/offres/${offreId}/candidatures/${candidatureId}`, { statut }).then((r) => r.data),
 
   // ── Documents ──
   getDocuments: () =>
