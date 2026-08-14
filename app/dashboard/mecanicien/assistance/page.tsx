@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { mecanicienService } from "@/services/mecanicien.service";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ const urgenceBadge: Record<string, "destructive" | "warning" | "info" | "default
 };
 
 export default function MecanicienAssistancePage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { position } = useMechanicLocation();
 
@@ -74,9 +76,14 @@ export default function MecanicienAssistancePage() {
 
   const prendreMutation = useMutation({
     mutationFn: (id: string) => mecanicienService.prendreAssistance(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Demande prise en charge");
       queryClient.invalidateQueries({ queryKey: ["mecanicien"] });
+      // Ouverture automatique de la conversation privée avec le demandeur.
+      const convId = (data as { conversation_id?: string })?.conversation_id;
+      if (convId) {
+        router.push(`/dashboard/chat?conv=${convId}`);
+      }
     },
     onError: (err: unknown) => {
       // Course « premier arrivé » : un autre mécanicien a déjà accepté.

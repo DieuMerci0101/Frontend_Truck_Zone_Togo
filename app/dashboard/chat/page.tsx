@@ -23,8 +23,90 @@ import {
   Play,
   Pause,
   CheckCheck,
+  Paperclip,
+  Download,
+  FileText,
 } from "lucide-react";
 import type { Conversation, Message } from "@/types";
+
+function fileNameFromUrl(url: string) {
+  try {
+    return decodeURIComponent(url.split("/").pop() || "document");
+  } catch {
+    return "document";
+  }
+}
+
+function MediaMessage({
+  msg,
+  isMine,
+}: {
+  msg: Message;
+  isMine: boolean;
+}) {
+  const base = isMine
+    ? "bg-slate-700 text-white rounded-br-md"
+    : "bg-white text-slate-900 rounded-bl-md border border-slate-200";
+
+  if (msg.type === "image" && msg.media_url) {
+    return (
+      <div className={`rounded-2xl p-1.5 ${base} overflow-hidden`}>
+        <a href={msg.media_url} target="_blank" rel="noopener noreferrer">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={msg.media_url}
+            alt="Photo"
+            className="max-h-72 max-w-full rounded-xl object-cover"
+          />
+        </a>
+        {msg.contenu && <p className="text-sm px-2 py-1.5 whitespace-pre-wrap break-words">{msg.contenu}</p>}
+      </div>
+    );
+  }
+
+  if (msg.type === "video" && msg.media_url) {
+    return (
+      <div className={`rounded-2xl p-1.5 ${base} overflow-hidden`}>
+        <video
+          src={msg.media_url}
+          controls
+          preload="metadata"
+          className="max-h-72 max-w-full rounded-xl bg-black"
+        />
+        {msg.contenu && <p className="text-sm px-2 py-1.5 whitespace-pre-wrap break-words">{msg.contenu}</p>}
+      </div>
+    );
+  }
+
+  if (msg.type === "fichier" && msg.media_url) {
+    return (
+      <a
+        href={msg.media_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        download
+        className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${base} hover:opacity-90 transition-opacity min-w-[220px]`}
+      >
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+            isMine ? "bg-white/20" : "bg-amber-100"
+          }`}
+        >
+          <FileText className={`h-5 w-5 ${isMine ? "text-white" : "text-amber-600"}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{fileNameFromUrl(msg.media_url)}</p>
+          {msg.contenu && (
+            <p className="text-xs opacity-80 truncate">{msg.contenu}</p>
+          )}
+        </div>
+        <Download className="h-4 w-4 shrink-0 opacity-70" />
+      </a>
+    );
+  }
+
+  return null;
+}
 
 function AudioPlayer({ src }: { src: string }) {
   const [playing, setPlaying] = useState(false);
@@ -246,6 +328,33 @@ export default function ChatPage() {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const sendMediaMutation = useMutation({
+    mutationFn: (file: File) =>
+      conversationService.sendMediaMessage(selectedConvId!, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["conversation", selectedConvId, "messages"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      toast.error(e?.response?.data?.detail || e?.message || "Envoi du fichier impossible");
+    },
+  });
+
+  const handleFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !selectedConvId) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("Fichier trop volumineux (maximum 25 Mo)");
+      return;
+    }
+    sendMediaMutation.mutate(file);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -575,6 +684,8 @@ export default function ChatPage() {
                             >
                               <AudioPlayer src={msg.media_url} />
                             </div>
+                          ) : msg.type === "image" || msg.type === "video" || msg.type === "fichier" ? (
+                            <MediaMessage msg={msg} isMine={isMine} />
                           ) : (
                             <div
                               className={`rounded-2xl px-4 py-2.5 ${
@@ -626,6 +737,27 @@ export default function ChatPage() {
                 <VoiceRecorder onSend={handleAudioSend} onCancel={handleAudioCancel} />
               ) : (
                 <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                    className="hidden"
+                    onChange={handleFilePicked}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sendMediaMutation.isPending}
+                    className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                    title="Joindre une photo, une vidéo ou un document"
+                  >
+                    {sendMediaMutation.isPending ? (
+                      <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Paperclip className="h-5 w-5" />
+                    )}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

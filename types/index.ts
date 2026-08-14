@@ -434,7 +434,7 @@ export interface ConversationCreate {
   premier_message?: string;
 }
 
-export type TypeMessage = "texte" | "image" | "fichier" | "audio";
+export type TypeMessage = "texte" | "image" | "video" | "fichier" | "audio";
 
 export interface Message {
   id: string;

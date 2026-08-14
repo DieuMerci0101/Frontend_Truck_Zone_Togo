@@ -46,6 +46,20 @@ export const conversationService = {
     }).then((r) => r.data);
   },
 
+  /**
+   * Envoie une pièce jointe (photo, vidéo ou document) dans une conversation.
+   * Le type (`image` | `video` | `fichier`) est déduit côté serveur du
+   * Content-Type du fichier.
+   */
+  sendMediaMessage: (conversationId: string, file: File, contenu?: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (contenu) formData.append("contenu", contenu);
+    return api.post<Message>(`/api/conversations/${conversationId}/messages/media`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+
   lire: (conversationId: string) =>
     api.put<{ message: string; marked: number }>(`/api/conversations/${conversationId}/lire`).then((r) => r.data),
 };
