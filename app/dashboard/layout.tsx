@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { MechanicLocationProvider } from "@/providers/mechanic-location-provider";
+import { RealTimeNotifications } from "@/components/layout/real-time-notifications";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardTopbar } from "@/components/layout/dashboard-topbar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,6 +57,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <RealTimeNotifications />
       <DashboardSidebar
         user={user}
         isOpen={sidebarOpen}

@@ -100,8 +100,14 @@ export const mecanicienService = {
   updateAssistanceStatut: (id: string, data: AssistanceUpdateStatut) =>
     api.put<{ message: string; statut: string }>(`/api/mecaniciens/assistance/${id}/statut`, data).then((r) => r.data),
 
-  getAssistanceDisponibles: () =>
-    api.get<Assistance[]>("/api/mecaniciens/assistance/disponibles").then((r) => r.data),
+  getAssistanceDisponibles: (lat?: number, lng?: number, rayonKm?: number) =>
+    api.get<Assistance[]>("/api/mecaniciens/assistance/disponibles", {
+      params: {
+        ...(lat != null ? { lat } : {}),
+        ...(lng != null ? { lng } : {}),
+        ...(rayonKm ? { rayon_km: rayonKm } : {}),
+      },
+    }).then((r) => r.data),
 
   prendreAssistance: (id: string) =>
     api.put<{ message: string; statut: string }>(`/api/mecaniciens/assistance/${id}/prendre`).then((r) => r.data),

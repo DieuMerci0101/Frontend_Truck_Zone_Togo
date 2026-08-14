@@ -396,6 +396,8 @@ export interface Assistance {
   statut: StatutAssistance;
   localisation_lat?: number | null;
   localisation_lng?: number | null;
+  distance_km?: number | null;
+  pris_en_charge_at?: string | null;
   created_at: string;
 }
 

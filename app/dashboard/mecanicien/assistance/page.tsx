@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { STATUT_ASSISTANCE, TYPE_PANNE } from "@/constants";
-import { Headphones, CheckCircle, Play, MapPin, Clock, Wrench, User, Navigation } from "lucide-react";
+import { Headphones, CheckCircle, Play, MapPin, Clock, Wrench, User, Navigation, LocateFixed } from "lucide-react";
 import type { StatutAssistance, Assistance } from "@/types";
 import MechanicGeoWidget from "@/components/maps/mechanic-geo-widget";
+import { useMechanicLocation } from "@/providers/mechanic-location-provider";
 
 const statutBadge: Record<string, "warning" | "info" | "success" | "destructive" | "default" | "secondary"> = {
   en_attente: "warning",
@@ -34,15 +35,33 @@ const urgenceBadge: Record<string, "destructive" | "warning" | "info" | "default
 
 export default function MecanicienAssistancePage() {
   const queryClient = useQueryClient();
+  const { position } = useMechanicLocation();
+
+  const { data: monProfil } = useQuery({
+    queryKey: ["mecanicien", "profile"],
+    queryFn: () => mecanicienService.getMyProfile(),
+  });
 
   const { data: mesDemandes, isLoading: loadingMine } = useQuery({
     queryKey: ["mecanicien", "mes-demandes"],
     queryFn: () => mecanicienService.getMyDemandes(),
   });
 
+  const rayon = monProfil?.rayon_intervention ?? 50;
   const { data: disponibles, isLoading: loadingDispo } = useQuery({
-    queryKey: ["mecanicien", "demandes-disponibles"],
-    queryFn: () => mecanicienService.getAssistanceDisponibles(),
+    queryKey: [
+      "mecanicien",
+      "demandes-disponibles",
+      position?.lat ?? null,
+      position?.lng ?? null,
+      rayon,
+    ],
+    queryFn: () =>
+      mecanicienService.getAssistanceDisponibles(
+        position?.lat,
+        position?.lng,
+        rayon
+      ),
     refetchInterval: 10000,
   });
 
@@ -59,7 +78,18 @@ export default function MecanicienAssistancePage() {
       toast.success("Demande prise en charge");
       queryClient.invalidateQueries({ queryKey: ["mecanicien"] });
     },
-    onError: () => toast.error("Impossible de prendre la demande"),
+    onError: (err: unknown) => {
+      // Course « premier arrivé » : un autre mécanicien a déjà accepté.
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ?? "";
+      if (msg.includes("déjà prise")) {
+        toast.error("Demande déjà prise par un autre mécanicien", { duration: 5000 });
+        queryClient.invalidateQueries({ queryKey: ["mecanicien"] });
+      } else {
+        toast.error("Impossible de prendre la demande");
+      }
+    },
   });
 
   const updateMutation = useMutation({
@@ -80,7 +110,7 @@ export default function MecanicienAssistancePage() {
     );
   };
 
-  const isLoading = loadingMine || loadingDispo;
+  const isLoading = (loadingMine || loadingDispo) && !mesDemandes && !disponibles;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -150,6 +180,15 @@ export default function MecanicienAssistancePage() {
                       <Clock className="h-3 w-3 shrink-0" />
                       {formatDate(demande.created_at)}
                     </p>
+                    {demande.distance_km != null && (
+                      <p className="flex items-center gap-1 font-medium text-blue-700">
+                        <LocateFixed className="h-3 w-3 shrink-0" />
+                        {demande.distance_km < 1
+                          ? `${Math.round(demande.distance_km * 1000)} m`
+                          : `${demande.distance_km.toLocaleString("fr-FR")} km`}{" "}
+                        de votre position
+                      </p>
+                    )}
                   </div>
 
                   {demande.demandeur_info && (
@@ -271,6 +310,10 @@ export default function MecanicienAssistancePage() {
           <CardContent className="py-12 text-center">
             <Headphones className="h-12 w-12 mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">Aucune demande d&apos;assistance</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Activez votre position pour voir les demandes autour de vous et être
+              notifié en priorité
+            </p>
           </CardContent>
         </Card>
       )}
