@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Briefcase,
   AlertTriangle,
+  Bell,
   Settings,
   Truck,
   Users,
@@ -48,6 +49,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Offres", href: "/dashboard/chauffeur/offres", icon: Briefcase },
     { label: "Assistance", href: "/dashboard/chauffeur/assistance", icon: Headphones },
     { label: "Incidents", href: "/dashboard/chauffeur/incidents", icon: AlertTriangle },
+    { label: "Notifications", href: "/dashboard/parametres/notifications", icon: Bell },
   ],
   proprietaire: [
     { label: "Dashboard", href: "/dashboard/proprietaire", icon: LayoutDashboard },
@@ -59,6 +61,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Messagerie", href: "/dashboard/chat", icon: MessageSquare },
     { label: "Assistance", href: "/dashboard/proprietaire/assistance", icon: Headphones },
     { label: "Incidents", href: "/dashboard/proprietaire/incidents", icon: AlertTriangle },
+    { label: "Notifications", href: "/dashboard/parametres/notifications", icon: Bell },
   ],
   mecanicien: [
     { label: "Dashboard", href: "/dashboard/mecanicien", icon: LayoutDashboard },
@@ -67,6 +70,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Assistance", href: "/dashboard/mecanicien/assistance", icon: Headphones },
     { label: "Messagerie", href: "/dashboard/chat", icon: MessageSquare },
     { label: "Localisation", href: "/dashboard/mecanicien/localisation", icon: MapPin },
+    { label: "Notifications", href: "/dashboard/parametres/notifications", icon: Bell },
   ],
   admin: [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },

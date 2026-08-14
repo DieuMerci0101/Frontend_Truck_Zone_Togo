@@ -290,6 +290,14 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
                       <User className="h-4 w-4" />
                       Mon profil
                     </Link>
+                    <Link
+                      href="/dashboard/parametres/notifications"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <Bell className="h-4 w-4" />
+                      Notifications
+                    </Link>
                     <div className="border-t border-gray-100 my-1" />
                     <button
                       onClick={() => {

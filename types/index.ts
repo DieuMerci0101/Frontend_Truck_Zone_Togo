@@ -556,6 +556,7 @@ export interface Notification {
   type: TypeNotification;
   lu: boolean;
   lien: string | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -565,6 +566,27 @@ export interface NotificationCreate {
   contenu: string;
   type?: TypeNotification;
   lien?: string;
+}
+
+// ─── Notification multi-canal (module 2) ─────────────
+export interface NotificationPreferences {
+  user_id: string;
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+  in_app: boolean;
+  updated_at?: string | null;
+}
+
+export interface PushSubscriptionBody {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+export interface PushConfig {
+  vapid_public_key: string;
+  active: boolean;
 }
 
 // ─── Admin ──────────────────────────────────────────

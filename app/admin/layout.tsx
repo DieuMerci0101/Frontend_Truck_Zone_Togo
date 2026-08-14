@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Users,
   Bell,
+  Settings,
   User as UserIcon,
   LogOut,
   ShieldCheck,
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { label: "Gestion des incidents", href: "/admin/dashboard/incidents", icon: AlertTriangle },
   { label: "Utilisateurs", href: "/admin/dashboard/utilisateurs", icon: Users },
   { label: "Notifications", href: "/admin/dashboard/notifications", icon: Bell },
+  { label: "Préférences de notification", href: "/dashboard/parametres/notifications", icon: Settings },
   { label: "Journal d'audit", href: "/admin/dashboard/audit", icon: ScrollText },
   { label: "Profil", href: "/admin/dashboard/profil", icon: UserIcon },
 ];
