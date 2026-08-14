@@ -71,7 +71,14 @@ export default function ProprietaireChauffeursPage() {
 
   const chauffeurs = pages?.pages.flat() || [];
 
-  const filtered = chauffeurs.filter((c) => {
+  // Dédoublonnage de sécurité : un chauffeur n'apparaît STRICTEMENT qu'une
+  // seule fois (un seul profil par id utilisateur), quelle que soit la
+  // pagination ou l'historique de la base.
+  const uniqueChauffeurs = Array.from(
+    new Map(chauffeurs.map((c) => [c.user_id, c])).values()
+  );
+
+  const filtered = uniqueChauffeurs.filter((c) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const name = c.user?.nom_complet?.toLowerCase() || "";
