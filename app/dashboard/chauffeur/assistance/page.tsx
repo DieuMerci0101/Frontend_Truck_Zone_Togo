@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { chauffeurService } from "@/services/chauffeur.service";
+import type { Assistance } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +18,10 @@ import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { TYPE_PANNE, URGENCE, STATUT_ASSISTANCE } from "@/constants";
-import { Wrench, Plus, MapPin, Clock, AlertTriangle, Phone, Locate } from "lucide-react";
+import { Wrench, Plus, MapPin, Clock, AlertTriangle, Phone, Locate, Users, UserRoundCheck } from "lucide-react";
 import { MapPicker } from "@/components/maps";
 import NearbyMechanicsMap from "@/components/maps/nearby-mechanics-map";
+import { PropositionsPanel } from "@/components/assistance/propositions-panel";
 
 const assistanceSchema = z.object({
   type_panne: z.string().min(1, "Le type de panne est requis"),
@@ -32,6 +34,7 @@ type AssistanceFormValues = z.infer<typeof assistanceSchema>;
 
 const statutBadge: Record<string, "warning" | "info" | "success" | "default"> = {
   en_attente: "warning",
+  pris_en_charge: "info",
   assignee: "info",
   en_cours: "info",
   terminee: "success",
@@ -52,6 +55,7 @@ export default function ChauffeurAssistancePage() {
   const queryClient = useQueryClient();
   const [createDialog, setCreateDialog] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedDemande, setSelectedDemande] = useState<Assistance | null>(null);
 
   const { data: mesDemandes, isLoading } = useQuery({
     queryKey: ["chauffeur", "mes-demandes"],
@@ -176,6 +180,34 @@ export default function ChauffeurAssistancePage() {
                     <Clock className="h-3 w-3" /> {formatDate(demande.created_at)}
                   </p>
                 </div>
+                <div className="mt-auto space-y-2">
+                  {demande.statut !== "terminee" && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                      <Users className="h-3.5 w-3.5" />
+                      {(demande.propositions?.length ?? 0) > 0
+                        ? `${demande.propositions?.length} mécanicien${
+                            (demande.propositions?.length ?? 0) > 1 ? "s" : ""
+                          } a proposé son assistance`
+                        : "Aucun mécanicien n'a encore proposé"}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full min-h-[40px]"
+                    onClick={() => setSelectedDemande(demande)}
+                  >
+                    {demande.statut === "en_attente" ? (
+                      <>
+                        <Users className="h-4 w-4 mr-1" /> Voir les mécaniciens intéressés
+                      </>
+                    ) : (
+                      <>
+                        <UserRoundCheck className="h-4 w-4 mr-1" /> Voir le mécanicien sélectionné
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -191,6 +223,23 @@ export default function ChauffeurAssistancePage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={!!selectedDemande}
+        onClose={() => setSelectedDemande(null)}
+        title="Mécaniciens disponibles pour votre assistance"
+        size="lg"
+      >
+        {selectedDemande && (
+          <PropositionsPanel
+            demande={selectedDemande}
+            role="chauffeur"
+            onRefresh={() =>
+              queryClient.invalidateQueries({ queryKey: ["chauffeur", "mes-demandes"] })
+            }
+          />
+        )}
+      </Dialog>
 
       <Dialog open={createDialog} onClose={() => setCreateDialog(false)} title="Demander une assistance mécanique" size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">

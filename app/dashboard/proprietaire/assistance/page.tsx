@@ -16,9 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
-import { Headphones, Plus, MapPin, Clock, AlertTriangle, CheckCircle, Loader2, Locate } from "lucide-react";
+import { Headphones, Plus, MapPin, Clock, AlertTriangle, CheckCircle, Loader2, Locate, Users, UserRoundCheck } from "lucide-react";
 import { MapPicker } from "@/components/maps";
 import NearbyMechanicsMap from "@/components/maps/nearby-mechanics-map";
+import { PropositionsPanel } from "@/components/assistance/propositions-panel";
+import { STATUT_ASSISTANCE } from "@/constants";
+import type { Assistance } from "@/types";
 
 const TYPE_PANNE_OPTIONS = [
   { value: "Mécanique", label: "Mécanique" },
@@ -48,17 +51,13 @@ type AssistanceFormValues = z.infer<typeof assistanceSchema>;
 
 const statutBadge: Record<string, "success" | "warning" | "destructive" | "info"> = {
   en_attente: "warning",
+  pris_en_charge: "info",
+  assignee: "info",
   en_cours: "info",
-  resolue: "success",
-  annulee: "destructive",
+  terminee: "success",
 };
 
-const statutLabel: Record<string, string> = {
-  en_attente: "En attente",
-  en_cours: "En cours",
-  resolue: "Résolue",
-  annulee: "Annulée",
-};
+const statutLabel: Record<string, string> = STATUT_ASSISTANCE;
 
 const urgenceBadge: Record<string, "destructive" | "warning" | "info" | "default"> = {
   critique: "destructive",
@@ -71,6 +70,7 @@ export default function ProprietaireAssistancePage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [selectedDemande, setSelectedDemande] = useState<Assistance | null>(null);
 
   const { data: demandes, isLoading } = useQuery({
     queryKey: ["proprietaire", "assistance"],
@@ -182,6 +182,28 @@ export default function ProprietaireAssistancePage() {
                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(d.created_at)}</span>
                 </div>
+                <div className="mt-auto space-y-2 pt-3">
+                  {d.statut !== "terminee" && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                      <Users className="h-3.5 w-3.5" />
+                      {(d.propositions?.length ?? 0) > 0
+                        ? `${d.propositions?.length} mécanicien${(d.propositions?.length ?? 0) > 1 ? "s" : ""} a proposé son assistance`
+                        : "Aucun mécanicien n'a encore proposé"}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full min-h-[40px]"
+                    onClick={() => setSelectedDemande(d)}
+                  >
+                    {d.statut === "en_attente" ? (
+                      <><Users className="h-4 w-4 mr-1" /> Voir les mécaniciens intéressés</>
+                    ) : (
+                      <><UserRoundCheck className="h-4 w-4 mr-1" /> Voir le mécanicien sélectionné</>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -198,6 +220,23 @@ export default function ProprietaireAssistancePage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={!!selectedDemande}
+        onClose={() => setSelectedDemande(null)}
+        title="Mécaniciens disponibles pour votre assistance"
+        size="lg"
+      >
+        {selectedDemande && (
+          <PropositionsPanel
+            demande={selectedDemande}
+            role="proprietaire"
+            onRefresh={() =>
+              queryClient.invalidateQueries({ queryKey: ["proprietaire", "assistance"] })
+            }
+          />
+        )}
+      </Dialog>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Demander une assistance" size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">

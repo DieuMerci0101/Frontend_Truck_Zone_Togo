@@ -376,6 +376,29 @@ export interface MecanicienInfo {
   photo_profil: string | null;
 }
 
+/**
+ * Proposition de prise en charge émise par un mécanicien.
+ * Plusieurs mécaniciens peuvent proposer la même demande ; seul le chauffeur
+ * (demandeur) décide. Niveau de statut INDÉPENDANT du statut de la demande.
+ */
+export type StatutProposition = "en_attente" | "accepte" | "refuse";
+
+export interface PropositionAssistance {
+  id: string;
+  assistance_id: string;
+  mecanicien_id: string;
+  user_id?: string | null;
+  statut: StatutProposition;
+  distance_km?: number | null;
+  nom_complet: string;
+  photo_profil?: string | null;
+  specialites: string[];
+  annees_experience: number;
+  tarification: string;
+  telephone?: string | null;
+  created_at: string;
+}
+
 export interface DeclarantInfo {
   id: string;
   nom_complet: string;
@@ -399,6 +422,11 @@ export interface Assistance {
   distance_km?: number | null;
   pris_en_charge_at?: string | null;
   created_at: string;
+  /** Historique des mécaniciens ayant proposé leur assistance. */
+  propositions?: PropositionAssistance[];
+  /** Proposition du mécanicien connecté (côté mécanicien uniquement). */
+  ma_proposition?: PropositionAssistance | null;
+  nb_propositions_en_attente?: number;
 }
 
 export interface AssistanceCreate {

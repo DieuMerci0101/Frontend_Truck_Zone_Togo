@@ -11,6 +11,7 @@ import type {
   Document,
   AssistanceCreate,
   Assistance,
+  PropositionAssistance,
 } from "@/types";
 
 export interface CandidatureRecue {
@@ -121,4 +122,24 @@ export const proprietaireService = {
 
   createAssistance: (data: AssistanceCreate) =>
     api.post<Assistance>("/api/proprietaires/me/assistance", data).then((r) => r.data),
+
+  // ── Mécaniciens ayant proposé leur assistance ──
+  getPropositions: (assistanceId: string) =>
+    api.get<PropositionAssistance[]>(`/api/mecaniciens/assistance/${assistanceId}/propositions`)
+      .then((r) => r.data),
+
+  accepterProposition: (assistanceId: string, mecanicienId: string) =>
+    api.put<{
+      message: string;
+      statut: string;
+      mecanicien_id: string;
+      conversation_id: string;
+      propositions_refusees: number;
+    }>(`/api/mecaniciens/assistance/${assistanceId}/propositions/${mecanicienId}/accept`)
+      .then((r) => r.data),
+
+  rejeterProposition: (assistanceId: string, mecanicienId: string) =>
+    api.put<{ message: string; statut: string; nb_propositions_en_attente: number }>(
+      `/api/mecaniciens/assistance/${assistanceId}/propositions/${mecanicienId}/reject`
+    ).then((r) => r.data),
 };

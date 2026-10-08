@@ -10,6 +10,7 @@ import type {
   Camion,
   CamionCreate,
   CamionUpdate,
+  PropositionAssistance,
 } from "@/types";
 
 export interface ChauffeurListParams {
@@ -148,4 +149,26 @@ export const chauffeurService = {
 
   getMyAssistances: () =>
     api.get<Assistance[]>("/api/proprietaires/me/assistance").then((r) => r.data),
+
+  // ── Mécaniciens ayant proposé leur assistance ──
+  getPropositions: (assistanceId: string) =>
+    api.get<PropositionAssistance[]>(`/api/mecaniciens/assistance/${assistanceId}/propositions`)
+      .then((r) => r.data),
+
+  /** Le chauffeur SÉLECTIONNE le mécanicien qui interviendra. */
+  accepterProposition: (assistanceId: string, mecanicienId: string) =>
+    api.put<{
+      message: string;
+      statut: string;
+      mecanicien_id: string;
+      conversation_id: string;
+      propositions_refusees: number;
+    }>(`/api/mecaniciens/assistance/${assistanceId}/propositions/${mecanicienId}/accept`)
+      .then((r) => r.data),
+
+  /** Le chauffeur rejette une proposition précise (avant sélection). */
+  rejeterProposition: (assistanceId: string, mecanicienId: string) =>
+    api.put<{ message: string; statut: string; nb_propositions_en_attente: number }>(
+      `/api/mecaniciens/assistance/${assistanceId}/propositions/${mecanicienId}/reject`
+    ).then((r) => r.data),
 };

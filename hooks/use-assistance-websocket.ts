@@ -9,12 +9,16 @@ import { WS_URL } from "@/constants";
 interface AssistanceEvent {
   type: string;
   demande_id: string;
+  demandeur_id?: string;
+  mecanicien_id?: string;
 }
 
 /**
- * Connexion WebSocket du mécanicien à `/ws/assistance`.
- * Rafraîchit instantanément la file d'attente (« premier arrivé ») quand une
- * demande apparaît ou est prise par un autre — sans attendre le polling 10 s.
+ * Connexion WebSocket à `/ws/assistance`.
+ * Côté mécanicien : rafraîchit instantanément la file d'attente quand une
+ * demande apparaît ou est attribuée.
+ * Côté chauffeur/propriétaire : signale les nouvelles propositions de prise en
+ * charge et la sélection du mécanicien, sans attendre le polling.
  */
 export function useAssistanceWebSocket(enabled = true) {
   const { user } = useAuth();
@@ -26,6 +30,9 @@ export function useAssistanceWebSocket(enabled = true) {
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["mecanicien", "demandes-disponibles"] });
     queryClient.invalidateQueries({ queryKey: ["mecanicien", "mes-demandes"] });
+    queryClient.invalidateQueries({ queryKey: ["chauffeur", "mes-demandes"] });
+    queryClient.invalidateQueries({ queryKey: ["proprietaire", "assistance"] });
+    queryClient.invalidateQueries({ queryKey: ["propositions"] });
   }, [queryClient]);
 
   const connect = useCallback(() => {
@@ -47,10 +54,30 @@ export function useAssistanceWebSocket(enabled = true) {
       ws.onmessage = (event) => {
         try {
           const data: AssistanceEvent = JSON.parse(event.data);
+          const estDemandeur = !!data.demandeur_id && data.demandeur_id === user?.id;
+
           if (data.type === "assistance_new") {
-            toast("Nouvelle demande d'assistance disponible", { icon: "🛠️" });
+            toast(
+              estDemandeur
+                ? "Votre demande a été transmise aux mécaniciens à proximité"
+                : "Nouvelle demande d'assistance disponible",
+              { icon: "🛠️" }
+            );
+          } else if (data.type === "assistance_proposal") {
+            // Un mécanicien vient de proposer son assistance pour la demande.
+            toast(
+              estDemandeur
+                ? "🔧 Un mécanicien vient de proposer son assistance pour votre demande"
+                : "Une proposition a été enregistrée",
+              { icon: "🔧" }
+            );
           } else if (data.type === "assistance_taken") {
-            toast("Une demande vient d'être prise en charge", { icon: "🔔" });
+            toast(
+              estDemandeur
+                ? "✅ Le mécanicien sélectionné a été informé de votre choix"
+                : "Une demande vient d'être prise en charge",
+              { icon: "🔔" }
+            );
           } else if (data.type === "pong") {
             return;
           }
@@ -74,7 +101,7 @@ export function useAssistanceWebSocket(enabled = true) {
       console.error("[AssistanceWS] Connection failed:", err);
       reconnectTimeoutRef.current = setTimeout(connect, 5000);
     }
-  }, [user?.id, enabled]);
+  }, [user?.id, enabled, refresh]);
 
   useEffect(() => {
     connect();

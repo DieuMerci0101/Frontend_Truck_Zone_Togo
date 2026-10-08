@@ -7,13 +7,16 @@ import { useAuth } from "@/providers/auth-provider";
 /**
  * Monte les connexions temps réel globales du dashboard :
  * - alertes / incidents / messages (« /ws/alerts/{user_id} ») pour tous les rôles ;
- * - file d'attente des demandes d'assistance (« /ws/assistance ») pour les
- *   mécaniciens uniquement (rafraîchissement « premier arrivé » sans polling).
+ * - assistance (« /ws/assistance ») pour mécaniciens (« premier arrivé »),
+ *   chauffeurs et propriétaires (nouvelles propositions + mécanicien sélectionné).
  */
 export function RealTimeNotifications() {
   useAlertWebSocket();
   const { user } = useAuth();
-  const isMechanic = user?.role === "mecanicien";
-  useAssistanceWebSocket(isMechanic);
+  const assistanceEnabled =
+    user?.role === "mecanicien" ||
+    user?.role === "chauffeur" ||
+    user?.role === "proprietaire";
+  useAssistanceWebSocket(assistanceEnabled);
   return null;
 }

@@ -156,9 +156,23 @@ export const URGENCE = {
 export const STATUT_ASSISTANCE = {
   en_attente: "En attente",
   pris_en_charge: "Pris en charge",
-  assignee: "Assignée",
+  assignee: "Mécanicien sélectionné",
   en_cours: "En cours",
   terminee: "Terminée",
+} as const;
+
+/** Statut d'une PROPOSITION d'un mécanicien (niveau indépendant de la demande). */
+export const STATUT_PROPOSITION = {
+  en_attente: "En attente de validation du chauffeur",
+  accepte: "Assistance acceptée",
+  refuse: "Assistance non retenue",
+} as const;
+
+/** Versions courtes (badges / listes). */
+export const STATUT_PROPOSITION_COURT = {
+  en_attente: "En attente",
+  accepte: "Accepté",
+  refuse: "Refusé",
 } as const;
 
 export const TYPE_INCIDENT = {

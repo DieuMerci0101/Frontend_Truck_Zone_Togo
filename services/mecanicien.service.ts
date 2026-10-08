@@ -7,6 +7,7 @@ import type {
   AssistanceUpdateStatut,
   VerificationStatusMecanicien,
   MecanicienActif,
+  PropositionAssistance,
 } from "@/types";
 
 export interface MechanicVerification {
@@ -109,6 +110,18 @@ export const mecanicienService = {
       },
     }).then((r) => r.data),
 
+  /**
+   * PROPOSE son assistance pour une demande (le mécanicien n'est PAS
+   * sélectionné : il rejoint la liste des mécaniciens intéressés et le
+   * chauffeur choisira ensuite).
+   */
   prendreAssistance: (id: string) =>
-    api.put<{ message: string; statut: string }>(`/api/mecaniciens/assistance/${id}/prendre`).then((r) => r.data),
+    api.put<{ message: string; statut: string; proposition: PropositionAssistance }>(
+      `/api/mecaniciens/assistance/${id}/prendre`
+    ).then((r) => r.data),
+
+  // ── Propositions de prise en charge ──
+  getPropositions: (assistanceId: string) =>
+    api.get<PropositionAssistance[]>(`/api/mecaniciens/assistance/${assistanceId}/propositions`)
+      .then((r) => r.data),
 };
